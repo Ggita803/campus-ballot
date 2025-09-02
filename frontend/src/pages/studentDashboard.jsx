@@ -711,7 +711,13 @@ function StudentDashboard({ user }) {
                         <FaCheckCircle className="text-success" size={20} />
                       </div>
                       <div className="flex-grow-1">
-                        <div className="fw-bold">{vote.electionTitle || vote.election}</div>
+                        <div className="fw-bold">
+                          {typeof vote.electionTitle === 'string' ? vote.electionTitle :
+                            (typeof vote.election === 'string' ? vote.election :
+                              (vote.election && typeof vote.election === 'object') ?
+                                (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
+                                : 'Unknown Election')}
+                        </div>
                         <small className="text-muted">
                           {vote.createdAt ? new Date(vote.createdAt).toLocaleDateString() : 'Recently voted'}
                         </small>
@@ -719,7 +725,13 @@ function StudentDashboard({ user }) {
                     </div>
                     <div className="mb-3">
                       <small className="text-muted">Voted for:</small>
-                      <div className="fw-semibold text-primary">{vote.candidateName || vote.candidate}</div>
+                      <div className="fw-semibold text-primary">
+                        {typeof vote.candidateName === 'string' ? vote.candidateName :
+                          (typeof vote.candidate === 'string' ? vote.candidate :
+                            (vote.candidate && typeof vote.candidate === 'object') ?
+                              (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
+                              : 'Unknown Candidate')}
+                      </div>
                     </div>
                     <div className="d-flex justify-content-between align-items-center">
                       <span className="badge bg-success">Completed</span>
@@ -764,9 +776,17 @@ function StudentDashboard({ user }) {
                     <FaInfoCircle className={`text-${notification.type === 'success' ? 'success' : 'info'}`} size={16} />
                   </div>
                   <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                    <div className="fw-semibold">{notification.title || 'Notification'}</div>
+                    <div className="fw-semibold">
+                      {typeof notification.title === 'string' ? notification.title :
+                        (notification.title && typeof notification.title === 'object' && (notification.title.text || notification.title.value)) ? (notification.title.text || notification.title.value) :
+                        (notification.title ? '[Invalid notification]' : 'Notification')}
+                    </div>
                     <p className="text-muted mb-1 small text-truncate" style={{ maxWidth: "300px" }}>
-                      {notification.message || notification.content}
+                      {typeof notification.message === 'string' ? notification.message :
+                        (typeof notification.content === 'string' ? notification.content :
+                          (notification.message && typeof notification.message === 'object' && (notification.message.text || notification.message.value)) ? (notification.message.text || notification.message.value) :
+                          (notification.content && typeof notification.content === 'object' && (notification.content.text || notification.content.value)) ? (notification.content.text || notification.content.value) :
+                          '[Invalid message]')}
                     </p>
                     <small className="text-muted">
                       {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString() : 'Recently'}
@@ -1018,9 +1038,19 @@ function StudentDashboard({ user }) {
                                 {vote.createdAt ? new Date(vote.createdAt).toLocaleDateString() : 'Recently'}
                               </small>
                             </div>
-                            <h6 className="mb-2 text-dark">{vote.electionTitle || vote.election}</h6>
+                            <h6 className="mb-2 text-dark">
+                              {typeof vote.electionTitle === 'string' ? vote.electionTitle :
+                                (typeof vote.election === 'string' ? vote.election :
+                                  (vote.election && typeof vote.election === 'object') ?
+                                    (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
+                                    : 'Unknown Election')}
+                            </h6>
                             <p className="mb-0 text-muted">
-                              <strong>Voted for:</strong> {vote.candidateName || vote.candidate}
+                              <strong>Voted for:</strong> {typeof vote.candidateName === 'string' ? vote.candidateName :
+                                (typeof vote.candidate === 'string' ? vote.candidate :
+                                  (vote.candidate && typeof vote.candidate === 'object') ?
+                                    (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
+                                    : 'Unknown Candidate')}
                             </p>
                           </div>
                         </div>
@@ -1072,8 +1102,16 @@ function StudentDashboard({ user }) {
                         {vote.createdAt ? new Date(vote.createdAt).toLocaleDateString() : 'Recently'}
                       </small>
                     </div>
-                    <p className="mb-1">Voted in: <strong>{vote.electionTitle || vote.election}</strong></p>
-                    <p className="mb-0 text-muted">Candidate: {vote.candidateName || vote.candidate}</p>
+                    <p className="mb-1">Voted in: <strong>{typeof vote.electionTitle === 'string' ? vote.electionTitle :
+                      (typeof vote.election === 'string' ? vote.election :
+                        (vote.election && typeof vote.election === 'object') ?
+                          (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
+                          : 'Unknown Election')}</strong></p>
+                    <p className="mb-0 text-muted">Candidate: {typeof vote.candidateName === 'string' ? vote.candidateName :
+                      (typeof vote.candidate === 'string' ? vote.candidate :
+                        (vote.candidate && typeof vote.candidate === 'object') ?
+                          (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
+                          : 'Unknown Candidate')}</p>
                   </div>
                 </div>
               </div>
@@ -1155,7 +1193,7 @@ function StudentDashboard({ user }) {
                   <li key={index}>
                     <a className="dropdown-item small" href="#" 
                        onClick={() => setActiveView('notifications')}>
-                      {notif.title || 'Notification'}
+                      {typeof notif.title === 'string' ? notif.title : 'Notification'}
                     </a>
                   </li>
                 ))}
@@ -1236,7 +1274,7 @@ function StudentDashboard({ user }) {
                       <IconComponent size={16} />
                       {item.label}
                     </span>
-                    {item.badge !== null && item.badge > 0 && (
+                    {item.badge !== null && typeof item.badge !== 'object' && item.badge > 0 && (
                       <span className={`badge ${
                         activeView === item.id ? 'bg-white text-primary' : 'bg-primary text-white'
                       } rounded-pill`}>
