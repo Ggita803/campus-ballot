@@ -109,7 +109,7 @@ function StudentDashboard({ user }) {
   const fetchElections = async () => {
   setLoading(true);
   try {
-    const res = await axios.get("/api/elections", {
+    const res = await axios.get("/api/elections?withCandidates=true", {
       headers: { Authorization: `Bearer ${token}` },
     });
     //  my backend returns { elections: [...] }
