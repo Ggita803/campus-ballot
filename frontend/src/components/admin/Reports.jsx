@@ -289,7 +289,7 @@ function Reports() {
       icon: faCalendarMinus,
       iconClass: "text-secondary",
       label: "Last Election",
-      value: lastElection ? lastElection.name : "-",
+      // value: lastElection ? lastElection.name : "-",
       sub: lastElection ? new Date(lastElection.createdAt).toLocaleDateString() : "",
     },
     {
@@ -324,7 +324,7 @@ function Reports() {
               <div className="card-body">
                 <FontAwesomeIcon icon={card.icon} className={`${card.iconClass} mb-2`} size="lg" />
                 <h6 className="text-muted">{card.label}</h6>
-                <h3 className="fw-bold">{card.value}</h3>
+                <h6 className="fw-bold">{card.value}</h6>
                 {card.sub && <span className="text-muted small">{card.sub}</span>}
               </div>
             </div>
