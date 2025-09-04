@@ -82,7 +82,7 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
     async function fetchStats() {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/admin/dashboard-stats",
+          "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -138,7 +138,7 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/admin/dashboard-stats",
+        "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }

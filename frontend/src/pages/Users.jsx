@@ -33,7 +33,7 @@ const Users = ({ user }) => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://localhost:5000/api/users', {
+            const response = await axios.get('https://campus-ballot-backend.onrender.com/api/users', {
                 headers: getAuthHeaders()
             });
             console.log('Fetch users response:', response.data);
@@ -65,13 +65,13 @@ const Users = ({ user }) => {
             // First try the search endpoint if it exists
             let response;
             try {
-                response = await axios.get(`http://localhost:5000/api/users/search?q=${searchTerm}`, {
+                response = await axios.get(`https://campus-ballot-backend.onrender.com/api/users/search?q=${searchTerm}`, {
                     headers: getAuthHeaders()
                 });
             } catch (searchError) {
                 console.log('Search endpoint not available, using client-side search');
                 // If search endpoint doesn't exist, do client-side filtering
-                const allUsersResponse = await axios.get('http://localhost:5000/api/users', {
+                const allUsersResponse = await axios.get('https://campus-ballot-backend.onrender.com/api/users', {
                     headers: getAuthHeaders()
                 });
                 const allUsers = allUsersResponse.data.users || allUsersResponse.data || [];
@@ -96,7 +96,7 @@ const Users = ({ user }) => {
 
     const handleSuspendUser = async (userId) => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${userId}/suspend`, {}, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/suspend`, {}, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User suspended successfully', 'success');
@@ -109,7 +109,7 @@ const Users = ({ user }) => {
 
     const handleActivateUser = async (userId) => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${userId}/activate`, {}, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/activate`, {}, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User activated successfully', 'success');
@@ -133,7 +133,7 @@ const Users = ({ user }) => {
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://localhost:5000/api/users/${userId}`, {
+                await axios.delete(`https://campus-ballot-backend.onrender.com/api/users/${userId}`, {
                     headers: getAuthHeaders()
                 });
                 Swal.fire('Deleted!', 'User has been deleted.', 'success');
@@ -147,7 +147,7 @@ const Users = ({ user }) => {
 
     const handleChangeRole = async (userId, newRole) => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${userId}/role`, 
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${userId}/role`, 
                 { role: newRole }, 
                 { headers: getAuthHeaders() }
             );
@@ -163,7 +163,7 @@ const Users = ({ user }) => {
         try {
             // Try the export endpoint first
             try {
-                const response = await axios.get('http://localhost:5000/api/users/export', {
+                const response = await axios.get('https://campus-ballot-backend.onrender.com/api/users/export', {
                     headers: getAuthHeaders(),
                     responseType: 'blob'
                 });
@@ -225,7 +225,7 @@ const Users = ({ user }) => {
 
     const viewUserDetails = async (userId) => {
         try {
-            const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+            const userResponse = await axios.get(`https://campus-ballot-backend.onrender.com/api/users/${userId}`, {
                 headers: getAuthHeaders()
             });
             setSelectedUser(userResponse.data.user || userResponse.data);
@@ -243,7 +243,7 @@ const Users = ({ user }) => {
 
     const handleUpdateUser = async () => {
         try {
-            await axios.put(`http://localhost:5000/api/users/${editUser.id}`, editUser, {
+            await axios.put(`https://campus-ballot-backend.onrender.com/api/users/${editUser.id}`, editUser, {
                 headers: getAuthHeaders()
             });
             Swal.fire('Success', 'User updated successfully', 'success');

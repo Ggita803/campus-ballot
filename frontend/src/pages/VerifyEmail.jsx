@@ -11,7 +11,7 @@ function VerifyEmail() {
   const handleVerify = async () => {
     setVerifying(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/auth/verify/${token}`);
+      const res = await axios.get(`https://campus-ballot-backend.onrender.com/api/auth/verify/${token}`);
       Swal.fire("Success", res.data.message, "success");
       setTimeout(() => {
         navigate("/login");
