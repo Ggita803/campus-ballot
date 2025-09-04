@@ -54,11 +54,11 @@ app.use(cors({
 // }));
 
 // Static files
-// app.use(express.static("public"));
+app.use(express.static("public"));
 
 // Serve static files from React build
-const path = require("path");
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// const path = require("path");
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // --- ROUTES ---
 // Test Route
@@ -83,10 +83,10 @@ app.use('/api/reports', reportRoutes);
 //   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 // });
 
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+// });
 
 
 // --- START SERVER & CONNECT TO DB ---
