@@ -7,7 +7,6 @@ import VerifyEmail from "./pages/VerifyEmail";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/studentDashboard";
 import { useState, useEffect } from "react";
-import LandingPage from "./Pages/LandingPage";
 import VotingPage from "./pages/VotingPage";
 
 // ProtectedRoute component to guard dashboard routes
