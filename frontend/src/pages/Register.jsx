@@ -156,8 +156,8 @@ function Register() {
             University Voting System!
           </p>
           <button
-            className="btn btn-light fw-bold px-4 "
-            style={{ color: "#2563eb" }}
+            className="btn btn-light fw-bold px-4 mb-3"
+            style={{ color: "#2563eb", marginBottom: 24 }}
           >
             Go Back
           </button>
