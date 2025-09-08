@@ -291,6 +291,19 @@ function StudentDashboard({ user }) {
                 <p className="text-muted mb-0 small text-truncate">Elections</p>
               </div>
             </div>
+            {/* Mobile Sidebar Logout Button */}
+            <div className="mt-4 pt-2 border-top d-lg-none">
+              <button
+                className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("currentUser");
+                  window.location.href = "/login";
+                }}
+              >
+                <FaSignOutAlt /> Logout
+              </button>
+            </div>
           </div>
         </div>
         <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">

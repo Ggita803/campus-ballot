@@ -2,7 +2,7 @@
 /* Responsive styles for Register.jsx */
 .register-container {
 	flex-direction: row;
-	margin: 40px auto;
+	margin: 0 auto;
 	padding: 32px 32px;
 	box-sizing: border-box;
 }
@@ -19,15 +19,15 @@
 		flex-direction: column;
 		box-shadow: none !important;
 		border-radius: 0 !important;
-		margin: 16px 2vw;
-		padding: 16px 2vw;
+		margin: 0 !important;
+		padding: 0 !important;
 	}
 	.register-left {
 		min-width: 0 !important;
 		max-width: 100vw !important;
 		width: 100vw !important;
 		border-radius: 0 !important;
-		padding: 32px 10vw !important;
+		padding: 0 !important;
 	}
 	.register-right {
 		padding: 24px 5vw !important;
@@ -36,15 +36,15 @@
 
 @media (max-width: 480px) {
 	.register-left {
-		padding: 24px 4vw !important;
+		padding: 0 !important;
 	}
 	.register-right {
 		padding: 16px 4vw !important;
 	}
 	.register-container {
 		max-width: 100vw;
-		margin: 8px 0;
-		padding: 8px 0;
+		margin: 0 !important;
+		padding: 0 !important;
 	}
 	.form-control, .input-group-text {
 		font-size: 1em;
