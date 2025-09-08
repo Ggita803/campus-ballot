@@ -1399,6 +1399,7 @@ function StudentDashboard({ user }) {
               <button
                 className="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
                 onClick={async () => {
+                  setSidebarOpen(false);
                   localStorage.removeItem("token");
                   localStorage.removeItem("currentUser");
                   await Swal.fire({
