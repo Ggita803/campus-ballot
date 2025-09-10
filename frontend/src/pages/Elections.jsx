@@ -316,7 +316,7 @@ function Elections({ user }) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
         <div className="text-center">
-          <FontAwesomeIcon icon={faSpinner} spin size="2x" className="text-primary mb-3" />
+          <FontAwesomeIcon icon={faSpinner} spin size="3x" className="text-primary mb-3" />
           <p>Loading elections...</p>
         </div>
       </div>
