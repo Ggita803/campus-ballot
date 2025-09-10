@@ -24,7 +24,7 @@ const seedAdmin = async () => {
   try {
     await connectDB();
 
-    const adminEmail = "admin@campusvote.com";
+    const adminEmail = "2400808976@std.kyu.ac.ug";
 
     const adminExists = await User.findOne({ email: adminEmail });
 
@@ -35,7 +35,7 @@ const seedAdmin = async () => {
 
       // we shall add  all required fields for your User model
       const admin = await User.create({
-        name: "Musisi Kizito",
+        name: "Nakuya Patrica",
         email: adminEmail,
         password: hashedPassword,
         role: "admin",
