@@ -1,19 +1,35 @@
+// const mongoose = require("mongoose");
+// const colors = require("colors");
+
+// // Function to connect to MongoDB
+// const connectDB = async () => {
+//   try {
+//     await mongoose.connect(process.env.MONGODB_URI, {
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//     });
+//     console.log("MongoDB connected successfully".green);
+//   } catch (error) {
+//     console.error("MongoDB connection failed".red, error);
+//     process.exit(1); // Exit process with failure
+//   }
+// };
+
+// // Export the connectDB function
+// module.exports = connectDB;
+
 const mongoose = require("mongoose");
 const colors = require("colors");
 
 // Function to connect to MongoDB
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected successfully".green);
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`.green);
   } catch (error) {
-    console.error("MongoDB connection failed".red, error);
+    console.error(`❌ MongoDB connection failed: ${error.message}`.red);
     process.exit(1); // Exit process with failure
   }
 };
 
-// Export the connectDB function
 module.exports = connectDB;
