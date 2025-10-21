@@ -18,6 +18,15 @@ const createElection = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Election with this title already exists" });
     }
 
+    // Determine status based on dates
+    const now = new Date();
+    let computedStatus = 'upcoming';
+    const sDate = new Date(startDate);
+    const eDate = new Date(endDate);
+    if (now < sDate) computedStatus = 'upcoming';
+    else if (now >= sDate && now <= eDate) computedStatus = 'ongoing';
+    else if (now > eDate) computedStatus = 'completed';
+
     const election = await Election.create({
       title,
       description,
@@ -25,6 +34,7 @@ const createElection = asyncHandler(async (req, res) => {
       endDate,
       positions,
       eligibility,
+      status: computedStatus,
       createdBy: req.user._id,
     });
 
@@ -104,7 +114,18 @@ const getElectionById = asyncHandler(async (req, res) => {
     if (!election) {
       return res.status(404).json({ message: "Election not found" });
     }
-    res.json(election);
+      // Compute status from dates to ensure freshness
+      try {
+        const now = new Date();
+        if (election.startDate && election.endDate) {
+          if (now < election.startDate) election.status = 'upcoming';
+          else if (now >= election.startDate && now <= election.endDate) election.status = 'ongoing';
+          else if (now > election.endDate) election.status = 'completed';
+        }
+      } catch (e) {
+        // ignore
+      }
+      res.json(election);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -127,6 +148,18 @@ const updateElection = asyncHandler(async (req, res) => {
       }
     });
     election.updatedBy = req.user._id;
+
+    // Recompute status if dates changed or status not explicitly provided
+    const now = new Date();
+    if (!req.body.status) {
+      const sDate = election.startDate ? new Date(election.startDate) : null;
+      const eDate = election.endDate ? new Date(election.endDate) : null;
+      if (sDate && eDate) {
+        if (now < sDate) election.status = 'upcoming';
+        else if (now >= sDate && now <= eDate) election.status = 'ongoing';
+        else if (now > eDate) election.status = 'completed';
+      }
+    }
 
     const updated = await election.save();
     try {
