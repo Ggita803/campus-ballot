@@ -31,17 +31,26 @@ router.get('/dashboard-stats', async (req, res) => {
       status: 'pending' 
     });
     
-    // Get elections for chart data
+    // Get elections for chart data (include id and title)
     const elections = await Election.find().select('title');
-    const electionNames = elections.map(e => e.title);
-    
-    // Get votes per election for chart
-    const votesPerElection = await Promise.all(
-      elections.map(async (election) => {
-        const count = await Vote.countDocuments({ electionId: election._id });
-        return count;
-      })
-    );
+
+    // Get votes per election for chart as structured objects { election, title, count }
+    const votesPerElectionAgg = await Vote.aggregate([
+      { $group: { _id: '$election', count: { $sum: 1 } } },
+      { $lookup: { from: 'elections', localField: '_id', foreignField: '_id', as: 'election' } },
+      { $unwind: { path: '$election', preserveNullAndEmptyArrays: true } },
+      { $project: { election: '$_id', title: '$election.title', count: 1 } }
+    ]);
+
+    // Ensure every election appears in the result, even if zero votes
+    const votesPerElection = elections.map(e => {
+      const found = votesPerElectionAgg.find(v => String(v.election) === String(e._id));
+      return {
+        election: e._id,
+        title: e.title,
+        count: found ? found.count : 0
+      };
+    });
     
     // Get user role distribution
     const roleStats = await User.aggregate([
@@ -60,7 +69,8 @@ router.get('/dashboard-stats', async (req, res) => {
       pendingApprovals,
       totalNotifications,
       totalLogs,
-      electionNames,
+      elections: elections.map(e => ({ id: e._id, title: e.title })),
+      electionNames: elections.map(e => e.title),
       votesPerElection,
       roles,
       roleCounts,

@@ -4,7 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
+axios.defaults.baseURL = "http://localhost:5000";
 import {
   FaSignOutAlt,
   FaUserCircle,

@@ -26,6 +26,8 @@ import {
   ArcElement,
 } from 'chart.js';
 
+import useSocket from '../../hooks/useSocket';
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
@@ -42,6 +44,7 @@ ChartJS.register(
 );
 
 function DashboardCharts() {
+  const { socketRef } = useSocket();
   const [stats, setStats] = useState({
     electionNames: [],
     votesPerElection: [],
@@ -242,6 +245,38 @@ function DashboardCharts() {
 
     fetchData();
   }, []);
+
+  // Socket listeners for realtime updates
+  useEffect(() => {
+    const socket = socketRef?.current;
+    if (!socket) return;
+
+    const onDashboardUpdate = (payload) => {
+      try {
+        if (payload && payload.votesPerElection) {
+          // transform structured payload { election, title, count }
+          const electionNames = payload.votesPerElection.map(v => v.title || String(v.election) || 'Unknown');
+          const votesPerElection = payload.votesPerElection.map(v => v.count || 0);
+          setStats(prev => ({ ...prev, electionNames, votesPerElection }));
+        }
+
+        if (payload && payload.candidateVotes) {
+          setCandidateStats({
+            candidateNames: payload.candidateVotes.map(c => c.name || 'Candidate'),
+            candidateVotes: payload.candidateVotes.map(c => c.votes || 0)
+          });
+        }
+      } catch (e) {
+        console.error('Error applying dashboard update', e);
+      }
+    };
+
+    socket.on('dashboard:update', onDashboardUpdate);
+
+    return () => {
+      socket.off('dashboard:update', onDashboardUpdate);
+    };
+  }, [socketRef]);
 
   const hasVotes = Array.isArray(stats?.electionNames) && stats.electionNames.length > 0;
   const hasRoles = Array.isArray(stats?.roles) && stats.roles.length > 0;

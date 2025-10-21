@@ -25,6 +25,7 @@ const userRoutes = require("./routes/userRoutes");
 const voteRoutes = require("./routes/voteRoutes");
 const logRoutes = require("./routes/logRoutes");
 const adminRoutes = require('./routes/adminRoutes');
+const devRoutes = require('./routes/devRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 
 
@@ -75,6 +76,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/votes", voteRoutes);
 app.use("/api/logs", logRoutes);
 app.use('/api/admin', adminRoutes);
+// Dev-only routes
+app.use('/api/dev', devRoutes);
 app.use('/api/reports', reportRoutes);
 
 
@@ -89,8 +92,68 @@ app.use('/api/reports', reportRoutes);
 // });
 
 
-// --- START SERVER & CONNECT TO DB ---
-app.listen(PORT, async () => {
+// --- SOCKET.IO + START SERVER & CONNECT TO DB ---
+const http = require('http');
+const { Server: IOServer } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const User = require('./models/User');
+
+const server = http.createServer(app);
+const io = new IOServer(server, {
+  cors: {
+    origin: CORS_ORIGIN,
+    credentials: true,
+  }
+});
+
+// Authenticate sockets when possible. If a token is provided, verify and attach user to socket.
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake?.auth?.token || (socket.handshake?.headers?.authorization ? socket.handshake.headers.authorization.split(' ')[1] : null);
+    if (!token) return next(); // allow unauthenticated sockets for public events
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return next(new Error('Authentication error'));
+
+    socket.user = user;
+    return next();
+  } catch (err) {
+    console.log('Socket auth error:', err.message);
+    return next(new Error('Authentication error'));
+  }
+});
+
+// Simple socket handlers (rooms used by frontend if needed)
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id, 'user:', socket.user ? socket.user.email : 'anonymous');
+
+  socket.on('join', (room) => {
+    if (!room) return;
+
+    // enforce role-based access for certain namespaces
+    if ((room.startsWith('election_') || room.startsWith('admin_')) && (!socket.user || socket.user.role !== 'admin')) {
+      socket.emit('error', 'Not authorized to join this room');
+      return;
+    }
+
+    socket.join(room);
+  });
+
+  socket.on('leave', (room) => {
+    if (room) socket.leave(room);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log('Socket disconnected:', socket.id, reason);
+  });
+});
+
+// Make io available to controllers via app
+app.set('io', io);
+
+// Start server and DB
+server.listen(PORT, async () => {
   console.log(`\n🚀 Server is running on port ${PORT}`.blue);
   console.log(`🔓 CORS enabled for: ${CORS_ORIGIN}`.cyan);
 

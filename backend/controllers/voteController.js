@@ -56,6 +56,47 @@ const castVote = asyncHandler(async (req, res) => {
       await candidate.save();
     }
 
+    // Emit realtime update to connected clients
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        // Emit to room for this election
+        io.to(`election_${electionId}`).emit('vote:update', {
+          electionId,
+          candidateId: candidateId || null,
+          position,
+          abstain: !!abstain,
+        });
+
+        // Compute aggregate counts for dashboard (votes per election and candidate votes)
+        // Build structured votes per election including titles
+        const votesPerElectionAgg = await Vote.aggregate([
+          { $group: { _id: '$election', count: { $sum: 1 } } },
+          { $lookup: { from: 'elections', localField: '_id', foreignField: '_id', as: 'election' } },
+          { $unwind: { path: '$election', preserveNullAndEmptyArrays: true } },
+          { $project: { election: '$_id', title: '$election.title', count: 1 } }
+        ]);
+
+        // Ensure all elections are present with zero counts if missing
+        const allElections = await Election.find().select('title').lean();
+        const votesPerElection = allElections.map(e => {
+          const found = votesPerElectionAgg.find(v => String(v.election) === String(e._id));
+          return { election: e._id, title: e.title, count: found ? found.count : 0 };
+        });
+
+        const candidateVotesAgg = await Candidate.find({ election: electionId })
+          .select('name votes')
+          .lean();
+
+        io.emit('dashboard:update', {
+          votesPerElection,
+          candidateVotes: candidateVotesAgg
+        });
+      }
+    } catch (emitError) {
+      console.error('Error emitting socket update:', emitError.message);
+    }
+
     console.log({ message: "Vote cast successfully" });
     res.status(201).json({ message: "Vote cast successfully", vote });
   } catch (error) {

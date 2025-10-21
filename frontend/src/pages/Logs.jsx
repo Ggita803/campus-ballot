@@ -30,7 +30,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 // Set axios base URL
-axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
+axios.defaults.baseURL = "http://localhost:5000";
 
 function Logs({ user }) {
   const [logs, setLogs] = useState([]);

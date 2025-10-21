@@ -189,10 +189,10 @@ function Candidates({ user }) {
     setLoading(true);
     try {
       const url = query
-        ? `https://campus-ballot-backend.onrender.com/api/candidates/search?q=${encodeURIComponent(
+        ? `http://localhost:5000/api/candidates/search?q=${encodeURIComponent(
             query
           )}`
-        : "https://campus-ballot-backend.onrender.com/api/candidates";
+        : "http://localhost:5000/api/candidates";
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -211,10 +211,10 @@ function Candidates({ user }) {
   const fetchElectionsAndUsers = async () => {
     try {
       const [electionRes, userRes] = await Promise.all([
-        axios.get("https://campus-ballot-backend.onrender.com/api/elections", {
+        axios.get("http://localhost:5000/api/elections", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://campus-ballot-backend.onrender.com/api/users", {
+        axios.get("http://localhost:5000/api/users", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -233,7 +233,7 @@ function Candidates({ user }) {
   const handleApprove = async (id) => {
     try {
       await axios.put(
-        `https://campus-ballot-backend.onrender.com/api/candidates/${id}/approve`,
+        `http://localhost:5000/api/candidates/${id}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -251,7 +251,7 @@ function Candidates({ user }) {
   const handleDisqualify = async (id) => {
     try {
       await axios.put(
-        `https://campus-ballot-backend.onrender.com/api/candidates/${id}/disqualify`,
+        `http://localhost:5000/api/candidates/${id}/disqualify`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -277,7 +277,7 @@ function Candidates({ user }) {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`https://campus-ballot-backend.onrender.com/api/candidates/${id}`, {
+          await axios.delete(`http://localhost:5000/api/candidates/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           Swal.fire("Deleted", "Candidate deleted", "success");
@@ -337,7 +337,7 @@ function Candidates({ user }) {
       Object.entries(form).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
-      await axios.post("https://campus-ballot-backend.onrender.com/api/candidates", data, {
+      await axios.post("http://localhost:5000/api/candidates", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

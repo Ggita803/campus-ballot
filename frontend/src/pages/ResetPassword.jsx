@@ -21,7 +21,7 @@ function ResetPassword() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://campus-ballot-backend.onrender.com/api/auth/reset-password/${token}`,
+        `http://localhost:5000/api/auth/reset-password/${token}`,
         { password }
         );
       Swal.fire({

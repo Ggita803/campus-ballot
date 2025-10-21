@@ -7,6 +7,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/studentDashboard";
 import { useState, useEffect } from "react";
+import useSocket from './hooks/useSocket';
 import VotingPage from "./pages/VotingPage";
 import LandingPage from "./pages/LandingPage";
 
@@ -50,10 +51,17 @@ function App() {
   }, [currentUser]);
 
   // Function to handle logout
+  const { reconnectWithToken } = useSocket();
+
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
     localStorage.removeItem("token");
+    try {
+      reconnectWithToken(null);
+    } catch (e) {
+      // ignore if socket not initialized
+    }
   };
 
   return (

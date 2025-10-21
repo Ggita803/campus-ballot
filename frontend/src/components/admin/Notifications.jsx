@@ -13,7 +13,7 @@ import {
   faTimes
 } from "@fortawesome/free-solid-svg-icons";
 
-axios.defaults.baseURL = "https://campus-ballot-backend.onrender.com";
+axios.defaults.baseURL = "http://localhost:5000";
 
 function Notifications({ user }) {
   const [notifications, setNotifications] = useState([]);

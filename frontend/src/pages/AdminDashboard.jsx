@@ -14,6 +14,8 @@ import {
 import Sidebar from "../components/admin/Slidebar";
 import OverviewCards from "../components/admin/OverviewCards";
 import DashboardCharts from "../components/admin/DashboardCharts";
+import useRealtimeDashboard from '../hooks/useRealtimeDashboard';
+import useSocket from '../hooks/useSocket';
 import CreateElection from "../components/admin/CreateElection";
 import Candidates from "../pages/Candidates"; // Importing your Candidates page
 import Users from "../pages/Users"; // Importing the Users page
@@ -78,11 +80,11 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
   ]);
 
   useEffect(() => {
-    let interval;
+    // initial fetch remains as fallback; realtime updates handled by socket
     async function fetchStats() {
       try {
         const res = await axios.get(
-          "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
+          "http://localhost:5000/api/admin/dashboard-stats",
           {
             headers: { Authorization: `Bearer ${user?.token}` },
           }
@@ -94,10 +96,10 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
         setLoading(false);
       }
     }
+
     if (user?.role === "admin") {
       fetchStats();
-      interval = setInterval(fetchStats, 30000); // fetch every 30 seconds
-      // Show SweetAlert welcome popup only once after login
+
       if (!localStorage.getItem("adminWelcomeShown")) {
         Swal.fire({
           title: 'Welcome, Admin!',
@@ -115,8 +117,57 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
     } else {
       navigate("/login");
     }
-    return () => clearInterval(interval);
+    return () => {};
   }, [user, navigate]);
+
+  // Realtime integration: use central hook
+  const [rtStateRaw] = useRealtimeDashboard();
+  const { joinRoom, leaveRoom } = useSocket();
+
+  // Apply realtime updates to stats object when events arrive
+  useEffect(() => {
+    if (!rtStateRaw || Object.keys(rtStateRaw).length === 0) return;
+
+    // Example: if dashboard payload arrives, merge into stats
+    if (rtStateRaw.dashboard) {
+      setStats(prev => ({ ...prev, ...rtStateRaw.dashboard }));
+    }
+
+    // If candidate updates arrive, re-fetch candidates or apply lightweight update
+    if (rtStateRaw.candidateUpdated || rtStateRaw.candidateCreated || rtStateRaw.candidateDeleted) {
+      // lightweight: refresh the stats object from API
+      refreshStats();
+    }
+
+    if (rtStateRaw.electionUpdated || rtStateRaw.electionCreated) {
+      refreshStats();
+    }
+
+    if (rtStateRaw.userUpdated || rtStateRaw.userDeleted) {
+      refreshStats();
+    }
+  }, [rtStateRaw]);
+
+  // Auto-join election rooms after fetching stats
+  useEffect(() => {
+    if (!stats || !Array.isArray(stats.elections)) return;
+    try {
+      stats.elections.forEach(e => {
+        if (e && e.id) joinRoom(`election_${e.id}`);
+      });
+    } catch (err) {
+      console.error('Error joining election rooms:', err);
+    }
+    return () => {
+      try {
+        stats.elections.forEach(e => {
+          if (e && e.id) leaveRoom(`election_${e.id}`);
+        });
+      } catch (err) {
+        // ignore
+      }
+    };
+  }, [stats, joinRoom, leaveRoom]);
 
   // Handle logout confirmation
   const handleLogout = () => {
@@ -138,7 +189,7 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
   const refreshStats = async () => {
     try {
       const res = await axios.get(
-        "https://campus-ballot-backend.onrender.com/api/admin/dashboard-stats",
+        "http://localhost:5000/api/admin/dashboard-stats",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }

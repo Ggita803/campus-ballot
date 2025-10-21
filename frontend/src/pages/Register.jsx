@@ -82,7 +82,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://campus-ballot-backend.onrender.com/api/auth/register",
+      "http://localhost:5000/api/auth/register",
       form
     );
     Swal.fire({

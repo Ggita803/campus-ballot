@@ -46,6 +46,12 @@ const updateUserById = asyncHandler(async (req, res) => {
     Object.assign(user, req.body);
     await user.save();
     console.log({ message: "User updated by admin" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:updated', { user });
+    } catch (e) {
+      console.error('Socket emit error (user updated):', e.message);
+    }
     res.json({ message: "User updated", user });
   } catch (error) {
     console.log({ message: "Error updating user", error: error.message });
@@ -65,6 +71,12 @@ const deleteUserById = asyncHandler(async (req, res) => {
     }
     await user.deleteOne();
     console.log({ message: "User deleted by admin" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:deleted', { id: user._id });
+    } catch (e) {
+      console.error('Socket emit error (user deleted):', e.message);
+    }
     res.json({ message: "User deleted" });
   } catch (error) {
     console.log({ message: "Error deleting user", error: error.message });
@@ -85,6 +97,12 @@ const suspendUser = asyncHandler(async (req, res) => {
     user.accountStatus = "suspended";
     await user.save();
     console.log({ message: "User suspended" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:suspended', { id: user._id });
+    } catch (e) {
+      console.error('Socket emit error (user suspended):', e.message);
+    }
     res.json({ message: "User suspended" });
   } catch (error) {
     console.log({ message: "Error suspending user", error: error.message });
@@ -105,6 +123,12 @@ const activateUser = asyncHandler(async (req, res) => {
     user.accountStatus = "active";
     await user.save();
     console.log({ message: "User activated" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:activated', { id: user._id });
+    } catch (e) {
+      console.error('Socket emit error (user activated):', e.message);
+    }
     res.json({ message: "User activated" });
   } catch (error) {
     console.log({ message: "Error activating user", error: error.message });
@@ -143,6 +167,12 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
     Object.assign(user, req.body);
     await user.save();
     console.log({ message: "Updated own profile" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:profile:updated', { user });
+    } catch (e) {
+      console.error('Socket emit error (profile updated):', e.message);
+    }
     res.json({ message: "Profile updated", user });
   } catch (error) {
     console.log({ message: "Error updating own profile", error: error.message });
@@ -181,6 +211,12 @@ const changeUserRole = asyncHandler(async (req, res) => {
     user.role = req.body.role;
     await user.save();
     console.log({ message: "User role changed" });
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:role:changed', { user });
+    } catch (e) {
+      console.error('Socket emit error (user role changed):', e.message);
+    }
     res.json({ message: "User role updated", user });
   } catch (error) {
     console.log({ message: "Error changing user role", error: error.message });

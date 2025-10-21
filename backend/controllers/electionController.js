@@ -28,6 +28,13 @@ const createElection = asyncHandler(async (req, res) => {
       createdBy: req.user._id,
     });
 
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('election:created', { election });
+    } catch (e) {
+      console.error('Socket emit error (election created):', e.message);
+    }
+
     res.status(201).json({ message: "Election created successfully", election });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -122,6 +129,12 @@ const updateElection = asyncHandler(async (req, res) => {
     election.updatedBy = req.user._id;
 
     const updated = await election.save();
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('election:updated', { election: updated });
+    } catch (e) {
+      console.error('Socket emit error (election updated):', e.message);
+    }
     res.json({ message: "Election updated", election: updated });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -138,6 +151,12 @@ const deleteElection = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Election not found" });
     }
     await election.deleteOne();
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('election:deleted', { id: election._id });
+    } catch (e) {
+      console.error('Socket emit error (election deleted):', e.message);
+    }
     res.json({ message: "Election deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -155,6 +174,12 @@ const publishResults = asyncHandler(async (req, res) => {
     }
     election.resultsPublished = true;
     await election.save();
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('election:results:published', { id: election._id });
+    } catch (e) {
+      console.error('Socket emit error (results published):', e.message);
+    }
     res.json({ message: "Results published" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -317,6 +342,12 @@ const closeElection = asyncHandler(async (req, res) => {
     }
     election.status = "completed";
     await election.save();
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('election:closed', { id: election._id });
+    } catch (e) {
+      console.error('Socket emit error (election closed):', e.message);
+    }
     res.json({ message: "Election closed" });
   } catch (error) {
     res.status(500).json({ message: error.message });

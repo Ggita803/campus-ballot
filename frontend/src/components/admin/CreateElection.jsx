@@ -25,7 +25,7 @@ function CreateElection({ onCreated }) {
     setLoading(true);
     try {
       await axios.post(
-        "https://campus-ballot-backend.onrender.com/api/elections",
+        "http://localhost:5000/api/elections",
         {
           title,
           description,

@@ -5,8 +5,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignInAlt, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
+import useSocket from '../hooks/useSocket';
 
 function Login({ setCurrentUser }) {
+  const { reconnectWithToken } = useSocket();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
@@ -21,7 +23,7 @@ function Login({ setCurrentUser }) {
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://campus-ballot-backend.onrender.com/api/auth/login",
+        "http://localhost:5000/api/auth/login",
         form
       );
       // Save user and token to localStorage
@@ -30,6 +32,13 @@ function Login({ setCurrentUser }) {
 
       // Update App state if setCurrentUser is provided
       if (setCurrentUser) setCurrentUser(res.data.user);
+
+      // Reconnect socket with new token
+      try {
+        reconnectWithToken(res.data.token);
+      } catch (e) {
+        console.warn('Socket reconnect failed:', e.message);
+      }
 
       // Show success and redirect based on role
       Swal.fire({

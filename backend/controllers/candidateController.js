@@ -61,6 +61,17 @@ const createCandidate = asyncHandler(async (req, res) => {
       { $addToSet: { candidates: candidate._id } }
     );
 
+    // Emit realtime update
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('candidate:created', { candidate });
+        io.to(`election_${candidate.election}`).emit('candidate:created', { candidate });
+      }
+    } catch (e) {
+      console.error('Socket emit error (candidate created):', e.message);
+    }
+
     res.status(201).json({
       message: "Candidate created successfully",
       candidate,
@@ -150,6 +161,15 @@ const updateCandidate = asyncHandler(async (req, res) => {
     });
 
     const updated = await candidate.save();
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('candidate:updated', { candidate: updated });
+        io.to(`election_${updated.election}`).emit('candidate:updated', { candidate: updated });
+      }
+    } catch (e) {
+      console.error('Socket emit error (candidate updated):', e.message);
+    }
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -174,6 +194,15 @@ const deleteCandidate = asyncHandler(async (req, res) => {
     );
 
     await candidate.deleteOne();
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('candidate:deleted', { id: candidate._id });
+        io.to(`election_${candidate.election}`).emit('candidate:deleted', { id: candidate._id });
+      }
+    } catch (e) {
+      console.error('Socket emit error (candidate deleted):', e.message);
+    }
     res.json({ message: "Candidate deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -208,7 +237,15 @@ const approveCandidate = asyncHandler(async (req, res) => {
 
     candidate.status = "approved";
     await candidate.save();
-
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('candidate:approved', { id: candidate._id, candidate });
+        io.to(`election_${candidate.election}`).emit('candidate:approved', { id: candidate._id, candidate });
+      }
+    } catch (e) {
+      console.error('Socket emit error (candidate approved):', e.message);
+    }
     res.json({ message: "Candidate approved" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -228,7 +265,15 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
 
     candidate.status = "disqualified";
     await candidate.save();
-
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('candidate:disqualified', { id: candidate._id, candidate });
+        io.to(`election_${candidate.election}`).emit('candidate:disqualified', { id: candidate._id, candidate });
+      }
+    } catch (e) {
+      console.error('Socket emit error (candidate disqualified):', e.message);
+    }
     res.json({ message: "Candidate disqualified" });
   } catch (error) {
     res.status(500).json({ message: error.message });
