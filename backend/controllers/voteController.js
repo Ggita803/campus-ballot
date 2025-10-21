@@ -52,8 +52,8 @@ const castVote = asyncHandler(async (req, res) => {
 
     // Optionally increment candidate's vote count
     if (candidate) {
-      candidate.votes = (candidate.votes || 0) + 1;
-      await candidate.save();
+      // Use atomic $inc to avoid race conditions in high concurrency
+      await Candidate.updateOne({ _id: candidate._id }, { $inc: { votes: 1 } });
     }
 
     // Emit realtime update to connected clients
