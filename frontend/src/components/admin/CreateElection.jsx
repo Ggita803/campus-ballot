@@ -239,17 +239,7 @@ function CreateElection({ onCreated }) {
           </div>
         </form>
 
-        {/* Preview card */}
-        <div className="mt-3">
-          <h6 className="mb-2">Preview</h6>
-          <div className="card p-3">
-            <div className="fw-bold">{title || 'Untitled Election'}</div>
-            <div className="small text-muted">{description}</div>
-            <div className="mt-2 small"><strong>When:</strong> {startDate || 'N/A'} → {endDate || 'N/A'} ({timezone})</div>
-            <div className="mt-2 small"><strong>Positions:</strong> {positions.map(p => p.name || '(unnamed)').join(', ')}</div>
-            <div className="mt-2 small"><strong>Eligibility:</strong> {eligibilityType}{eligibilityType === 'faculty' ? ` (${faculties})` : ''}{eligibilityType === 'cohort' ? ` (${cohorts})` : ''}</div>
-          </div>
-        </div>
+        {/* Preview removed per request */}
       </div>
     </div>
   );
