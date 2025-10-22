@@ -43,7 +43,11 @@ app.use(cookieParser());
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
-  origin: CORS_ORIGIN,
+  origin: [
+    "http://localhost:5173",           // local dev
+    "https://campus-ballot.onrender.com",
+    CORS_ORIGIN   // deployed frontend
+  ],
   credentials: true
 }));
 // app.use(rateLimit({
@@ -101,8 +105,13 @@ const User = require('./models/User');
 const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
-    origin: CORS_ORIGIN,
-    credentials: true,
+    origin: [
+      "http://localhost:5173",
+      "https://campus-ballot.onrender.com",
+      CORS_ORIGIN
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
