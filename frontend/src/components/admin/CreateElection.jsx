@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import Select from 'react-select';
 
 function CreateElection({ onCreated }) {
   const [title, setTitle] = useState("");
@@ -11,8 +12,8 @@ function CreateElection({ onCreated }) {
     { name: "", seats: 1, method: "fptp" }
   ]);
   const [eligibilityType, setEligibilityType] = useState("all");
-  const [faculties, setFaculties] = useState("");
-  const [cohorts, setCohorts] = useState("");
+  const [faculties, setFaculties] = useState([]);
+  const [cohorts, setCohorts] = useState([]);
   const [whitelistFile, setWhitelistFile] = useState(null);
   const [autoPublish, setAutoPublish] = useState(false);
   const [saveDraft, setSaveDraft] = useState(false);
@@ -20,6 +21,38 @@ function CreateElection({ onCreated }) {
 
   const timezone = useMemo(() => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){ return 'UTC'; }
+  }, []);
+
+  const [availableFaculties, setAvailableFaculties] = useState([]);
+  const [availableCohorts, setAvailableCohorts] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchMeta = async () => {
+      try {
+        // Try a meta endpoint; fallback gracefully if not present
+        const resFac = await axios.get('/api/meta/faculties').catch(() => null);
+        const resCoh = await axios.get('/api/meta/cohorts').catch(() => null);
+        if (!mounted) return;
+        if (resFac && Array.isArray(resFac.data)) setAvailableFaculties(resFac.data);
+        if (resCoh && Array.isArray(resCoh.data)) setAvailableCohorts(resCoh.data);
+        // fallback: if none available, provide small sensible defaults
+        if ((!resFac || !Array.isArray(resFac.data) || resFac.data.length === 0) && availableFaculties.length === 0) {
+          setAvailableFaculties(['Engineering','Science','Business','Arts']);
+        }
+        if ((!resCoh || !Array.isArray(resCoh.data) || resCoh.data.length === 0) && availableCohorts.length === 0) {
+          setAvailableCohorts(['2025','2024','2023','2022']);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch faculties/cohorts meta, falling back to defaults', err);
+        if (mounted) {
+          if (availableFaculties.length === 0) setAvailableFaculties(['Engineering','Science','Business','Arts']);
+          if (availableCohorts.length === 0) setAvailableCohorts(['2025','2024','2023','2022']);
+        }
+      }
+    };
+    fetchMeta();
+    return () => { mounted = false };
   }, []);
 
   const addPosition = () => setPositions(prev => [...prev, { name: "", seats: 1, method: "fptp" }]);
@@ -196,16 +229,32 @@ function CreateElection({ onCreated }) {
               <option value="csv">Whitelist CSV upload</option>
             </select>
           </div>
-          {eligibilityType === 'faculty' && (
-            <div className="col-md-6">
-              <input className="form-control" placeholder="Faculties, comma separated" value={faculties} onChange={e => setFaculties(e.target.value)} />
-            </div>
-          )}
-          {eligibilityType === 'cohort' && (
-            <div className="col-md-6">
-              <input className="form-control" placeholder="Cohorts (e.g., 2024,2023)" value={cohorts} onChange={e => setCohorts(e.target.value)} />
-            </div>
-          )}
+            {eligibilityType === 'faculty' && (
+              <div className="col-md-6">
+                <label className="form-label small">Select Faculties</label>
+                <Select
+                  isMulti
+                  isSearchable
+                  options={availableFaculties.map(f => ({ value: f, label: f }))}
+                  value={faculties.map(f => ({ value: f, label: f }))}
+                  onChange={vals => setFaculties(vals ? vals.map(v => v.value) : [])}
+                  classNamePrefix="react-select"
+                />
+              </div>
+            )}
+            {eligibilityType === 'cohort' && (
+              <div className="col-md-6">
+                <label className="form-label small">Select Cohorts / Years</label>
+                <Select
+                  isMulti
+                  isSearchable
+                  options={availableCohorts.map(c => ({ value: c, label: c }))}
+                  value={cohorts.map(c => ({ value: c, label: c }))}
+                  onChange={vals => setCohorts(vals ? vals.map(v => v.value) : [])}
+                  classNamePrefix="react-select"
+                />
+              </div>
+            )}
           {eligibilityType === 'csv' && (
             <div className="col-12">
               <input type="file" accept=".csv,text/csv" className="form-control" onChange={e => setWhitelistFile(e.target.files?.[0] || null)} />
