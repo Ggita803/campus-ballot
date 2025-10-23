@@ -27,14 +27,14 @@ async function seedTestData() {
         description: 'Election for Student Council President',
         startDate: new Date('2024-01-15'),
         endDate: new Date('2024-01-30'),
-        status: 'active'
+  status: 'ongoing'
       },
       {
         title: 'Vice President Election',
         description: 'Election for Vice President position',
         startDate: new Date('2024-02-01'),
         endDate: new Date('2024-02-15'),
-        status: 'active'
+  status: 'ongoing'
       },
       {
         title: 'Secretary General Election',

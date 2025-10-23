@@ -21,7 +21,8 @@ router.get('/dashboard-stats', async (req, res) => {
     const now = new Date();
     const activeElections = await Election.countDocuments({
       $or: [
-        { status: 'active' },
+  // match ongoing elections (legacy 'active' may still exist in db)
+  { status: { $in: ['ongoing', 'active'] } },
         {
           $and: [
             { startDate: { $lte: now } },

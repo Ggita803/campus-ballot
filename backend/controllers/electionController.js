@@ -144,7 +144,16 @@ const updateElection = asyncHandler(async (req, res) => {
     const fields = ["title", "description", "startDate", "endDate", "positions", "eligibility", "status"];
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        election[field] = req.body[field];
+        // Defensive mapping: accept legacy 'active' sent by older frontends
+        if (field === 'status' && typeof req.body.status === 'string') {
+          let s = req.body.status;
+          if (s === 'active') s = 'ongoing';
+          // map 'ended' to 'completed' for backward compatibility until we rename everywhere
+          if (s === 'ended') s = 'completed';
+          election[field] = s;
+        } else {
+          election[field] = req.body[field];
+        }
       }
     });
     election.updatedBy = req.user._id;

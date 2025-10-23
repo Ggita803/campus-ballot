@@ -40,7 +40,7 @@ function Elections({ user }) {
   const [selectedElection, setSelectedElection] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
-    active: 0,
+    ongoing: 0,
     upcoming: 0,
     completed: 0
   });
@@ -50,10 +50,46 @@ function Elections({ user }) {
     title: "",
     description: "",
     startDate: "",
+    startAmPm: 'AM',
     endDate: "",
+    endAmPm: 'AM',
     status: "upcoming",
     positions: ["President", "Vice President", "Secretary"]
   });
+
+  // Helper: convert ISO date -> datetime-local (local timezone) string 'YYYY-MM-DDTHH:MM'
+  const toDateTimeLocal = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
+
+  const getAmPmFromIso = (iso) => {
+    if (!iso) return 'AM';
+    const hr = new Date(iso).getHours();
+    return hr >= 12 ? 'PM' : 'AM';
+  };
+
+  // Helper: convert datetime-local + AM/PM -> ISO string
+  const toIsoWithAmPm = (dtLocal, ampm) => {
+    if (!dtLocal) return null;
+    const [datePart, timePartRaw] = dtLocal.split('T');
+    if (!datePart || !timePartRaw) return null;
+    const [hourStr, minuteStr] = timePartRaw.split(':');
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10) || 0;
+    if (isNaN(hour)) hour = 0;
+    if (ampm === 'PM' && hour < 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+    const dateObj = new Date(`${datePart}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:00`);
+    return dateObj.toISOString();
+  };
 
   useEffect(() => {
     fetchElections();
@@ -108,7 +144,7 @@ function Elections({ user }) {
               if (now < startDate) {
                 actualStatus = 'upcoming';
               } else if (now >= startDate && now <= endDate) {
-                actualStatus = 'active';
+                actualStatus = 'ongoing';
               } else if (now > endDate) {
                 actualStatus = 'completed';
               }
@@ -151,7 +187,7 @@ function Elections({ user }) {
   const calculateStats = (electionsData) => {
     const stats = {
       total: electionsData.length,
-      active: electionsData.filter(e => e.status === 'active').length,
+      ongoing: electionsData.filter(e => e.status === 'ongoing').length,
       upcoming: electionsData.filter(e => e.status === 'upcoming').length,
       completed: electionsData.filter(e => e.status === 'completed').length
     };
@@ -181,7 +217,16 @@ function Elections({ user }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post("/api/elections", formData, {
+      // Prepare payload: convert datetime-local + AM/PM to ISO
+      const payload = {
+        ...formData,
+        startDate: toIsoWithAmPm(formData.startDate, formData.startAmPm),
+        endDate: toIsoWithAmPm(formData.endDate, formData.endAmPm),
+      };
+      // Do not send status from the client; let server compute based on dates
+      delete payload.status;
+
+      await axios.post("/api/elections", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -199,7 +244,16 @@ function Elections({ user }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/elections/${selectedElection._id}`, formData, {
+      // Prepare payload: convert datetime-local + AM/PM to ISO
+      const payload = {
+        ...formData,
+        startDate: toIsoWithAmPm(formData.startDate, formData.startAmPm),
+        endDate: toIsoWithAmPm(formData.endDate, formData.endAmPm),
+      };
+      // Do not send status from the client; let server compute based on dates
+      delete payload.status;
+
+      await axios.put(`/api/elections/${selectedElection._id}`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -243,8 +297,12 @@ function Elections({ user }) {
   const handleStatusChange = async (election, newStatus) => {
     try {
       const token = localStorage.getItem('token');
+      // Map legacy values defensively and only send minimal payload
+      let mapped = newStatus;
+      if (newStatus === 'active') mapped = 'ongoing';
+      if (newStatus === 'ended') mapped = 'completed';
       await axios.put(`/api/elections/${election._id}`, 
-        { ...election, status: newStatus }, 
+        { status: mapped }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -261,8 +319,11 @@ function Elections({ user }) {
     setFormData({
       title: election.title,
       description: election.description,
-      startDate: election.startDate ? new Date(election.startDate).toISOString().split('T')[0] : "",
-      endDate: election.endDate ? new Date(election.endDate).toISOString().split('T')[0] : "",
+      // Use datetime-local format
+      startDate: election.startDate ? toDateTimeLocal(election.startDate) : "",
+      startAmPm: election.startDate ? getAmPmFromIso(election.startDate) : 'AM',
+      endDate: election.endDate ? toDateTimeLocal(election.endDate) : "",
+      endAmPm: election.endDate ? getAmPmFromIso(election.endDate) : 'AM',
       status: election.status,
       positions: election.positions || ["President", "Vice President", "Secretary"]
     });
@@ -279,7 +340,9 @@ function Elections({ user }) {
       title: "",
       description: "",
       startDate: "",
+      startAmPm: 'AM',
       endDate: "",
+      endAmPm: 'AM',
       status: "upcoming",
       positions: ["President", "Vice President", "Secretary"]
     });
@@ -288,7 +351,7 @@ function Elections({ user }) {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { class: "bg-success", icon: faPlay, text: "Active" },
+      ongoing: { class: "bg-success", icon: faPlay, text: "Ongoing" },
       upcoming: { class: "bg-success", icon: faClock, text: "Upcoming" },
       completed: { class: "bg-secondary", icon: faCheckCircle, text: "Completed" },
       cancelled: { class: "bg-danger", icon: faTimesCircle, text: "Cancelled" }
@@ -372,8 +435,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">{stats.active}</h5>
-        <p className="text-muted mb-0 small fw-bold" id="font">Active Elections</p>
+          <h5 className="fw-bold mb-0 fs-6">{stats.ongoing}</h5>
+        <p className="text-muted mb-0 small fw-bold" id="font">Ongoing Elections</p>
       </div>
     </div>
   </div>
@@ -444,8 +507,8 @@ function Elections({ user }) {
         </div>
       </div>
       <div className="card-body text-center">
-        <h5 className="fw-bold mb-0 fs-6">
-          {elections.filter(e => e.status === "active").length}
+          <h5 className="fw-bold mb-0 fs-6">
+          {elections.filter(e => e.status === "ongoing").length}
         </h5>
         <p className="text-muted mb-0 small fw-bold" id="font">Ongoing Elections</p>
       </div>
@@ -496,9 +559,9 @@ function Elections({ user }) {
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
                     <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="completed">Completed</option>
+                    <option value="upcoming">upcoming</option>
+                    <option value="ongoing">ongoing</option>
+                    <option value="ended">Ended</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
@@ -605,7 +668,7 @@ function Elections({ user }) {
                                   <FontAwesomeIcon icon={faPlay} />
                                 </button>
                               )}
-                              {election.status === 'active' && (
+                              {election.status === 'ongoing' && (
                                 <button
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => handleStatusChange(election, 'completed')}
@@ -680,23 +743,35 @@ function Elections({ user }) {
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-bold">Start Date *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                        required
-                      />
+                      <div className="d-flex gap-2">
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                          required
+                        />
+                        <select className="form-select" style={{maxWidth: '110px'}} value={formData.startAmPm} onChange={e => setFormData({...formData, startAmPm: e.target.value})}>
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-bold">End Date *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                        required
-                      />
+                      <div className="d-flex gap-2">
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                          required
+                        />
+                        <select className="form-select" style={{maxWidth: '110px'}} value={formData.endAmPm} onChange={e => setFormData({...formData, endAmPm: e.target.value})}>
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="col-12 mb-3">
                       <label className="form-label fw-bold">Status</label>
@@ -778,23 +853,35 @@ function Elections({ user }) {
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-bold">Start Date *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                        required
-                      />
+                      <div className="d-flex gap-2">
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                          required
+                        />
+                        <select className="form-select" style={{maxWidth: '110px'}} value={formData.startAmPm} onChange={e => setFormData({...formData, startAmPm: e.target.value})}>
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-bold">End Date *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                        required
-                      />
+                      <div className="d-flex gap-2">
+                        <input
+                          type="datetime-local"
+                          className="form-control"
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                          required
+                        />
+                        <select className="form-select" style={{maxWidth: '110px'}} value={formData.endAmPm} onChange={e => setFormData({...formData, endAmPm: e.target.value})}>
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="col-12 mb-3">
                       <label className="form-label fw-bold">Status</label>
@@ -804,8 +891,8 @@ function Elections({ user }) {
                         onChange={(e) => setFormData({...formData, status: e.target.value})}
                       >
                         <option value="upcoming">Upcoming</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="ended">Ended</option>
                         <option value="cancelled">Cancelled</option>
                       </select>
                     </div>
