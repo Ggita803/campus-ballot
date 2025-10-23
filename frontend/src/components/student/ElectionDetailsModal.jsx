@@ -79,7 +79,7 @@ const ElectionDetailsModal = ({ show, onClose, election, myVotes, refreshData })
                       <div className="card-body small" style={{padding: '1rem', borderRadius: '5px'}}>
                         <div className="d-flex align-items-center mb-3 fs-6">
                           <img
-                            src={(function(){ const s = getImageUrl(candidate.photo) || ("https://ui-avatars.com/api/?name=" + encodeURIComponent(candidate.name)); console.debug('[ElectionDetailsModal] candidate', candidate._id, 'imgSrc:', s); return s; })()}
+                            src={(function(){ const s = getImageUrl(candidate.photo) || ("https://ui-avatars.com/api/?name=" + encodeURIComponent(candidate.name)); return s; })()}
                             alt={candidate.name}
                             style={{ width: 70, height: 70, borderRadius: "50%", objectFit: "cover", marginRight: 16, border: "2px solid #e0e7ef" }}
                           />

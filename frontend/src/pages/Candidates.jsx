@@ -456,8 +456,8 @@ function Candidates({ user }) {
               <tr>
                 <th>Photo</th>
                 <th>Name</th>
-                {/* <th>Email</th> */}
-                {/* <th>Party</th> */}
+                <th>Symbol</th>
+                <th>Party</th>
                 <th>Election</th>
                 <th>Position</th>
                 <th>Status</th>
@@ -471,13 +471,12 @@ function Candidates({ user }) {
                     {c.photo ? (
                       (() => {
                         const imgSrc = getImageUrl(c.photo);
-                        console.debug('[Candidates] candidate', c._id, 'imgSrc:', imgSrc);
                         return (
                           <img
                             src={imgSrc}
-                        alt="Candidate"
-                        style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%" }}
-                      />
+                            alt="Candidate"
+                            style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%" }}
+                          />
                         );
                       })()
                     ) : (
@@ -485,6 +484,14 @@ function Candidates({ user }) {
                     )}
                   </td>
                   <td>{c.name}</td>
+                  <td>
+                    {c.symbol ? (
+                      <img src={getImageUrl(c.symbol)} alt="symbol" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid #e9ecef' }} />
+                    ) : (
+                      <span className="text-muted small">No Symbol</span>
+                    )}
+                  </td>
+                  <td>{c.party ? c.party : <span className="text-muted">-</span>}</td>
                   {/* <td>{c.email}</td> */}
                   
                   {/* <td>{c.party || <span className="text-muted">-</span>}</td> */}

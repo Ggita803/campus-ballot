@@ -25,8 +25,9 @@ import Notifications from "../components/admin/Notifications"; // Importing Noti
 import Reports from "../components/admin/Reports";
 import Results from "../components/admin/Results";
 
-function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
+function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout prop here
   const navigate = useNavigate();
+  const [user, setUser] = useState(initialUser);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCreateElection, setShowCreateElection] = useState(false);
@@ -223,6 +224,7 @@ function AdminDashboard({ user, onLogout }) { // Adding onLogout prop here
           navigate={navigate}
           onOpenCreateElection={() => setShowCreateElection(true)}
           onLogout={onLogout} // This should now work
+          onProfileUpdated={(updated) => setUser(updated)}
         />
         <div className="col-md-10 p-0">
           {/* Top Navigation Bar */}

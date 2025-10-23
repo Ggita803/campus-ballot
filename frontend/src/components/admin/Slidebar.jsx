@@ -26,31 +26,69 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
   const [uploading, setUploading] = useState(false);
   const [profilePic, setProfilePic] = useState(user?.profilePicture || '/default-avatar.png');
   const profileImgSrc = getImageUrl(profilePic);
-  // Debug: log resolved image URL
-  console.debug('[Slidebar] resolved profile image URL:', profileImgSrc);
+  // resolved profile image URL is profileImgSrc
+  // Modal + preview upload states
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const onChooseFile = () => fileRef.current && fileRef.current.click();
+  const onChooseFile = () => {
+    setShowUploadModal(true);
+  };
 
-  const handleFileChange = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    setSelectedFile(file);
+    try {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } catch (err) {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleSaveUpload = async () => {
+    if (!selectedFile) return;
     setUploading(true);
     try {
       const token = localStorage.getItem('token');
       const fd = new FormData();
-      fd.append('profilePicture', file);
+      fd.append('profilePicture', selectedFile);
       const res = await axios.put(`/api/users/${user._id}/photo`, fd, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       if (res.data && res.data.profilePicture) {
         setProfilePic(res.data.profilePicture);
+        // notify parent if provided
+        if (typeof onProfileUpdated === 'function') {
+          try { onProfileUpdated({ ...user, profilePicture: res.data.profilePicture }); } catch (e) {}
+        }
+        // update localStorage user if present
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.profilePicture = res.data.profilePicture;
+            localStorage.setItem('user', JSON.stringify(parsed));
+          }
+        } catch (e) {}
       }
+      setShowUploadModal(false);
+      setSelectedFile(null);
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
     } catch (err) {
       console.error('Upload error', err);
-      // Optionally show user-facing error here
+      alert(err.response?.data?.message || 'Failed to upload profile picture');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCancelUpload = () => {
+    setShowUploadModal(false);
+    setSelectedFile(null);
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
   };
 
   return (
@@ -78,8 +116,38 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
                 <FontAwesomeIcon icon={faUserCircle} />
               )}
             </button>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+            {/* hidden input for fallback */}
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
           </div>
+
+          {/* Upload modal */}
+          {showUploadModal && (
+            <div className="modal show d-block" tabIndex="-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-sm modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Upload profile picture</h5>
+                    <button type="button" className="btn-close" onClick={handleCancelUpload}></button>
+                  </div>
+                  <div className="modal-body text-center">
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="preview" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%' }} />
+                    ) : (
+                      <div className="mb-3 text-muted">No file selected</div>
+                    )}
+                    <div className="mt-3">
+                      <input className="form-control" type="file" accept="image/*" onChange={handleFileSelect} />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" type="button" onClick={handleCancelUpload}>Cancel</button>
+                    <button className="btn btn-primary" type="button" onClick={handleSaveUpload} disabled={uploading || !selectedFile}>{uploading ? 'Saving...' : 'Save'}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <h4 className="fw-bold text-primary mt-2">Admin Panel</h4>
           <p className="mb-0 text-muted">{user?.name}</p>
           <span className="badge bg-success">{user?.role}</span>
