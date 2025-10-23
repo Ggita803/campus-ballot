@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import useSocket from '../../hooks/useSocket';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faCheckCircle, faTrash, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faBell, faCheckCircle, faTrash, faInfoCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Notifications({ user }) {
 	const [notifications, setNotifications] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [markingIds, setMarkingIds] = useState([]);
 	const { socketRef } = useSocket();
 
 	const fetchNotifications = async () => {
@@ -96,12 +97,15 @@ export default function Notifications({ user }) {
 
 	const markAsRead = async (id) => {
 		try {
-			const token = localStorage.getItem('token');
-			await axios.put(`/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } });
-			fetchNotifications();
-		} catch (err) {
-			console.error('Failed to mark notification as read', err);
-		}
+	    	setMarkingIds(prev => [...prev, id]);
+	    	const token = localStorage.getItem('token');
+	    	await axios.put(`/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } });
+	    	await fetchNotifications();
+	  } catch (err) {
+	    	console.error('Failed to mark notification as read', err);
+	  } finally {
+	    	setMarkingIds(prev => prev.filter(x => x !== id));
+	  }
 	};
 
 	return (
@@ -123,8 +127,16 @@ export default function Notifications({ user }) {
 								</div>
 								<div className="d-flex flex-column gap-2">
 									{!n.read && (
-										<button className="btn btn-sm btn-outline-success" onClick={() => markAsRead(n._id)}>
-											<FontAwesomeIcon icon={faCheckCircle} /> Mark as read
+										<button
+											className="btn btn-sm btn-outline-success"
+											onClick={() => markAsRead(n._id)}
+											disabled={markingIds.includes(n._id)}
+										>
+											{markingIds.includes(n._id) ? (
+												<FontAwesomeIcon icon={faSpinner} spin />
+											) : (
+												<><FontAwesomeIcon icon={faCheckCircle} /> Mark as read</>
+											)}
 										</button>
 									)}
 								</div>

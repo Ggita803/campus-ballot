@@ -61,6 +61,7 @@ function StudentDashboard({ user }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [notifications, setNotifications] = useState([]);
+  const [markingReadIds, setMarkingReadIds] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
@@ -180,6 +181,26 @@ function StudentDashboard({ user }) {
       setNotifications(res.data);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
+    }
+  };
+
+  const markNotificationAsRead = async (id) => {
+    if (!id) return;
+    try {
+      setMarkingReadIds(prev => [...prev, id]);
+      const res = await axios.put(`/api/notifications/${id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      // update local list quickly
+      setNotifications(prev => (prev || []).map(n => n._id === id ? { ...n, readBy: [...(n.readBy||[]), user?._id] } : n));
+      if (selectedNotification && (selectedNotification._id === id || selectedNotification.id === id)) {
+        setSelectedNotification(prev => prev ? { ...prev, readBy: [...(prev.readBy||[]), user?._id] } : prev);
+      }
+      // optional toast
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Marked as read' });
+    } catch (err) {
+      console.error('Failed to mark notification as read', err);
+      Swal.fire('Error', 'Failed to mark notification as read', 'error');
+    } finally {
+      setMarkingReadIds(prev => prev.filter(i => i !== id));
     }
   };
 
@@ -319,113 +340,40 @@ function StudentDashboard({ user }) {
     <div style={{ width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
       {/* Statistics Cards - 8 cards in single row */}
       <div className="row g-2 g-md-3 mb-4">
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                <FaPoll className="text-primary" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{electionStats.total}</h5>
-                <p className="text-muted mb-0 small text-truncate">Elections</p>
-              </div>
-            </div>
-            
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-success bg-opacity-10 rounded-circle p-2 me-2">
-                <FaCheckCircle className="text-success" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{electionStats.participated}</h5>
-                <p className="text-muted mb-0 small text-truncate">Voted</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-2">
-                <FaClock className="text-warning" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{electionStats.upcoming}</h5>
-                <p className="text-muted mb-0 small text-truncate">Upcoming</p>
+        {[
+          { icon: <FaPoll className="text-primary" size={20} />, value: electionStats.total, label: 'Elections', color: 'primary' },
+          { icon: <FaCheckCircle className="text-success" size={20} />, value: electionStats.participated, label: 'Voted', color: 'success' },
+          { icon: <FaClock className="text-warning" size={20} />, value: electionStats.upcoming, label: 'Upcoming', color: 'warning' },
+          { icon: <FaTrophy className="text-secondary" size={20} />, value: electionStats.completed, label: 'Complete', color: 'secondary' },
+          { icon: <FaVoteYea className="text-primary" size={20} />, value: myVotes.length, label: 'My Votes', color: 'primary' },
+          { icon: <FaBell className="text-primary" size={20} />, value: notifications.length, label: 'Notifications', color: 'primary' },
+          { icon: <FaBell className="text-warning" size={20} />, value: notifications.filter(n => !n.read).length, label: 'Unread', color: 'warning' },
+          { icon: <FaTrophy className="text-success" size={20} />, value: `${Math.min(100, Math.round((electionStats.participated / Math.max(electionStats.total, 1)) * 100))}%`, label: 'Engagement', color: 'success' }
+        ].map((c, i) => {
+          // determine soft bg and border based on semantic color
+          let bg = '#f1f3f5';
+          let border = '#e9ecef';
+          if (c.color === 'primary') { bg = '#e7f1ff'; border = '#cfe3ff'; }
+          if (c.color === 'success') { bg = '#e9f7ee'; border = '#d5efda'; }
+          if (c.color === 'warning') { bg = '#fff4e5'; border = '#ffe6b8'; }
+          if (c.color === 'secondary') { bg = '#f1f3f5'; border = '#e9ecef'; }
+
+          return (
+            <div key={i} className="col-6 col-md-3 col-lg-3 col-xl-1-5">
+              <div className="card border-0 shadow-sm h-100 stat-card-hover" style={{ borderRadius: '12px' }}>
+                <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-1 p-md-2">
+                  <div className={`rounded-circle mb-2 d-inline-flex align-items-center justify-content-center`} style={{ width: 44, height: 44, backgroundColor: bg, border: `1px solid ${border}` }}>
+                    {c.icon}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h5 className="fw-bold mb-0 fs-6">{c.value}</h5>
+                    <p className="text-muted mb-0 small text-truncate">{c.label}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-secondary bg-opacity-10 rounded-circle p-2 me-2">
-                <FaTrophy className="text-secondary" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{electionStats.completed}</h5>
-                <p className="text-muted mb-0 small text-truncate">Complete</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                <FaVoteYea className="text-primary" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{myVotes.length}</h5>
-                <p className="text-muted mb-0 small text-truncate">My Votes</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                <FaBell className="text-primary" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{notifications.length}</h5>
-                <p className="text-muted mb-0 small text-truncate">Notifications</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-warning bg-opacity-10 rounded-circle p-2 me-2">
-                <FaBell className="text-warning" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">{notifications.filter(n => !n.read).length}</h5>
-                <p className="text-muted mb-0 small text-truncate">Unread</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '5px' }}>
-            <div className="card-body d-flex align-items-center p-2 p-md-3">
-              <div className="bg-success bg-opacity-10 rounded-circle p-2 me-2">
-                <FaTrophy className="text-success" size={16} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h5 className="fw-bold mb-0 fs-6">
-                  {Math.min(100, Math.round((electionStats.participated / Math.max(electionStats.total, 1)) * 100))}%
-                </h5>
-                <p className="text-muted mb-0 small text-truncate">Engagement</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       {/* Recent Elections Quick View */}
@@ -1191,6 +1139,13 @@ function StudentDashboard({ user }) {
               width: 12.5%;
             }
           }
+          .stat-card-hover {
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+          }
+          .stat-card-hover:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.06);
+          }
         `}
       </style>
       <div
@@ -1817,9 +1772,22 @@ function StudentDashboard({ user }) {
                   Close
                 </button>
                 {!selectedNotification.read && (
-                  <button className="btn btn-primary">
-                    <FaCheckCircle className="me-2" />
-                    Mark as Read
+                  <button
+                    className="btn btn-primary"
+                    onClick={async () => { await markNotificationAsRead(selectedNotification._id); setShowNotificationModal(false); setSelectedNotification(null); }}
+                    disabled={markingReadIds.includes(selectedNotification._id)}
+                  >
+                    {markingReadIds.includes(selectedNotification._id) ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Marking...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheckCircle className="me-2" />
+                        Mark as Read
+                      </>
+                    )}
                   </button>
                 )}
               </div>

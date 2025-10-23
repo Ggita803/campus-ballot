@@ -7,7 +7,7 @@ const StudentHeader = ({ user, onLogout }) => (
     style={{
       background: "#fff",
       color: "#18181b",
-      padding: "0.75rem 1.5rem",
+      padding: "1.5rem 1.5rem",
       width: "100%",
       minHeight: 30,
       boxShadow: "0 2px 12px rgba(124,58,237,0.08)",
