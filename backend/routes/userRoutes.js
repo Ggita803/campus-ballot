@@ -18,6 +18,10 @@ const {
     reactivateOwnAccount,
     exportUsers
 } = require('../controllers/userController');
+const { updateUserPhoto } = require('../controllers/userController');
+
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -44,6 +48,9 @@ router.get('/me/profile', protect, getCurrentUserProfile);
 
 // User: Update own profile
 router.put('/me/profile', protect, updateCurrentUserProfile);
+
+// Upload/update profile photo (users can update their own, admins can update any)
+router.put('/:id/photo', protect, upload.single('profilePicture'), updateUserPhoto);
 
 // Admin: Search or filter users
 router.get('/search', protect, adminOnly, searchUsers);

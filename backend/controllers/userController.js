@@ -59,6 +59,40 @@ const updateUserById = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Update user photo (admin or owner)
+// @route   PUT /api/users/:id/photo
+// @access  Protected (admin or owner)
+const updateUserPhoto = asyncHandler(async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Authorization: allow if admin or owner
+    if (req.user.role !== 'admin' && req.user._id.toString() !== user._id.toString()) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const fname = req.file.filename || req.file.path.split(/[\\/]/).pop();
+    user.profilePicture = `/uploads/${fname}`;
+    await user.save();
+
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('user:photo:updated', { userId: user._id, profilePicture: user.profilePicture });
+    } catch (e) {
+      console.error('Socket emit error (user photo updated):', e.message);
+    }
+
+    res.json({ message: 'Profile picture updated', profilePicture: user.profilePicture });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Delete user by ID (admin)
 // @route   DELETE /api/users/:id
 // @access  Admin only
@@ -326,5 +360,6 @@ module.exports = {
   getUserNotifications,
   deactivateOwnAccount,
   reactivateOwnAccount,
-  exportUsers
+  exportUsers,
+  updateUserPhoto
 };

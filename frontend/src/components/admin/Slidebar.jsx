@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from 'axios';
+import { useRef, useState } from 'react';
 import {
   faTachometerAlt,
   faUsers,
@@ -19,12 +21,61 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function Sidebar({ user, navigate, onOpenCreateElection, onLogout }) {
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [profilePic, setProfilePic] = useState(user?.profilePicture || '/default-avatar.png');
+
+  const onChooseFile = () => fileRef.current && fileRef.current.click();
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const fd = new FormData();
+      fd.append('profilePicture', file);
+      const res = await axios.put(`/api/users/${user._id}/photo`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data && res.data.profilePicture) {
+        setProfilePic(res.data.profilePicture);
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      // Optionally show user-facing error here
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="col-md-2 bg-white shadow-sm p-0 min-vh-100 d-flex flex-column justify-content-between">
       <div>
         <div className="p-4 border-bottom text-center">
           {/* User Avatar */}
-          <FontAwesomeIcon icon={faUserCircle} size="3x" className="mb-2 text-secondary" />
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img
+              src={profilePic}
+              alt="Admin"
+              style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%' }}
+              className="mb-2"
+            />
+            <button
+              className="btn btn-sm btn-light position-absolute top-0 end-0"
+              style={{ transform: 'translate(30%, -30%)' }}
+              onClick={onChooseFile}
+              title="Change profile picture"
+              aria-label="Change profile picture"
+            >
+              {uploading ? (
+                <span className="spinner-border spinner-border-sm" role="status" />
+              ) : (
+                <FontAwesomeIcon icon={faUserCircle} />
+              )}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+          </div>
           <h4 className="fw-bold text-primary mt-2">Admin Panel</h4>
           <p className="mb-0 text-muted">{user?.name}</p>
           <span className="badge bg-success">{user?.role}</span>

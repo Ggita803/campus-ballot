@@ -26,10 +26,13 @@ const createCandidate = asyncHandler(async (req, res) => {
     let symbol = null;
     if (req.files) {
       if (req.files.photo && req.files.photo[0]) {
-        photo = req.files.photo[0].filename || req.files.photo[0].path;
+        // normalize to URL path served by /uploads
+        const fname = req.files.photo[0].filename || req.files.photo[0].path.split(/[\\/]/).pop();
+        photo = `/uploads/${fname}`;
       }
       if (req.files.symbol && req.files.symbol[0]) {
-        symbol = req.files.symbol[0].filename || req.files.symbol[0].path;
+        const sname = req.files.symbol[0].filename || req.files.symbol[0].path.split(/[\\/]/).pop();
+        symbol = `/uploads/${sname}`;
       }
     }
 

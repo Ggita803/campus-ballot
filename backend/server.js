@@ -5,6 +5,7 @@ require("dotenv").config();
 
 // Core Modules
 const express = require("express");
+const path = require('path');
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const helmet = require("helmet");
@@ -61,6 +62,8 @@ app.use(cors({
 
 // Static files
 app.use(express.static("public"));
+// Serve uploaded files (images) from the uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from React build
 // const path = require("path");
