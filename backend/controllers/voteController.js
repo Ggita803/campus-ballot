@@ -15,11 +15,26 @@ const castVote = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "electionId and position are required" });
     }
 
-    // Check if election exists and is ongoing
+    // Check if election exists
     const election = await Election.findById(electionId);
-    if (!election || election.status !== "ongoing") {
-      console.log({ message: "Election not found or not ongoing" });
-      return res.status(400).json({ message: "Election not found or not ongoing" });
+    if (!election) {
+      console.log({ message: "Election not found" });
+      return res.status(400).json({ message: "Election not found" });
+    }
+
+    // Enforce voting time window on the server (use server time)
+    const now = new Date();
+    const start = election.startDate ? new Date(election.startDate) : null;
+    const end = election.endDate ? new Date(election.endDate) : null;
+
+    if (start && now < start) {
+      console.log({ message: 'Voting has not started yet', now, start });
+      return res.status(403).json({ message: 'Voting has not started yet' });
+    }
+
+    if (end && now > end) {
+      console.log({ message: 'Voting has ended', now, end });
+      return res.status(403).json({ message: 'Voting has ended' });
     }
 
     // If not abstain, check candidate

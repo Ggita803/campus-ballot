@@ -8,6 +8,8 @@ function CreateElection({ onCreated }) {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [startAmPm, setStartAmPm] = useState('AM');
+  const [endAmPm, setEndAmPm] = useState('AM');
   const [positions, setPositions] = useState([
     { name: "", seats: 1, method: "fptp" }
   ]);
@@ -133,17 +135,38 @@ function CreateElection({ onCreated }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      // helper: merge datetime-local value and AM/PM into an ISO string
+      const toIsoWithAmPm = (dtLocal, ampm) => {
+        // dtLocal expected format: 'YYYY-MM-DDTHH:MM' or 'YYYY-MM-DDTHH:MM:SS'
+        if (!dtLocal) return null;
+        // split date and time
+        const [datePart, timePartRaw] = dtLocal.split('T');
+        if (!datePart || !timePartRaw) return null;
+        // keep only HH:MM
+        const [hourStr, minuteStr] = timePartRaw.split(':');
+        let hour = parseInt(hourStr, 10);
+        const minute = parseInt(minuteStr, 10) || 0;
+        if (isNaN(hour)) hour = 0;
+        // Adjust hour based on AM/PM
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+        // Build a Date using local time then convert to ISO
+        const dateObj = new Date(datePart + 'T' + String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0') + ':00');
+        return dateObj.toISOString();
+      };
+
       const payload = {
         title,
         description,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
+        startDate: toIsoWithAmPm(startDate, startAmPm),
+        endDate: toIsoWithAmPm(endDate, endAmPm),
         timezone,
-        positions: positions.map(p => ({ name: p.name.trim(), seats: Number(p.seats) || 1, votingMethod: p.method })),
+    // The Election model expects positions as an array of strings. Send names only to match schema.
+    positions: positions.map(p => (p.name || '').trim()),
         eligibility: {
           type: eligibilityType,
-          faculties: eligibilityType === 'faculty' ? faculties.split(',').map(s => s.trim()).filter(Boolean) : undefined,
-          cohorts: eligibilityType === 'cohort' ? cohorts.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+          faculties: eligibilityType === 'faculty' ? faculties : undefined,
+          cohorts: eligibilityType === 'cohort' ? cohorts : undefined,
           whitelist: whitelist.length ? whitelist : undefined
         },
         autoPublish: !!autoPublish,
@@ -152,9 +175,9 @@ function CreateElection({ onCreated }) {
 
       await axios.post('/api/elections', payload, { headers: { Authorization: `Bearer ${token}` } });
       Swal.fire('Success', saveDraft ? 'Draft saved' : 'Election created', 'success');
-      // reset form
-      setTitle(''); setDescription(''); setStartDate(''); setEndDate(''); setPositions([{ name: '', seats: 1, method: 'fptp' }]);
-      setEligibilityType('all'); setFaculties(''); setCohorts(''); setWhitelistFile(null); setAutoPublish(false); setSaveDraft(false);
+  // reset form
+  setTitle(''); setDescription(''); setStartDate(''); setStartAmPm('AM'); setEndDate(''); setEndAmPm('AM'); setPositions([{ name: '', seats: 1, method: 'fptp' }]);
+  setEligibilityType('all'); setFaculties([]); setCohorts([]); setWhitelistFile(null); setAutoPublish(false); setSaveDraft(false);
       if (onCreated) onCreated();
     } catch (err) {
       console.error('Create election failed', err);
@@ -196,11 +219,23 @@ function CreateElection({ onCreated }) {
 
           <div className="col-md-6">
             <label className="form-label small">Start Date & Time</label>
-            <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+            <div className="d-flex gap-2">
+              <input type="datetime-local" className="form-control" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+              <select className="form-select" style={{maxWidth: '110px'}} value={startAmPm} onChange={e => setStartAmPm(e.target.value)}>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
           </div>
           <div className="col-md-6">
             <label className="form-label small">End Date & Time</label>
-            <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} required />
+            <div className="d-flex gap-2">
+              <input type="datetime-local" className="form-control" value={endDate} onChange={e => setEndDate(e.target.value)} required />
+              <select className="form-select" style={{maxWidth: '110px'}} value={endAmPm} onChange={e => setEndAmPm(e.target.value)}>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
           </div>
 
           <div className="col-12">
@@ -280,8 +315,8 @@ function CreateElection({ onCreated }) {
           <div className="col-12">
             <div className="d-flex justify-content-end gap-2">
               <button type="button" className="btn btn-secondary" onClick={() => {
-                setTitle(''); setDescription(''); setStartDate(''); setEndDate(''); setPositions([{ name: '', seats: 1, method: 'fptp' }]);
-                setEligibilityType('all'); setFaculties(''); setCohorts(''); setWhitelistFile(null); setAutoPublish(false); setSaveDraft(false);
+                setTitle(''); setDescription(''); setStartDate(''); setStartAmPm('AM'); setEndDate(''); setEndAmPm('AM'); setPositions([{ name: '', seats: 1, method: 'fptp' }]);
+                setEligibilityType('all'); setFaculties([]); setCohorts([]); setWhitelistFile(null); setAutoPublish(false); setSaveDraft(false);
               }}>Reset</button>
               <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Saving...' : (saveDraft ? 'Save Draft' : (autoPublish ? 'Create & Publish' : 'Create'))}</button>
             </div>
