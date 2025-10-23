@@ -388,6 +388,15 @@ function Elections({ user }) {
 
   return (
     <div className="container-fluid">
+      <style>{`
+        .stat-card-hover {
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .stat-card-hover:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.06);
+        }
+      `}</style>
       {/* Header */}
       <div className="row mb-4">
         <div className="col-12">
@@ -411,10 +420,10 @@ function Elections({ user }) {
       </div>
 
       {/* Statistics Cards */}
-<div className="row mb-1 tight-row">
+  <div className="row mb-1 tight-row">
   {/* Total Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+  <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-primary bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faChartBar} className="text-primary" size="lg" />
@@ -428,7 +437,7 @@ function Elections({ user }) {
   </div>
   {/* Active Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+  <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-success bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faPlayCircle} className="text-success" size="lg" />
@@ -442,7 +451,7 @@ function Elections({ user }) {
   </div>
   {/* Upcoming Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-warning bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faCalendarAlt} className="text-warning" size="lg" />
@@ -456,7 +465,7 @@ function Elections({ user }) {
   </div>
   {/* Completed Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-secondary bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faCheck} className="text-secondary" size="lg" />
@@ -470,7 +479,7 @@ function Elections({ user }) {
   </div>
   {/* Cancelled Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-danger bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faBan} className="text-danger" size="lg" />
@@ -484,7 +493,7 @@ function Elections({ user }) {
   </div>
   {/* Total Votes Cast */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-info bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faPoll} className="text-info" size="lg" />
@@ -500,7 +509,7 @@ function Elections({ user }) {
   </div>
   {/* Ongoing Elections */}
   <div className="col-8th mb-1 tight">
-    <div className="card border-0 shadow-sm h-100 stat-card">
+    <div className="card border-0 shadow-sm h-100 stat-card stat-card-hover" style={{ borderRadius: '12px' }}>
       <div className="d-flex justify-content-center mt-3">
         <div className="bg-info bg-opacity-10 rounded-circle p-2">
           <FontAwesomeIcon icon={faPlay} className="text-info" size="lg" />
@@ -533,9 +542,9 @@ function Elections({ user }) {
 </div>
 
       {/* Filters */}
-      <div className="row mb-4">
+          <div className="row mb-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
             <div className="card-body">
               <div className="row align-items-center">
                 <div className="col-md-6">
@@ -578,9 +587,9 @@ function Elections({ user }) {
       </div>
 
       {/* Elections Table */}
-      <div className="row">
+          <div className="row">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
+          <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
             <div className="card-header bg-white border-0 py-3">
               <h5 className="mb-0 fw-bold">Elections List</h5>
             </div>
