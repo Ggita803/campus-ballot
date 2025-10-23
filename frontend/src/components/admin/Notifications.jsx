@@ -244,7 +244,7 @@ function Notifications({ user }) {
                   </div>
                 </div>
               </div>
-              <div className="d-flex flex-column align-items-end gap-2">
+              <div className="d-flex align-items-center gap-2">
                 {!n.read && (
                   <button
                     className="btn btn-outline-success btn-sm"

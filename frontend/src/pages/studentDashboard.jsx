@@ -46,6 +46,7 @@ import {
   FaArrowUp,
   FaUser
 } from "react-icons/fa";
+import useSocket from '../hooks/useSocket';
 
 function StudentDashboard({ user }) {
   const [elections, setElections] = useState([]);
@@ -76,11 +77,48 @@ function StudentDashboard({ user }) {
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   const token = localStorage.getItem("token");
+  const { socketRef } = useSocket();
 
   useEffect(() => {
     fetchElections();
     fetchMyVotes();
     fetchNotifications();
+    // setup socket listeners for real-time notifications
+    let socketCleanup;
+    const attachSocket = () => {
+      const s = socketRef.current;
+      if (!s) return false;
+
+      // join rooms
+      try { s.emit('join', 'students'); } catch (e) {}
+      if (user?._id) try { s.emit('join', user._id); } catch (e) {}
+
+      const onNew = (notification) => {
+        // add notification if it targets students/all
+        if (notification.targetAudience === 'students' || notification.targetAudience === 'all') {
+          setNotifications(prev => [notification, ...(prev || [])]);
+        }
+      };
+      const onDeleted = ({ notificationId }) => setNotifications(prev => (prev||[]).filter(n => n._id !== notificationId));
+      const onRead = ({ notificationId, userId }) => setNotifications(prev => (prev||[]).map(n => n._id === notificationId ? { ...n, readBy: [...(n.readBy||[]), userId] } : n));
+
+      s.on('notification:new', onNew);
+      s.on('notification:deleted', onDeleted);
+      s.on('notification:read', onRead);
+
+      socketCleanup = () => {
+        try { s.off('notification:new', onNew); s.off('notification:deleted', onDeleted); s.off('notification:read', onRead); } catch (e) {}
+      };
+
+      return true;
+    };
+
+    // try immediate attach, otherwise poll for socket
+    if (!attachSocket()) {
+      const iv = setInterval(() => {
+        if (attachSocket()) clearInterval(iv);
+      }, 200);
+    }
     // eslint-disable-next-line
   }, []);
 
@@ -1173,10 +1211,12 @@ function StudentDashboard({ user }) {
         style={{
           width: "100vw",
           margin: 0,
-          padding: 0
+          padding: '1.25rem 1.25rem',
+          height: '110px',
+          alignItems: 'center'
         }}
       >
-        <div className="container-fluid" style={{ maxWidth: "100%", padding: "0 1rem", margin: 0 }}>
+        <div className="container-fluid" style={{ maxWidth: "100%", padding: "0", margin: 0 }}>
           <span className="navbar-brand d-flex align-items-center gap-2">
             {/* Hamburger menu for mobile */}
             <button
@@ -1258,7 +1298,7 @@ function StudentDashboard({ user }) {
         </div>
       </nav>
 
-      <div className="d-flex" style={{ width: "100vw", maxWidth: "100vw", margin: 0, padding: 0, height: "calc(100vh - 70px)" }}>
+  <div className="d-flex" style={{ width: "100vw", maxWidth: "100vw", margin: 0, padding: 0, height: "calc(100vh - 90px)" }}>
         {/* Sidebar for large screens */}
         <div className="bg-white shadow-sm border-end d-none d-lg-block"
              style={{

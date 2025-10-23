@@ -52,11 +52,18 @@ function Results({ user }) {
   };
 
   const loadResults = async (electionId) => {
+    // Defensive: if electionId is falsy (empty string, null, undefined), do not proceed
+    if (!electionId) {
+      console.warn('loadResults called without electionId');
+      return;
+    }
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       setSelectedElectionId(electionId);
-      const res = await axios.get(`/api/elections/${electionId}/results`, { headers: { Authorization: `Bearer ${token}` } });
+      const url = `/api/elections/${electionId}/results`;
+      console.debug('Loading results from', url);
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setSelectedElection(res.data.election || null);
       setResults(res.data.results || []);
       setUnpublished(false);
@@ -66,8 +73,13 @@ function Results({ user }) {
         setUnpublished(true);
         setResults([]);
         Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Results not published yet' });
+      } else if (err.response?.status === 404) {
+        const serverMsg = err.response?.data?.message || err.response?.statusText || 'Not Found';
+        Swal.fire('Not Found', `Results endpoint returned 404: ${serverMsg}`, 'error');
       } else {
-        Swal.fire('Error', 'Failed to load results', 'error');
+        const status = err.response?.status ? ` (${err.response.status})` : '';
+        const serverMsg = err.response?.data?.message ? `: ${err.response.data.message}` : '';
+        Swal.fire('Error', `Failed to load results${status}${serverMsg}`, 'error');
         setResults([]);
       }
     } finally {
@@ -139,7 +151,7 @@ function Results({ user }) {
         <div className="card-header d-flex justify-content-between align-items-center">
           <h4 className="mb-0">Election Results</h4>
           <div>
-            <select className="form-select me-2 d-inline-block" style={{width: '280px'}} onChange={e => loadResults(e.target.value)}>
+            <select className="form-select me-2 d-inline-block" style={{width: '280px'}} onChange={e => { const v = e.target.value; if (v) loadResults(v); }}>
               <option value="">Select an election...</option>
               {Array.isArray(elections) && elections.length > 0 ? (
                 elections.map(el => {
