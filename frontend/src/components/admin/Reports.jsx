@@ -308,8 +308,8 @@ function Reports() {
   return (
     <div className="container py-4 reports-container">
       <style>{`
-        .reports-container .card { border-radius: 10px; overflow: hidden; }
-        .analytics-card { border-radius: 10px; transition: transform 0.18s ease, box-shadow 0.18s ease; overflow: hidden; }
+        .reports-container .card { border-radius: 8px; overflow: hidden; }
+        .analytics-card { border-radius: 8px; transition: transform 0.18s ease, box-shadow 0.18s ease; overflow: hidden; }
         .analytics-card.hovered, .analytics-card:hover { transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.06); }
         .analytics-card .card-body { padding: 1rem; }
       `}</style>
@@ -319,7 +319,7 @@ function Reports() {
       </div>
 
   {/* 16 Analytics Cards in 2 rows, 8 per row */}
-  <div className="row g-3 mb-4">
+  <div className="row g-2 mb-4">
         {cards.map((card, idx) => (
           <div
             key={idx}
