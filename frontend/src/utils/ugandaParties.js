@@ -1,4 +1,5 @@
 const ugandaParties = [
+  "Common Man's Party (CMP)",
   "National Resistance Movement (NRM)",
   "Forum for Democratic Change (FDC)",
   "Democratic Party (DP)",

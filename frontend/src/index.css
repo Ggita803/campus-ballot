@@ -214,4 +214,13 @@ td{
 .dashboard-card-icon-secondary { background: #f0f0f0; color: #6c757d; }
 .dashboard-card-icon-info { background: #e6f6ff; color: #0dcaf0; }
 
+/* Candidate photo overrides to ensure consistent shape/size in modals */
+.candidate-photo {
+  border-radius: 0 !important;
+  width: 84px !important;
+  height: 84px !important;
+  object-fit: cover !important;
+  display: inline-block;
+}
+
 

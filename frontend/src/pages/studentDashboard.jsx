@@ -216,26 +216,46 @@ function StudentDashboard({ user }) {
     }
   };
 
+  // Determine election status robustly (handles missing/invalid dates)
+  const getElectionStatus = (election) => {
+    const now = new Date();
+    const startDate = election.startDate ? new Date(election.startDate) : null;
+    const endDate = election.endDate ? new Date(election.endDate) : null;
+
+    const validStart = startDate && !isNaN(startDate.getTime());
+    const validEnd = endDate && !isNaN(endDate.getTime());
+
+    // If both dates valid, use them
+    if (validStart && validEnd) {
+      if (now < startDate) return { status: 'upcoming', color: 'warning', icon: FaClock };
+      if (now >= startDate && now <= endDate) return { status: 'active', color: 'success', icon: FaPlay };
+      return { status: 'completed', color: 'secondary', icon: FaStop };
+    }
+
+    // If only start is valid
+    if (validStart && !validEnd) {
+      if (now < startDate) return { status: 'upcoming', color: 'warning', icon: FaClock };
+      return { status: 'active', color: 'success', icon: FaPlay };
+    }
+
+    // If only end is valid
+    if (!validStart && validEnd) {
+      if (now > endDate) return { status: 'completed', color: 'secondary', icon: FaStop };
+      return { status: 'active', color: 'success', icon: FaPlay };
+    }
+
+    // No valid dates: treat as upcoming by default
+    return { status: 'upcoming', color: 'warning', icon: FaClock };
+  };
+
   const filteredElections = elections.filter((election) => {
-    const matchesSearch = election.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         election.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (election.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+                         (election.description || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesStatus = statusFilter === "all" || getElectionStatus(election).status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const getElectionStatus = (election) => {
-    const now = new Date();
-    const startDate = new Date(election.startDate);
-    const endDate = new Date(election.endDate);
 
-    if (now < startDate) {
-      return { status: "upcoming", color: "warning", icon: FaClock };
-    } else if (now >= startDate && now <= endDate) {
-      return { status: "active", color: "success", icon: FaPlay };
-    } else {
-      return { status: "completed", color: "secondary", icon: FaStop };
-    }
-  };
 
   const formatTimeRemaining = (endDate) => {
     const now = new Date();

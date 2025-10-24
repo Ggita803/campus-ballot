@@ -79,13 +79,29 @@ const ElectionDetailsModal = ({ show, onClose, election, myVotes, refreshData })
                       <div className="card-body small" style={{padding: '1rem', borderRadius: '5px'}}>
                         <div className="d-flex align-items-center mb-3 fs-6">
                           <img
+                            className="candidate-photo"
                             src={(function(){ const s = getImageUrl(candidate.photo) || ("https://ui-avatars.com/api/?name=" + encodeURIComponent(candidate.name)); return s; })()}
                             alt={candidate.name}
-                            style={{ width: 70, height: 70, borderRadius: "50%", objectFit: "cover", marginRight: 16, border: "2px solid #e0e7ef" }}
+                            style={{ width: 84, height: 84, objectFit: "cover", marginRight: 16, border: "2px solid #e0e7ef" }}
                           />
-                          <div>
-                            <h5 className="card-title mb-0">{candidate.name}</h5>
-                            <small className="text-muted">{candidate.position}</small>
+                          <div style={{ width: '100%' }}>
+                            <div className="d-flex align-items-center justify-content-between">
+                              <div>
+                                <h5 className="card-title mb-0 d-flex align-items-center">
+                                  {candidate.name}
+                                  {candidate.position && (
+                                    <span className="badge bg-secondary ms-2" style={{ fontSize: '0.65rem' }}>{candidate.position}</span>
+                                  )}
+                                </h5>
+                              </div>
+                              {candidate.symbol && (
+                                <img
+                                  src={getImageUrl(candidate.symbol)}
+                                  alt={candidate.party || 'Symbol'}
+                                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid #e9ecef', marginLeft: 12 }}
+                                />
+                              )}
+                            </div>
                           </div>
                         </div>
                         {candidate.party && <div className="mb-1"><strong>Party:</strong> {candidate.party}</div>}

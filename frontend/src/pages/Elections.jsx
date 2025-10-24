@@ -549,7 +549,7 @@ function Elections({ user }) {
               <div className="row align-items-center">
                 <div className="col-md-6">
                   <div className="input-group">
-                    <span className="input-group-text">
+                    <span className="input-group-text ">
                       <FontAwesomeIcon icon={faSearch} />
                     </span>
                     <input
@@ -558,6 +558,7 @@ function Elections({ user }) {
                       placeholder="Search elections by title or description..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      // style={{width:800}}
                     />
                   </div>
                 </div>
