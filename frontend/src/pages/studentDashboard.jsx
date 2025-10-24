@@ -413,7 +413,7 @@ function StudentDashboard({ user }) {
 
           return (
             <div key={i} className="col-6 col-md-3 col-lg-3 col-xl-1-5">
-              <div className="card border-0 shadow-sm h-100 stat-card-hover" style={{ borderRadius: '12px' }}>
+              <div className="card shadow-sm h-100 stat-card-hover" style={{ borderRadius: '12px', border: '1px solid #e0e0e0' }}>
                 <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-1 p-md-2">
                   <div className={`rounded-circle mb-2 d-inline-flex align-items-center justify-content-center`} style={{ width: 44, height: 44, backgroundColor: bg, border: `1px solid ${border}` }}>
                     {c.icon}
