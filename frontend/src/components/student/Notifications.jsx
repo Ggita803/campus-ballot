@@ -167,12 +167,15 @@ export default function Notifications({ user }) {
 												className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
 												onClick={() => markAsRead(n._id)}
 												disabled={markingIds.includes(n._id)}
-												style={{ minWidth: 120 }}
+												style={{ minWidth: 44 }}
 											>
 												{markingIds.includes(n._id) ? (
 													<FontAwesomeIcon icon={faSpinner} spin />
 												) : (
-													<><FontAwesomeIcon icon={faCheckCircle} className="me-2" /> Mark as read</>
+													<>
+														<FontAwesomeIcon icon={faCheckCircle} className="me-0 me-sm-2" />
+														<span className="d-none d-sm-inline">Mark as read</span>
+													</>
 												)}
 											</button>
 										)}
