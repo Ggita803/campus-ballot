@@ -25,6 +25,7 @@ import Users from "../pages/Users"; // Importing the Users page
 import Elections from "../pages/Elections"; // Importing the Elections page
 import Logs from "../pages/Logs"; // Importing the Logs page
 import Notifications from "../components/admin/Notifications"; // Importing Notifications component  
+import AdminSettings from "../components/admin/AdminSettings";
 import Reports from "../components/admin/Reports";
 import Results from "../components/admin/Results";
 
@@ -518,6 +519,7 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
               <Route path="users" element={<Users user={user} />} />
               <Route path="logs" element={<Logs user={user} />} />
               <Route path="notifications" element={<Notifications user={user} />} />
+              <Route path="settings" element={<AdminSettings user={user} />} />
               <Route path="reports" element={<Reports user={user} />} />
               <Route path="results" element={<Results user={user} />} />
               {/* Add more admin routes here */}
