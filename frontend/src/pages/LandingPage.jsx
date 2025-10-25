@@ -16,6 +16,17 @@ const LandingPage = () => {
     };
   }, []);
 
+  // detect small screens so we can apply inline mobile styles immediately
+  const [isMobileNav, setIsMobileNav] = useState(false);
+  useEffect(() => {
+    function update() {
+      setIsMobileNav(window.innerWidth < 992);
+    }
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   // Contact form handler (client-side simulation)
   const handleContactSubmit = (e) => {
     e.preventDefault();
@@ -94,7 +105,7 @@ const LandingPage = () => {
         className="navbar navbar-expand-lg navbar-dark fixed-top"
         style={{ backgroundColor: "#003366", width: "100%", height: '72px' }}
       >
-        <div className="container-fluid px-4">
+        <div className="container-fluid px-4" style={isMobileNav ? { paddingLeft: 20, paddingRight: 20 } : undefined}>
           <Link className="navbar-brand fw-bold d-flex align-items-center" to="/" style={{ fontSize: '1.05rem' }}>
             <img src={kyuLogo} alt="Kyambogo University" style={{ height: 48, marginRight: 10 }} />
             <span style={{ fontSize: '1.15rem' }}>Campus Ballot</span>
@@ -112,7 +123,7 @@ const LandingPage = () => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <div className="collapse navbar-collapse" id="navbarSupportedContent" style={isMobileNav ? { paddingLeft: 8, paddingRight: 8 } : undefined}>
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
                 <a className="nav-link" href="#about">About</a>
@@ -128,8 +139,8 @@ const LandingPage = () => {
               </li>
             </ul>
 
-            <div className="d-flex">
-              <Link to="/register" className="btn btn-primary me-2 d-flex align-items-center" style={{ minWidth: 140, padding: '0.45rem 0.85rem' }}>
+            <div className="d-grid gap-2 d-sm-flex align-items-center" style={isMobileNav ? { paddingLeft: 12, paddingRight: 12 } : undefined}>
+              <Link to="/register" className="btn btn-primary me-2 d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 140, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.85rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="8.5" cy="7" r="4" />
@@ -139,7 +150,7 @@ const LandingPage = () => {
                 <span>Register</span>
               </Link>
 
-              <Link to="/login" className="btn btn-light d-flex align-items-center" style={{ minWidth: 120, padding: '0.45rem 0.75rem' }} aria-label="Login">
+              <Link to="/login" className="btn btn-light d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 120, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.75rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined, marginTop: isMobileNav ? 12 : undefined }} aria-label="Login">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                   <polyline points="10 17 15 12 10 7" />
