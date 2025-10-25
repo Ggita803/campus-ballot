@@ -9,7 +9,10 @@ import {
   faSignOutAlt,
   faUser,
   faCircle,
-  faTimes
+  faTimes,
+  faTrash,
+  faEye,
+  faCheck
 } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "../components/admin/Slidebar";
 import OverviewCards from "../components/admin/OverviewCards";
@@ -57,29 +60,8 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
       unread: false
     }
   ]);
-  const [notifications] = useState([
-    {
-      id: 1,
-      title: "New Election Created",
-      message: "Student Council Election 2024 has been created",
-      time: "1 hour ago",
-      type: "success"
-    },
-    {
-      id: 2,
-      title: "Vote Cast",
-      message: "A new vote was cast in Presidential Election",
-      time: "3 hours ago",
-      type: "info"
-    },
-    {
-      id: 3,
-      title: "Candidate Approved",
-      message: "Muchwezi Onesmus has been approved as candidate",
-      time: "5 hours ago",
-      type: "warning"
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   useEffect(() => {
     // initial fetch remains as fallback; realtime updates handled by socket
@@ -202,6 +184,130 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
     }
   };
 
+  // Notifications: fetch, mark read, delete
+  const fetchNotifications = async () => {
+    setLoadingNotifications(true);
+    // ensure we have a token
+    const token = user?.token || localStorage.getItem('token');
+    if (!token) {
+      setLoadingNotifications(false);
+      console.warn('Not authenticated - no token available to fetch notifications');
+      Swal.fire('Unauthorized', 'You must be logged in to view notifications', 'warning');
+      return;
+    }
+
+    try {
+      // Try admin notifications endpoint first, fallback to general
+      let res;
+      try {
+        res = await axios.get("http://localhost:5000/api/admin/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        res = await axios.get("http://localhost:5000/api/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      setNotifications(Array.isArray(res.data) ? res.data : res.data.notifications || []);
+    } catch (err) {
+      // better debug info
+      console.error("Failed to load notifications", err?.response?.status, err?.response?.data || err.message || err);
+      if (err?.response?.status === 401) {
+        Swal.fire('Unauthorized', 'Your session may have expired — please log in again.', 'warning');
+      } else if (err?.response?.status === 404) {
+        Swal.fire('Not found', 'Notifications endpoint not found on the server.', 'error');
+      } else {
+        Swal.fire('Error', 'Failed to load notifications', 'error');
+      }
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const markNotificationAsRead = async (id) => {
+    // optimistic UI update
+    const token = user?.token || localStorage.getItem('token');
+    if (!token) return Swal.fire('Unauthorized', 'You must be logged in to mark notifications as read', 'warning');
+
+    setNotifications(prev => (prev || []).map(n => (n._id === id || n.id === id) ? { ...n, read: true } : n));
+    try {
+      await axios.put(`http://localhost:5000/api/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      // try admin path
+      try {
+        await axios.put(`http://localhost:5000/api/admin/notifications/${id}/read`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (e) {
+        console.error("Failed to mark notification read", e);
+        // revert optimistic update
+        setNotifications(prev => (prev || []).map(n => (n._id === id || n.id === id) ? { ...n, read: false } : n));
+        if (e?.response?.status === 401) Swal.fire('Unauthorized', 'Your session may have expired — please log in again.', 'warning');
+        else Swal.fire('Error', 'Failed to mark notification as read', 'error');
+      }
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    const confirm = await Swal.fire({
+      title: 'Delete notification?',
+      text: 'This will permanently remove the notification.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel'
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/notifications/${id}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setNotifications((prev) => prev.filter(n => !(n._id === id || n.id === id)));
+      Swal.fire('Deleted', 'Notification removed', 'success');
+    } catch (err) {
+      // try admin path
+      try {
+        await axios.delete(`http://localhost:5000/api/admin/notifications/${id}`, {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        });
+        setNotifications((prev) => prev.filter(n => !(n._id === id || n.id === id)));
+        Swal.fire('Deleted', 'Notification removed', 'success');
+      } catch (e) {
+        console.error('Failed to delete notification', e);
+        Swal.fire('Error', 'Failed to delete notification', 'error');
+      }
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.read && !(n.read === true));
+    if (unread.length === 0) return Swal.fire('Info', 'No unread notifications', 'info');
+    setLoadingNotifications(true);
+    try {
+      // If backend supports bulk endpoint, call it. Otherwise mark one-by-one.
+      try {
+        await axios.put('http://localhost:5000/api/notifications/mark-all-read', {}, {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        });
+      } catch (_) {
+        // fallback: mark each
+        await Promise.all(unread.map(n => axios.put(`http://localhost:5000/api/notifications/${n._id || n.id}/read`, {}, {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        })));
+      }
+      setNotifications((prev) => prev.map(n => ({ ...n, read: true })));
+      Swal.fire('Success', 'All notifications marked as read', 'success');
+    } catch (err) {
+      console.error('Failed to mark all read', err);
+      Swal.fire('Error', 'Failed to mark all notifications as read', 'error');
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
   if (loading)
     return (
       <div
@@ -286,41 +392,87 @@ function AdminDashboard({ user: initialUser, onLogout }) { // Adding onLogout pr
                   className="btn btn-link nav-link position-relative p-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowNotificationsDropdown(!showNotificationsDropdown);
+                    const opening = !showNotificationsDropdown;
+                    setShowNotificationsDropdown(opening);
                     setShowMessagesDropdown(false);
+                    if (opening) fetchNotifications();
                   }}
                   style={{ border: 'none', background: 'none' }}
                 >
                   <FontAwesomeIcon icon={faBell} size="lg" className="text-primary" />
-                  {notifications.length > 0 && (
+                  {notifications && notifications.filter(n => !n.read).length > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
-                      {notifications.length}
+                      {notifications.filter(n => !n.read).length}
                     </span>
                   )}
                 </button>
                 {showNotificationsDropdown && (
-                  <div className="dropdown-menu dropdown-menu-end show" style={{ minWidth: '350px', maxHeight: '400px', overflowY: 'auto' }}>
+                  <div
+                    className="dropdown-menu dropdown-menu-end show"
+                    style={{
+                      minWidth: '360px',
+                      maxHeight: '420px',
+                      overflowY: 'auto',
+                      position: 'absolute',
+                      top: '56px',
+                      right: '1rem',
+                      zIndex: 2000
+                    }}
+                  >
                     <div className="dropdown-header d-flex justify-content-between align-items-center">
-                      <span className="fw-bold">Notifications</span>
-                      <span className="badge bg-warning">{notifications.length}</span>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-bold">Notifications</span>
+                        {loadingNotifications && <small className="text-muted">Loading...</small>}
+                      </div>
+                      <div>
+                        <button className="btn btn-sm btn-link" onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}>
+                          Mark all read
+                        </button>
+                        <span className="badge bg-warning ms-2">{notifications.length}</span>
+                      </div>
                     </div>
                     <div className="dropdown-divider"></div>
-                    {notifications.map(notification => (
-                      <div key={notification.id} className="dropdown-item p-3">
-                        <div className="d-flex align-items-start">
-                          <div className="flex-shrink-0">
-                            <span className={`badge bg-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : 'info'} me-2`}>
-                              <FontAwesomeIcon icon={faBell} size="xs" />
-                            </span>
-                          </div>
-                          <div className="flex-grow-1">
-                            <div className="fw-bold small">{notification.title}</div>
-                            <div className="text-muted small">{notification.message}</div>
-                            <div className="text-muted small">{notification.time}</div>
+                    {loadingNotifications ? (
+                      <div className="px-3 py-4 text-center text-muted">Loading notifications...</div>
+                    ) : notifications.length === 0 ? (
+                      <div className="px-3 py-4 text-center text-muted">No notifications</div>
+                    ) : (
+                      notifications.map(notification => (
+                        <div key={notification._id || notification.id} className={`dropdown-item p-2 ${!notification.read ? 'bg-light' : ''}`}>
+                          <div className="d-flex align-items-start">
+                            <div className="flex-shrink-0 me-2">
+                              <span className={`badge bg-${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : 'info'} d-inline-flex align-items-center justify-content-center`} style={{ width: 34, height: 34 }}>
+                                <FontAwesomeIcon icon={faBell} />
+                              </span>
+                            </div>
+                            <div className="flex-grow-1">
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div>
+                                  <div className="fw-bold small">{notification.title}</div>
+                                  <div className="text-muted small">{notification.message}</div>
+                                  <div className="text-muted small mt-1">{notification.time}</div>
+                                </div>
+                                <div className="ms-2 text-end">
+                                  <div className="btn-group" role="group">
+                                    <button className="btn btn-sm btn-outline-secondary" onClick={(e) => { e.stopPropagation(); setShowNotificationsDropdown(false); navigate('/admin/notifications'); if (!notification.read) markNotificationAsRead(notification._id || notification.id); }}>
+                                      View
+                                    </button>
+                                    {!notification.read && (
+                                      <button className="btn btn-sm btn-primary ms-1" onClick={(e) => { e.stopPropagation(); markNotificationAsRead(notification._id || notification.id); }}>
+                                        <FontAwesomeIcon icon={faCheck} className="me-1" /> Mark as read
+                                      </button>
+                                    )}
+                                    <button className="btn btn-sm btn-light text-danger" onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id || notification.id); }}>
+                                      <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                     <div className="dropdown-divider"></div>
                     <div className="dropdown-item text-center">
                       <small><a href="#" className="text-decoration-none">View all notifications</a></small>
