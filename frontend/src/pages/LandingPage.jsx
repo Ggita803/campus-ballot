@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Card, Modal } from "react-bootstrap";
+import { Container, Row, Col, Button, Card, Modal, Accordion } from "react-bootstrap";
 import "./LandingPage.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Swal from 'sweetalert2';
 
 const LandingPage = () => {
   useEffect(() => {
@@ -14,6 +15,78 @@ const LandingPage = () => {
       document.body.classList.remove('has-fixed-navbar');
     };
   }, []);
+
+  // Contact form handler (client-side simulation)
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = fd.get('name');
+    const email = fd.get('email');
+    const subject = fd.get('subject');
+    const message = fd.get('message');
+
+    // In a real app we'd POST to /api/contact. For now show a success toast and reset.
+    Swal.fire({
+      icon: 'success',
+      title: 'Message sent',
+      html: `Thanks <strong>${name}</strong> — we received your message about "${subject}". We'll reply to <a href=\"mailto:${email}\">${email}</a> within 1-2 business days.`,
+      timer: 4000,
+      showConfirmButton: false,
+    });
+
+    e.target.reset();
+  };
+
+  // FAQ items (could be moved to CMS later)
+  const faqs = [
+    {
+      q: 'How do I register?',
+      a: 'Click Register, fill in your student details (student ID and institutional email for students) and submit. You will receive a confirmation email.'
+    },
+    {
+      q: 'Who can run elections on this platform?',
+      a: 'University administrators with the admin role can create and manage elections. Contact your university IT office to request admin access.'
+    },
+    {
+      q: 'Is this system secure?',
+      a: 'Yes — votes are encrypted and stored with auditable logs. We recommend running a pilot before production elections and enabling 2FA for admin accounts.'
+    },
+    {
+      q: 'How do students verify their votes?',
+      a: 'After voting, students receive a non-identifying receipt code they can use to verify their vote on the results page.'
+    }
+  ];
+
+  // Append a few additional FAQ entries requested
+  faqs.push(
+    {
+      q: 'Who is eligible to vote?',
+      a: 'Eligibility is defined by the university. Typically all registered students with an active student account and verified institutional email are eligible during open election periods.'
+    },
+    {
+      q: 'How long do you keep data?',
+      a: 'We retain election logs and non-identifying audit trails for 2 years by default; personal data retention follows university policy and GDPR-like best practices where applicable.'
+    },
+    {
+      q: 'What happens if there is a dispute?',
+      a: 'The platform provides detailed audit logs to support investigations. Dispute resolution should follow your institution\'s election rules.'
+    }
+  );
+  // Extra FAQ entries
+  faqs.push(
+    {
+      q: 'Can students nominate candidates?',
+      a: 'Yes — nomination flows are configurable per election. Administrators can open nomination windows and accept submissions per the university election rules.'
+    },
+    {
+      q: 'Can alumni or external users vote?',
+      a: 'Voting eligibility is determined by the election configuration. Alumni or external voters can only participate if explicitly allowed by the institution and supported in the election settings.'
+    },
+    {
+      q: 'How do I reset my password?',
+      a: 'Use the "Forgot password" link on the login page. A secure reset email will be sent to your registered institutional email address.'
+    }
+  );
   return (
     <div style={{ fontFamily: "'Merriweather', serif", overflowX: "hidden" }}>
       {/* ===== NAVBAR ===== */}
@@ -22,80 +95,59 @@ const LandingPage = () => {
         style={{ backgroundColor: "#003366", width: "100%", height: '72px' }}
       >
         <div className="container-fluid px-4">
-          <a className="navbar-brand fw-bold d-flex align-items-center" href="#" style={{ fontSize: '1.05rem' }}>
-            <img src={kyuLogo} alt="Kyambogo University" style={{ height: 70, marginRight: 10 }} />
+          <Link className="navbar-brand fw-bold d-flex align-items-center" to="/" style={{ fontSize: '1.05rem' }}>
+            <img src={kyuLogo} alt="Kyambogo University" style={{ height: 48, marginRight: 10 }} />
             <span style={{ fontSize: '1.15rem' }}>Campus Ballot</span>
-          </a>
+          </Link>
+
           <button
             className="navbar-toggler"
             type="button"
             data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
             aria-expanded="false"
             aria-label="Toggle navigation"
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav ms-auto align-items-center">
+
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <a className="nav-link active" href="#about">
-                  About
-                </a>
+                <a className="nav-link" href="#about">About</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#features">
-                  Features
-                </a>
+                <a className="nav-link" href="#features">Features</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#how">
-                  How It Works
-                </a>
+                <a className="nav-link" href="#developers">Developers</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#testimonials">
-                  Testimonials
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#developers">
-                  Developers
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#contact">
-                  Contact
-                </a>
+                <a className="nav-link" href="#contact">Contact</a>
               </li>
             </ul>
-            <Link
-              to="/login"
-              className="btn btn-light ms-3 d-flex align-items-center justify-content-center"
-              style={{ minWidth: 140, padding: '0.5rem 0.85rem' }}
-              aria-label="Login"
-            >
-              {/* small inline SVG login icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ marginRight: 8 }}
-                aria-hidden="true"
-              >
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
-              <span>Login</span>
-            </Link>
+
+            <div className="d-flex">
+              <Link to="/register" className="btn btn-primary me-2 d-flex align-items-center" style={{ minWidth: 140, padding: '0.45rem 0.85rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <path d="M20 8v6" />
+                  <path d="M23 11h-6" />
+                </svg>
+                <span>Register</span>
+              </Link>
+
+              <Link to="/login" className="btn btn-light d-flex align-items-center" style={{ minWidth: 120, padding: '0.45rem 0.75rem' }} aria-label="Login">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                <span>Login</span>
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
@@ -342,7 +394,7 @@ const LandingPage = () => {
           <h2 className="text-center fw-bold mb-5" style={{ color: "#003366" }}>
             Core Features
           </h2>
-          <Row className="g-4">
+          <Row className="g-4 contact-columns">
             {[
               {
                 icon: '🛡️',
@@ -386,28 +438,35 @@ const LandingPage = () => {
             {[
               {
                 img: 'https://via.placeholder.com/100?text=Omolo ',
-                name: 'Sa',
+                name: 'Sarah',
                 text: 'Voting has never been this easy. The interface is clean and quick!',
+                faculty: 'Faculty of Science',
+                course: 'Information Technology'
               },
               {
                 img: 'https://via.placeholder.com/100?text=David',
                 name: 'David',
                 text: 'I love the transparency and the instant results. Great system!',
+                faculty: 'Faculty of Engineering',
+                course: 'Computer Engineering'
               },
               {
                 img: 'https://via.placeholder.com/100?text=Emily',
                 name: 'Emily',
                 text: 'As an admin, managing elections is now stress-free and automated.',
+                faculty: 'Faculty of Business',
+                course: 'Marketing'
               },
             ].map((item, index) => (
               <Col lg={3} md={4} key={index}>
-                <Card className="p-3 shadow-sm border-0 h-100 text-center">
-                  <img src={item.img} alt={item.name} className="testimonial-img mb-3" />
-                  <Card.Body>
-                    <p className="text-muted">"{item.text}"</p>
-                    <h6 className="fw-bold mt-3">{item.name}</h6>
-                  </Card.Body>
-                </Card>
+                    <Card className="p-3 shadow-sm border-0 h-100 text-center">
+                      <img src={item.img} alt={item.name} className="testimonial-img mb-3" />
+                      <Card.Body className="testimonial-italic" style={{fontStyle:'italic'}}>
+                        <p style={{fontStyle:'italic'}} className="text-muted">"{item.text}"</p>
+                        <h6 style={{fontStyle:'italic'}} className="fw-bold mt-3">{item.name}</h6>
+                        <div style={{fontStyle:'italic'}} className="small text-secondary mt-1">{item.faculty}<br />{item.course}</div>
+                      </Card.Body>
+                    </Card>
               </Col>
             ))}
           </Row>
@@ -463,13 +522,100 @@ const LandingPage = () => {
       </section>
 
       {/* ===== CONTACT ===== */}
-      <section id="contact" className="py-5 bg-light" style={{ width: "100%" }}>
-        <div className="container-fluid px-5 text-center">
-          <h2 className="fw-bold mb-4" style={{ color: "#003366" }}>
+      <section id="contact" className="py-5 bg-light">
+        <div className="container-fluid px-5">
+          <h2 className="fw-bold mb-4 text-center" style={{ color: "#003366" }}>
             Contact Us
           </h2>
-          <p>Email: info@campusvoting.com</p>
-          <p>Kyambogo University, Kampala, Uganda</p>
+          <Row className="g-4">
+            <Col md={6}>
+              <Card className="p-3 h-100">
+                <h5 className="fw-bold">Contact Information</h5>
+                <div className="contact-info-list mt-3">
+                  <div className="contact-line d-flex align-items-start gap-3 py-3" style={{ borderBottom: '1px solid rgba(3,51,102,0.06)' }}>
+                      <i className="fa-solid fa-envelope contact-icon" aria-hidden="true" style={{ width: 52, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,99,181,0.12)', borderRadius: 10, color: '#0b63b5', fontSize: 20, flex: '0 0 52px' }}></i>
+                      <div className="contact-text" style={{ lineHeight: 1.15 }}>
+                        <div className="small text-muted" style={{ marginBottom: 4 }}>Email</div>
+                        <a href="mailto:info@campusballot.com" className="fw-semibold contact-value" style={{ fontWeight: 600, color: '#0b63b5', textDecoration: 'underline' }}>info@campusballot.com</a>
+                      </div>
+                    </div>
+
+                  <div className="contact-line d-flex align-items-start gap-3 py-3" style={{ borderBottom: '1px solid rgba(3,51,102,0.06)' }}>
+                    <i className="fa-solid fa-phone contact-icon" aria-hidden="true" style={{ width: 52, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,99,181,0.12)', borderRadius: 10, color: '#0b63b5', fontSize: 20, flex: '0 0 52px' }}></i>
+                    <div className="contact-text" style={{ lineHeight: 1.15 }}>
+                      <div className="small text-muted" style={{ marginBottom: 4 }}>Phone</div>
+                      <a href="tel:+256700000000" className="fw-semibold contact-value" style={{ fontWeight: 600, color: '#0b63b5', textDecoration: 'underline' }}>+256 700 000 000</a>
+                    </div>
+                  </div>
+
+                  <div className="contact-line d-flex align-items-start gap-3 py-3" style={{ borderBottom: '1px solid rgba(3,51,102,0.06)' }}>
+                    <i className="fa-solid fa-location-dot contact-icon" aria-hidden="true" style={{ width: 52, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,99,181,0.12)', borderRadius: 10, color: '#0b63b5', fontSize: 20, flex: '0 0 52px' }}></i>
+                    <div className="contact-text" style={{ lineHeight: 1.15 }}>
+                      <div className="small text-muted" style={{ marginBottom: 4 }}>Office</div>
+                      <div className="fw-semibold" style={{ fontWeight: 600, color: '#111' }}>School of Computing and Information Science, Kyambogo University</div>
+                    </div>
+                  </div>
+
+                  <div className="contact-line d-flex align-items-start gap-3 py-3" style={{ borderBottom: '1px solid rgba(3,51,102,0.06)' }}>
+                    <i className="fa-solid fa-clock contact-icon" aria-hidden="true" style={{ width: 52, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,99,181,0.12)', borderRadius: 10, color: '#0b63b5', fontSize: 20, flex: '0 0 52px' }}></i>
+                    <div className="contact-text" style={{ lineHeight: 1.15 }}>
+                      <div className="small text-muted" style={{ marginBottom: 4 }}>Office Hours</div>
+                      <div className="fw-semibold" style={{ fontWeight: 600 }}>Mon - Fri, 09:00 - 17:00</div>
+                    </div>
+                  </div>
+
+                  <div className="contact-line d-flex align-items-start gap-3 py-3" style={{ borderBottom: 'none' }}>
+                    <i className="fa-solid fa-life-ring contact-icon" aria-hidden="true" style={{ width: 52, height: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(11,99,181,0.12)', borderRadius: 10, color: '#0b63b5', fontSize: 20, flex: '0 0 52px' }}></i>
+                    <div className="contact-text" style={{ lineHeight: 1.15 }}>
+                      <div className="small text-muted" style={{ marginBottom: 4 }}>Support</div>
+                      <a href="mailto:support@campusballot.com" className="fw-semibold contact-value" style={{ fontWeight: 600, color: '#0b63b5', textDecoration: 'underline' }}>support@campusballot.com</a>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card className="p-3 h-100">
+                <h5 className="fw-bold">Send us a message</h5>
+                <form onSubmit={handleContactSubmit}>
+                  <div className="mb-2">
+                    <input style={{height:50}} className="form-control" name="name" placeholder="Your name" required />
+                  </div>
+                  <div className="mb-2">
+                    <input style={{height:50}} className="form-control" type="email" name="email" placeholder="Your email" required />
+                  </div>
+                  <div className="mb-2">
+                    <input style={{height:50}}  className="form-control" name="subject" placeholder="Subject" required />
+                  </div>
+                  <div className="mb-2">
+                    <textarea className="form-control" name="message" rows={10} placeholder="Message" required></textarea>
+                  </div>
+                  <div className="d-grid">
+                    <button className="btn btn-primary btn-md" type="submit">Send Message</button>
+                  </div>
+                </form>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </section>
+
+      {/* ===== FAQS ===== */}
+      <section id="faqs" className="py-5" style={{ width: '100%' }}>
+        <div className="container-fluid px-5">
+          <h2 className="fw-bold mb-4 text-center" style={{ color: '#003366' }}>Frequently Asked Questions</h2>
+          <Row className="justify-content-center">
+            <Col lg={8}>
+              <Accordion defaultActiveKey="0">
+                {faqs.map((f, i) => (
+                  <Accordion.Item eventKey={String(i)} key={i}>
+                    <Accordion.Header>{f.q}</Accordion.Header>
+                    <Accordion.Body>{f.a}</Accordion.Body>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            </Col>
+          </Row>
         </div>
       </section>
 
@@ -479,7 +625,7 @@ const LandingPage = () => {
         style={{ backgroundColor: "#003366", width: "100%" }}
       >
         <p className="mb-0">
-          © {new Date().getFullYear()} Campus Voting | Developed by Concept
+          © {new Date().getFullYear()} Campus Ballot | Developed by Concept
           Crashers
         </p>
       </footer>

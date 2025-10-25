@@ -6,6 +6,7 @@ import { faEnvelope, faLock, faSignInAlt, faEye, faEyeSlash } from "@fortawesome
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import useSocket from '../hooks/useSocket';
+import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
 
 function Login({ setCurrentUser }) {
   const { reconnectWithToken } = useSocket();
@@ -91,10 +92,16 @@ function Login({ setCurrentUser }) {
     >
       <div className={`login-inner-container bg-white p-4 rounded-1 shadow ${styles["login-inner-container"]}`}
         style={{ minWidth: 300, maxWidth: 400, width: "100%" }}>
-        <h2 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
+        {/* <h2 className="mb-4 text-center fw-bold" style={{ color: "#2563eb" }}>
           <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
           Login
-        </h2>
+        </h2> */}
+
+        <div className="text-center mb-4">
+          <img src={kyuLogo} alt="Kyambogo University Logo" style={{ width: 100, marginBottom: 0 }} />
+          <h5 className="fw-bold" style={{ color: "#2563eb" }}>Campus Ballot</h5>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="input-group mb-3">
             <span className="input-group-text"><FontAwesomeIcon icon={faEnvelope} /></span>
