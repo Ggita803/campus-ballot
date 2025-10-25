@@ -340,6 +340,10 @@ const register = asyncHandler(async (req, res) => {
     // If registering student, enforce institutional email format and studentId match
     if (role === 'student') {
       const sid = (studentId || '').toString().trim();
+      // Server-side: ensure student ID is numeric
+      if (!/^[0-9]+$/.test(sid)) {
+        return res.status(400).json({ message: 'Student ID must contain only digits.' });
+      }
       const mail = (email || '').toString().trim().toLowerCase();
       if (!sid) {
         return res.status(400).json({ message: 'Student ID is required for student registrations.' });
