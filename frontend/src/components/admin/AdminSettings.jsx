@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -74,6 +74,38 @@ export default function AdminSettings({ user }) {
   // RBAC / MFA enforcement
   const [enforceMfa, setEnforceMfa] = useState(false);
   const [mfaGraceDays, setMfaGraceDays] = useState(7);
+
+  // load settings from backend when available
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } });
+        const s = res.data || {};
+        if (!mounted) return;
+        if (s.general) {
+          setSiteName(s.general.siteName || siteName);
+          setSiteLogo(s.general.siteLogo || siteLogo);
+        }
+        if (s.email) {
+          setSmtpHost(s.email.smtpHost || smtpHost);
+          setSmtpPort(s.email.smtpPort || smtpPort);
+        }
+        if (s.notifications) setNotifyOnVote(Boolean(s.notifications.notifyOnVote));
+        if (s.security) {
+          setEnforceMfa(Boolean(s.security.enforceMfa));
+          setMfaGraceDays(Number(s.security.mfaGraceDays) || mfaGraceDays);
+        }
+      } catch (err) {
+        // silently ignore; frontend has fallbacks
+        console.log('Could not load settings from backend', err?.message || err);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // scroll + flash helper + toast
   const scrollToSection = (id, label) => {

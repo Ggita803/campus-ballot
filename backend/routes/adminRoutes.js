@@ -8,6 +8,10 @@ const Candidate = require('../models/Candidate');
 const Notification = require('../models/Notification');
 const Log = require('../models/Log');
 
+// settings controller + auth
+const settingsController = require('../controllers/settingsController');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
+
 router.get('/dashboard-stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -73,5 +77,21 @@ router.get('/dashboard-stats', async (req, res) => {
     });
   }
 });
+
+// --- Admin settings endpoints ---
+// Get current settings
+router.get('/settings', protect, adminOnly, settingsController.getSettings);
+
+// Update a section of settings (general, email, notifications, security)
+router.put('/settings/:section', protect, adminOnly, settingsController.updateSettingsSection);
+
+// Test SMTP connection (best-effort)
+router.post('/settings/test-smtp', protect, adminOnly, settingsController.testSmtp);
+
+// Update admin profile (current user)
+router.put('/profile', protect, adminOnly, settingsController.updateProfile);
+
+// Settings history
+router.get('/settings/history', protect, adminOnly, settingsController.listHistory);
 
 module.exports = router;

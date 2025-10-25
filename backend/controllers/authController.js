@@ -326,6 +326,9 @@ const register = asyncHandler(async (req, res) => {
       phone,
     } = req.body;
 
+    // Normalize email early (trim + lowercase) to avoid case/whitespace duplicates
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+
     // Validate essential fields
     if (!name || !email || !password) {
       console.log("[REGISTER ERROR]: Missing required fields");
@@ -334,8 +337,28 @@ const register = asyncHandler(async (req, res) => {
         .json({ message: "Please provide all required fields." });
     }
 
-    // Prevent duplicate emails
-    const userExists = await User.findOne({ email });
+    // If registering student, enforce institutional email format and studentId match
+    if (role === 'student') {
+      const sid = (studentId || '').toString().trim();
+      const mail = (email || '').toString().trim().toLowerCase();
+      if (!sid) {
+        return res.status(400).json({ message: 'Student ID is required for student registrations.' });
+      }
+      const parts = mail.split('@');
+      if (parts.length !== 2) {
+        return res.status(400).json({ message: 'Provide a valid institutional email like 2400812450@std.kyu.ac.ug' });
+      }
+      const [local, domain] = parts;
+      if (domain !== 'std.kyu.ac.ug') {
+        return res.status(400).json({ message: 'Student email must use the @std.kyu.ac.ug domain.' });
+      }
+      if (local !== sid) {
+        return res.status(400).json({ message: 'The local part of the email must exactly match the Student ID.' });
+      }
+    }
+
+    // Prevent duplicate emails (use normalized email)
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       console.log("[REGISTER ERROR]: User already exists with this email");
       return res
@@ -346,10 +369,10 @@ const register = asyncHandler(async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user (store normalized email)
     const newUser = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       role,
       studentId,
@@ -430,7 +453,8 @@ const register = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).select("+password");
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -505,7 +529,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
 const forgotPassword = asyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -625,12 +650,14 @@ const changePassword = asyncHandler(async (req, res) => {
 const resendVerification = asyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
