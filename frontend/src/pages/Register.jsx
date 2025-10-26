@@ -72,6 +72,14 @@ const facultyCourses = {
     "Management Science",
     "Banking and Microfinance"
   ],
+  "Arts and Humanities": [
+    "Arts in Humanitites ",
+    "Arts with Education",
+    "Performing Arts ",
+    "Cultural Heritage Studies",
+    "Archeology and Heritage Management",
+    "Ethics and Human Rights"
+  ]
   //We shall add more faculties and courses as needed
 };
 
