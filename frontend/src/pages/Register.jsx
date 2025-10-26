@@ -96,6 +96,19 @@ const facultyCourses = {
     "Surveying and Land Information Systems",
     "Science in Building Economics",
     "Science in Land Economics"
+  ],
+  "Agriculture":[
+    "Vocational Studies in Agriculture with Education"
+  ],
+  "Art and Industrial Design": [
+    "Art and Industrial Design",
+    "Interior and Landscape Design ",
+    "Textile and Apparel Design",
+    "Computer and Graphic Design",
+    "Art and Design with Education",
+    "Fine Art",
+    "Interior Design",
+    "Textiles Design and Surface Design"
   ]
   //We shall add more faculties and courses as needed
 };
