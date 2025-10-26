@@ -109,6 +109,23 @@ const facultyCourses = {
     "Fine Art",
     "Interior Design",
     "Textiles Design and Surface Design"
+  ],
+  "Education":[
+    "Pre-Primary Education"
+  ],
+  "Special Needs & Rehabilitation":[
+    "Adult and Community Education",
+    "Community Development and Social Justice",
+    "Community Based Rehabilitation",
+    "Sign Language Interpreting",
+    "Mobility and Rehabilitation"
+  ],
+  "Vocational Studies":[
+    "Vocational Studies in Home Economics with Education",
+    "Science in Human Nutrition and Dietetics",
+    "Hotel and Institutional Catering",
+    "Fashion and Cosmetology",
+    "Fashion and Apparel Design"
   ]
   //We shall add more faculties and courses as needed
 };
