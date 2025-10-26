@@ -47,9 +47,21 @@ const facultyCourses = {
 
   ],
   Science: [
-    "Biology",
-    "Chemistry",
-    "Physics",
+    "Leather Tanning Technology",
+    "Science Technology - Physics",
+    "Science Technology - Chemistry",
+    "Science Technology - Biology",
+    "Food Science and Processing Technology",
+    "Textile and Clothing Technology",
+    "Statistics",
+    "Material and Ceramic Science Technology",
+    "Sports and Leisure Management",
+    "Environmental Science Technology and Management",
+    "Education (Biological Sciences)",
+    "Education (Economics)",
+    "Education (Physical Sciences)",
+    "Sports and Exercise Instruction",
+    "Food Processing Technology"
   ],
   Business: [
     "Accounting",
