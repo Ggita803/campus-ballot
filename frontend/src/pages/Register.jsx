@@ -64,9 +64,13 @@ const facultyCourses = {
     "Food Processing Technology"
   ],
   "Management & Entrepreneurship": [
-    "Accounting",
-    "Marketing",
-    "Finance"
+    "Business Studies with Education",
+    "Business Administration",
+    " Science in Accounting and Finance",
+    "Administrative Science",
+    "Procurement and Logistics Management",
+    "Management Science",
+    "Banking and Microfinance"
   ],
   //We shall add more faculties and courses as needed
 };
