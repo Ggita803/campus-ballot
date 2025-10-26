@@ -79,6 +79,17 @@ const facultyCourses = {
     "Cultural Heritage Studies",
     "Archeology and Heritage Management",
     "Ethics and Human Rights"
+  ],
+  "Social Sciences": [
+    "Guidance and Counselling",
+    "Arts in Economics ",
+    "Demography & Reproductive Health",
+    "Development Studies",
+    "Public Administration and Resource Governance",
+    "Arts in Social Sciences",
+    "Social Work and Social Administration",
+    "Art in Security and Diplomatic Studies",
+    "Economics and Statistics"
   ]
   //We shall add more faculties and courses as needed
 };
