@@ -23,7 +23,7 @@ import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.
 
 // Sample data for faculties and courses
 const facultyCourses = {
-  Computing: [
+  "Computing and Information Science": [
     "Information Systems",
     "Information Technology and Computing",
     "Library and Information Science"
@@ -63,7 +63,7 @@ const facultyCourses = {
     "Sports and Exercise Instruction",
     "Food Processing Technology"
   ],
-  Business: [
+  "Management & Entrepreneurship": [
     "Accounting",
     "Marketing",
     "Finance"
