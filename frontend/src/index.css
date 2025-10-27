@@ -38,7 +38,7 @@ label {
   font-family: 'Poppins', Arial, Helvetica, sans-serif !important;
 }
 
-.form-control, .input-group-text, label {
+.input-group-text, label {
   font-size: 1.1rem !important; /* Adjust this value as needed (e.g., 1rem, 1.2rem, 16px, etc.) */
 }
 
@@ -226,19 +226,19 @@ td{
 }
 
 input, input::placeholder{
-  font-size: .85em !important;
+  font-size: .9em !important;
 }
 
 select{
-  font-size: .85em !important;
+  font-size: .9em !important;
 }
 
 option{
-  font-size: .85em;
+  font-size: .9em;
 }
 
 input{
-  font-size: .85em !important;
+  font-size: .9em !important;
 }
 
 
