@@ -27,6 +27,20 @@ const LandingPage = () => {
     return () => window.removeEventListener('resize', update);
   }, []);
 
+  // Scroll to top button state
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Contact form handler (client-side simulation)
   const handleContactSubmit = async (e) => {
     e.preventDefault();
@@ -1241,6 +1255,83 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="scroll-to-top-btn"
+          aria-label="Scroll to top"
+          style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '30px',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #003366 0%, #0056b3 100%)',
+            color: 'white',
+            border: 'none',
+            boxShadow: '0 4px 12px rgba(0,51,102,0.3)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.2rem',
+            transition: 'all 0.3s ease',
+            zIndex: 1000,
+            animation: 'fadeInUp 0.3s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px) scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,51,102,0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,51,102,0.3)';
+          }}
+        >
+          <i className="fa-solid fa-arrow-up"></i>
+        </button>
+      )}
+
+      {/* WhatsApp Floating Button */}
+      <a
+        href="https://wa.me/256786021431?text=Hello!%20I'm%20interested%20in%20Campus%20Ballot"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="whatsapp-float-btn"
+        aria-label="Chat on WhatsApp"
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: '#25D366',
+          color: 'white',
+          border: 'none',
+          boxShadow: '0 4px 12px rgba(37,211,102,0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.8rem',
+          transition: 'all 0.3s ease',
+          zIndex: 1000,
+          textDecoration: 'none'
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = 'scale(1.15) rotate(10deg)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(37,211,102,0.6)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,211,102,0.4)';
+        }}
+      >
+        <i className="fa-brands fa-whatsapp"></i>
+      </a>
     </div>
   );
 };
