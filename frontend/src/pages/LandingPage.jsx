@@ -683,10 +683,12 @@ const LandingPage = () => {
                         <i key={i} className="fa-solid fa-star" style={{ color: '#ffc107', fontSize: '0.9rem', marginRight: '2px' }}></i>
                       ))}
                     </div>
-                    <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
+                    <p className="text-muted mb-3" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+                      <em>"{item.text}"</em>
+                    </p>
                     <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
-                    <div className="small text-secondary">{item.faculty}</div>
-                    <div className="small text-muted">{item.course}</div>
+                    <div className="small text-secondary"><em>{item.faculty}</em></div>
+                    <div className="small text-muted"><em>{item.course}</em></div>
                   </Card.Body>
                 </Card>
               ))}
@@ -743,10 +745,12 @@ const LandingPage = () => {
                         <i key={i} className="fa-solid fa-star" style={{ color: '#ffc107', fontSize: '0.9rem', marginRight: '2px' }}></i>
                       ))}
                     </div>
-                    <p style={{fontStyle:'italic', fontSize: '0.95rem', lineHeight: '1.6'}} className="text-muted mb-3">"{item.text}"</p>
+                    <p className="text-muted mb-3" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+                      <em>"{item.text}"</em>
+                    </p>
                     <h6 className="fw-bold mb-1" style={{ color: '#003366' }}>{item.name}</h6>
-                    <div className="small text-secondary">{item.faculty}</div>
-                    <div className="small text-muted">{item.course}</div>
+                    <div className="small text-secondary"><em>{item.faculty}</em></div>
+                    <div className="small text-muted"><em>{item.course}</em></div>
                   </Card.Body>
                 </Card>
               ))}

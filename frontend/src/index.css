@@ -324,6 +324,24 @@ section .testimonial-card.card {
   outline: 0 !important;
 }
 
+/* Force italic styling on all testimonial text */
+.testimonial-card p,
+.testimonial-card p em,
+.testimonial-card p.text-muted,
+.testimonial-card p.text-muted em,
+.testimonial-card .small,
+.testimonial-card .small em,
+.testimonial-card div em,
+.testimonial-card .text-secondary,
+.testimonial-card .text-secondary em,
+.testimonial-card .text-muted,
+.testimonial-card .text-muted em,
+.testimonial-card div.small,
+.testimonial-card div.text-secondary,
+.testimonial-card div.text-muted {
+  font-style: italic !important;
+}
+
 .testimonial-card:hover,
 .testimonial-card.card:hover {
   transform: translateY(-8px);
