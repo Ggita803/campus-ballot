@@ -967,22 +967,24 @@ const LandingPage = () => {
       {/* ===== CALL TO ACTION ===== */}
       <section
         id="cta"
-        className="text-center text-white d-flex align-items-center justify-content-center flex-column"
+        className="text-center text-white d-flex align-items-center justify-content-center flex-column py-5 px-3"
         style={{
           backgroundColor: "#004080",
           minHeight: "50vh",
           width: "100%",
         }}
       >
-        <h2 className="fw-bold mb-4">
-          Be Part of the Future of Campus Elections
-        </h2>
-        <p className="mb-4">
-          Register today and make your voice count in every election.
-        </p>
-        <Link to="/register" className="btn btn-light btn-lg">
-          Get Started
-        </Link>
+        <div className="container">
+          <h2 className="fw-bold mb-4">
+            Be Part of the Future of Campus Elections
+          </h2>
+          <p className="mb-4 mx-auto" style={{ maxWidth: '600px' }}>
+            Register today and make your voice count in every election.
+          </p>
+          <Link to="/register" className="btn btn-light btn-lg">
+            Get Started
+          </Link>
+        </div>
       </section>
 
       {/* ===== CONTACT ===== */}
