@@ -28,7 +28,7 @@ const LandingPage = () => {
   }, []);
 
   // Contact form handler (client-side simulation)
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const name = fd.get('name');
@@ -36,16 +36,60 @@ const LandingPage = () => {
     const subject = fd.get('subject');
     const message = fd.get('message');
 
-    // In a real app we'd POST to /api/contact. For now show a success toast and reset.
-    Swal.fire({
-      icon: 'success',
-      title: 'Message sent',
-      html: `Thanks <strong>${name}</strong> — we received your message about "${subject}". We'll reply to <a href=\"mailto:${email}\">${email}</a> within 1-2 business days.`,
-      timer: 4000,
-      showConfirmButton: false,
-    });
+    try {
+      // Show loading state
+      Swal.fire({
+        title: 'Sending...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
-    e.target.reset();
+      // Send to backend API
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const data = await response.json();
+
+      // Show simple success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Message Sent!',
+        text: 'Thank you for contacting us. We\'ll get back to you soon.',
+        timer: 3000,
+        showConfirmButton: true,
+        confirmButtonText: 'OK'
+      });
+
+      // Reset form
+      e.target.reset();
+    } catch (error) {
+      console.error('Contact form error:', error);
+      
+      // Show error message
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Failed to send message. Please try again.',
+        showConfirmButton: true,
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   // FAQ items (could be moved to CMS later)
