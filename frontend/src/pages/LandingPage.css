@@ -177,21 +177,56 @@ body.has-fixed-navbar {
   }
   .navbar-collapse {
     background: #003366;
-    position: absolute;
-    top: 64px;
+    position: fixed;
+    top: 0;
     left: 0;
-    right: 0;
+    bottom: 0;
+    width: 280px;
     z-index: 999;
-    padding: 1rem; /* added padding so mobile collapsed menu breathes */
+    padding: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
   }
+  .navbar-collapse.show {
+    transform: translateX(0);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+  .navbar-collapse.collapsing {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  /* Mobile nav logo header */
+  .mobile-nav-logo {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  /* Mobile nav content area */
+  .mobile-nav-content {
+    padding: 1rem;
+  }
+  
+  /* Left-align buttons in mobile nav */
+  .navbar-collapse .d-grid {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
   .navbar-collapse .btn {
-    /* make collapsed buttons comfortable to tap */
-    padding: 0.6rem 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
     font-weight: 700;
-  }
-  /* add vertical spacing between stacked buttons in the collapsed mobile menu */
-  .navbar-collapse .btn + .btn {
-    margin-top: 0.6rem;
+    justify-content: flex-start;
+    margin: 0 !important;
   }
 }
 

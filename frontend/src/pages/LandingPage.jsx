@@ -123,41 +123,50 @@ const LandingPage = () => {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          <div className="collapse navbar-collapse" id="navbarSupportedContent" style={isMobileNav ? { paddingLeft: 8, paddingRight: 8 } : undefined}>
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <a className="nav-link" href="#about">About</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#features">Features</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#developers">Developers</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#contact">Contact</a>
-              </li>
-            </ul>
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            {/* Mobile logo header - only visible on mobile */}
+            <div className="mobile-nav-logo d-lg-none">
+              <img src={kyuLogo} alt="Kyambogo University" style={{ height: 40 }} />
+              <span className="text-white fw-bold" style={{ fontSize: '1.1rem' }}>Campus Ballot</span>
+            </div>
 
-            <div className="d-grid gap-2 d-sm-flex align-items-center" style={isMobileNav ? { paddingLeft: 12, paddingRight: 12 } : undefined}>
-              <Link to="/register" className="btn btn-primary me-2 d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 140, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.85rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="8.5" cy="7" r="4" />
-                  <path d="M20 8v6" />
-                  <path d="M23 11h-6" />
-                </svg>
-                <span>Register</span>
-              </Link>
+            {/* Nav content */}
+            <div className="mobile-nav-content">
+              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                <li className="nav-item">
+                  <a className="nav-link" href="#about">About</a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#features">Features</a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#developers">Developers</a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#contact">Contact</a>
+                </li>
+              </ul>
 
-              <Link to="/login" className="btn btn-light d-flex align-items-center justify-content-center w-100 w-sm-auto" style={{ minWidth: 120, padding: isMobileNav ? '0.75rem 1.25rem' : '0.45rem 0.75rem', marginLeft: isMobileNav ? 12 : undefined, marginRight: isMobileNav ? 12 : undefined, marginTop: isMobileNav ? 12 : undefined }} aria-label="Login">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  <polyline points="10 17 15 12 10 7" />
-                  <line x1="15" y1="12" x2="3" y2="12" />
-                </svg>
-                <span>Login</span>
-              </Link>
+              <div className="d-grid gap-2 d-sm-flex align-items-center">
+                <Link to="/register" className="btn btn-primary d-flex align-items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <path d="M20 8v6" />
+                    <path d="M23 11h-6" />
+                  </svg>
+                  <span>Register</span>
+                </Link>
+
+                <Link to="/login" className="btn btn-light d-flex align-items-center" aria-label="Login">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }} aria-hidden="true">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                  <span>Login</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
