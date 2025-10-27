@@ -580,7 +580,7 @@ const LandingPage = () => {
           </h2>
           <Row className="justify-content-center g-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <Col lg={2} md={3} sm={4} xs={6} key={i}>
+              <Col lg={2} md={3} sm={6} xs={12} key={i}>
                 <Card className="shadow-sm border-0 p-2 h-100">
                   <Card.Img
                     variant="top"
@@ -719,14 +719,113 @@ const LandingPage = () => {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer
-        className="text-center text-white py-3"
-        style={{ backgroundColor: "#003366", width: "100%" }}
-      >
-        <p className="mb-0">
-          © {new Date().getFullYear()} Campus Ballot | Developed by Concept
-          Crashers
-        </p>
+      <footer className="footer-section" style={{ backgroundColor: "#003366", width: "100%" }}>
+        <div className="container-fluid px-5 py-5">
+          <Row className="g-4">
+            {/* About Column */}
+            <Col lg={3} md={6}>
+              <div className="footer-brand mb-3">
+                <img src={kyuLogo} alt="Kyambogo University" style={{ height: 48, marginBottom: 12 }} />
+                <h5 className="text-white fw-bold mb-2">Campus Ballot</h5>
+              </div>
+              <p className="text-white-50 small mb-3">
+                Empowering universities with secure, transparent, and accessible digital voting solutions for campus elections.
+              </p>
+              <div className="footer-social d-flex gap-2">
+                <a href="#" className="social-icon" aria-label="Facebook">
+                  <i className="fa-brands fa-facebook-f"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="Twitter">
+                  <i className="fa-brands fa-twitter"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="LinkedIn">
+                  <i className="fa-brands fa-linkedin-in"></i>
+                </a>
+                <a href="#" className="social-icon" aria-label="Instagram">
+                  <i className="fa-brands fa-instagram"></i>
+                </a>
+              </div>
+            </Col>
+
+            {/* Quick Links Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Quick Links</h6>
+              <ul className="footer-links list-unstyled">
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#developers">Our Team</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#faqs">FAQs</a></li>
+              </ul>
+            </Col>
+
+            {/* Resources Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Resources</h6>
+              <ul className="footer-links list-unstyled">
+                <li><Link to="/register">Register</Link></li>
+                <li><Link to="/login">Login</Link></li>
+                <li><a href="#contact">Contact Support</a></li>
+                <li><a href="#">Documentation</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+              </ul>
+            </Col>
+
+            {/* Support Column */}
+            <Col lg={2} md={6}>
+              <h6 className="text-white fw-bold mb-3">Support</h6>
+              <ul className="footer-links list-unstyled">
+                <li><a href="#contact">Help Center</a></li>
+                <li><a href="mailto:support@campusballot.com">Technical Support</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Security</a></li>
+                <li><a href="#">System Status</a></li>
+              </ul>
+            </Col>
+
+            {/* Contact Column */}
+            <Col lg={3} md={6}>
+              <h6 className="text-white fw-bold mb-3">Contact Info</h6>
+              <ul className="footer-contact list-unstyled">
+                <li className="d-flex align-items-start mb-2">
+                  <i className="fa-solid fa-location-dot me-2 mt-1"></i>
+                  <span className="text-white-50 small">
+                    School of Computing and Information Science<br />
+                    Kyambogo University, Kampala
+                  </span>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <i className="fa-solid fa-envelope me-2"></i>
+                  <a href="mailto:info@campusballot.com" className="text-white-50 small">info@campusballot.com</a>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <i className="fa-solid fa-phone me-2"></i>
+                  <a href="tel:+256700000000" className="text-white-50 small">+256 700 000 000</a>
+                </li>
+                <li className="d-flex align-items-center">
+                  <i className="fa-solid fa-clock me-2"></i>
+                  <span className="text-white-50 small">Mon - Fri, 09:00 - 17:00</span>
+                </li>
+              </ul>
+            </Col>
+          </Row>
+
+          {/* Footer Bottom */}
+          <div className="footer-bottom mt-4 pt-4" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <Row className="align-items-center">
+              <Col md={6} className="text-center text-md-start mb-2 mb-md-0">
+                <p className="text-white-50 small mb-0">
+                  © {new Date().getFullYear()} Campus Ballot. All rights reserved.
+                </p>
+              </Col>
+              <Col md={6} className="text-center text-md-end">
+                <p className="text-white-50 small mb-0">
+                  Developed with <i className="fa-solid fa-heart text-danger"></i> by <strong className="text-white">Concept Crashers</strong>
+                </p>
+              </Col>
+            </Row>
+          </div>
+        </div>
       </footer>
     </div>
   );
