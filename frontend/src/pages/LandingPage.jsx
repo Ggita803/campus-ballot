@@ -95,53 +95,70 @@ const LandingPage = () => {
   // FAQ items (could be moved to CMS later)
   const faqs = [
     {
-      q: 'How do I register?',
-      a: 'Click Register, fill in your student details (student ID and institutional email for students) and submit. You will receive a confirmation email.'
+      q: 'How do I register to vote?',
+      a: 'Click the Register button, fill in your student details including your student ID and institutional email address. You\'ll receive a confirmation email to verify your account. Once verified, you can participate in all active elections.'
     },
     {
-      q: 'Who can run elections on this platform?',
-      a: 'University administrators with the admin role can create and manage elections. Contact your university IT office to request admin access.'
+      q: 'Is my vote really anonymous?',
+      a: 'Yes, absolutely. Your vote is encrypted and separated from your identity immediately after casting. The system uses advanced cryptographic techniques to ensure complete anonymity while maintaining vote integrity and preventing duplicate voting.'
     },
     {
-      q: 'Is this system secure?',
-      a: 'Yes — votes are encrypted and stored with auditable logs. We recommend running a pilot before production elections and enabling 2FA for admin accounts.'
+      q: 'Can I change my vote after submitting?',
+      a: 'No, once a vote is submitted it cannot be changed. This ensures the integrity of the election process. Please review your selections carefully before clicking the final submit button.'
     },
     {
-      q: 'How do students verify their votes?',
-      a: 'After voting, students receive a non-identifying receipt code they can use to verify their vote on the results page.'
-    }
-  ];
-
-  // Append a few additional FAQ entries requested
-  faqs.push(
+      q: 'How do I know my vote was counted?',
+      a: 'After voting, you\'ll receive a unique receipt code (non-identifying). You can use this code to verify your vote was recorded in the final tally on the results page, without revealing how you voted.'
+    },
+    {
+      q: 'Who can create and manage elections?',
+      a: 'Only university administrators with the admin role can create and manage elections. This includes setting up candidates, defining positions, configuring voting periods, and managing election settings. Contact your university IT office to request admin access.'
+    },
+    {
+      q: 'What happens if I forget my password?',
+      a: 'Use the "Forgot password" link on the login page. Enter your registered email address and you\'ll receive a secure password reset link. The link expires after 1 hour for security reasons.'
+    },
     {
       q: 'Who is eligible to vote?',
-      a: 'Eligibility is defined by the university. Typically all registered students with an active student account and verified institutional email are eligible during open election periods.'
+      a: 'Eligibility is defined by your university and the specific election. Typically, all registered students with an active student account and verified institutional email are eligible during open election periods. Check each election\'s requirements for details.'
     },
     {
-      q: 'How long do you keep data?',
-      a: 'We retain election logs and non-identifying audit trails for 2 years by default; personal data retention follows university policy and GDPR-like best practices where applicable.'
+      q: 'Can I vote from my mobile phone?',
+      a: 'Yes! Campus Ballot is fully responsive and optimized for mobile devices. You can vote securely from your smartphone, tablet, laptop, or desktop computer with any modern web browser.'
     },
     {
-      q: 'What happens if there is a dispute?',
-      a: 'The platform provides detailed audit logs to support investigations. Dispute resolution should follow your institution\'s election rules.'
+      q: 'How secure is this voting system?',
+      a: 'Very secure. We use industry-standard encryption (SSL/TLS), secure authentication, encrypted vote storage, audit logs for all actions, and regular security updates. We recommend administrators enable two-factor authentication (2FA) for additional protection.'
+    },
+    {
+      q: 'What if there\'s a technical issue during voting?',
+      a: 'Contact support immediately at support@campusballot.com or use the Contact form. Our technical team monitors elections in real-time and can assist with any issues. All system activities are logged for troubleshooting.'
+    },
+    {
+      q: 'Can alumni or external users participate?',
+      a: 'Only if explicitly allowed by the institution for specific elections. Voting eligibility is configurable per election. External participants would need special access credentials provided by the university administration.'
+    },
+    {
+      q: 'How long is my data stored?',
+      a: 'We retain election logs and audit trails for 2 years by default for accountability purposes. Personal identification data retention follows your university\'s policy and GDPR-compliant best practices. Votes are stored indefinitely but remain anonymous.'
+    },
+    {
+      q: 'What happens if there\'s a dispute or complaint?',
+      a: 'The platform provides comprehensive audit logs including timestamps, IP addresses, and action details to support investigations. All dispute resolution follows your institution\'s established election rules and procedures.'
+    },
+    {
+      q: 'Can candidates nominate themselves?',
+      a: 'Yes, if enabled by the election administrator. The nomination process is fully configurable per election. Administrators can set nomination windows, require endorsements, and define eligibility criteria for each position.'
+    },
+    {
+      q: 'Are results available in real-time?',
+      a: 'Results can be viewed in real-time if enabled by the administrator, or they can be hidden until the election officially closes. Live results use WebSocket technology for instant updates without page refresh.'
+    },
+    {
+      q: 'Is this the official voting system for Kyambogo University?',
+      a: 'No, this is a demonstration platform for educational purposes. For official university elections, please use the authorized channels provided by Kyambogo University administration.'
     }
-  );
-  // Extra FAQ entries
-  faqs.push(
-    {
-      q: 'Can students nominate candidates?',
-      a: 'Yes — nomination flows are configurable per election. Administrators can open nomination windows and accept submissions per the university election rules.'
-    },
-    {
-      q: 'Can alumni or external users vote?',
-      a: 'Voting eligibility is determined by the election configuration. Alumni or external voters can only participate if explicitly allowed by the institution and supported in the election settings.'
-    },
-    {
-      q: 'How do I reset my password?',
-      a: 'Use the "Forgot password" link on the login page. A secure reset email will be sent to your registered institutional email address.'
-    }
-  );
+  ];
   return (
     <div style={{ fontFamily: "'Merriweather', serif", overflowX: "hidden" }}>
       {/* ===== NAVBAR ===== */}
@@ -802,21 +819,47 @@ const LandingPage = () => {
       </section>
 
       {/* ===== FAQS ===== */}
-      <section id="faqs" className="py-5" style={{ width: '100%' }}>
+      <section id="faqs" className="py-5" style={{ width: '100%', backgroundColor: '#f8f9fa' }}>
         <div className="container-fluid px-5">
-          <h2 className="fw-bold mb-4 text-center" style={{ color: '#003366' }}>Frequently Asked Questions</h2>
+          <div className="text-center mb-5">
+            <h2 className="fw-bold mb-3" style={{ color: '#003366' }}>Frequently Asked Questions</h2>
+            <p className="text-muted" style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.05rem' }}>
+              Find answers to common questions about Campus Ballot. Can't find what you're looking for? 
+              <a href="#contact" style={{ color: '#003366', fontWeight: 600, textDecoration: 'none' }}> Contact us</a>.
+            </p>
+          </div>
           <Row className="justify-content-center">
-            <Col lg={8}>
-              <Accordion defaultActiveKey="0">
+            <Col lg={9}>
+              <Accordion defaultActiveKey="0" className="faq-accordion">
                 {faqs.map((f, i) => (
-                  <Accordion.Item eventKey={String(i)} key={i}>
-                    <Accordion.Header>{f.q}</Accordion.Header>
-                    <Accordion.Body>{f.a}</Accordion.Body>
+                  <Accordion.Item eventKey={String(i)} key={i} className="mb-3" style={{ border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
+                    <Accordion.Header style={{ fontSize: '1.05rem', fontWeight: 600 }}>{f.q}</Accordion.Header>
+                    <Accordion.Body style={{ fontSize: '1rem', lineHeight: '1.7', color: '#555', padding: '1.25rem 1.5rem' }}>
+                      {f.a}
+                    </Accordion.Body>
                   </Accordion.Item>
                 ))}
               </Accordion>
             </Col>
           </Row>
+          
+          {/* Still have questions CTA */}
+          <div className="text-center mt-5">
+            <div className="p-4" style={{ background: '#fff', borderRadius: '12px', maxWidth: '600px', margin: '0 auto', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <h5 className="fw-bold mb-3" style={{ color: '#003366' }}>Still have questions?</h5>
+              <p className="text-muted mb-3">Our support team is here to help you with any questions or concerns.</p>
+              <div className="d-flex gap-3 justify-content-center">
+                <a href="#contact" className="btn btn-primary">
+                  <i className="fa-solid fa-envelope me-2"></i>
+                  Contact Support
+                </a>
+                <a href="mailto:support@campusballot.com" className="btn btn-outline-primary">
+                  <i className="fa-solid fa-life-ring me-2"></i>
+                  Email Us
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
