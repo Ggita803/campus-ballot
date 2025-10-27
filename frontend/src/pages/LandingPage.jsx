@@ -677,20 +677,57 @@ const LandingPage = () => {
               <Card className="p-3 h-100">
                 <h5 className="fw-bold">Send us a message</h5>
                 <form onSubmit={handleContactSubmit}>
-                  <div className="mb-2">
-                    <input style={{height:50}} className="form-control" id="inputs" name="name" placeholder="Your name" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-user input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        name="name" 
+                        placeholder="Your name" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <input style={{height:50}} className="form-control" id="inputs" type="email" name="email" placeholder="Your email" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-envelope input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        type="email" 
+                        name="email" 
+                        placeholder="Your email" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <input style={{height:50}}  className="form-control" id="inputs" name="subject" placeholder="Subject" required />
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-pen input-icon"></i>
+                      <input 
+                        className="form-control contact-input" 
+                        name="subject" 
+                        placeholder="Subject" 
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <textarea className="form-control" name="message" id="inputs" rows={10} placeholder="Message" required></textarea>
+                  <div className="mb-3">
+                    <div className="input-with-icon">
+                      <i className="fa-solid fa-message input-icon-textarea"></i>
+                      <textarea 
+                        className="form-control contact-textarea" 
+                        name="message" 
+                        rows={8} 
+                        placeholder="Your message..." 
+                        required
+                      ></textarea>
+                    </div>
                   </div>
                   <div className="d-grid">
-                    <button className="btn btn-primary btn-md" type="submit">Send Message</button>
+                    <button className="btn btn-primary btn-lg" type="submit">
+                      <i className="fa-solid fa-paper-plane me-2"></i>
+                      Send Message
+                    </button>
                   </div>
                 </form>
               </Card>

@@ -66,6 +66,74 @@
   }
 }
 
+/* Contact Form Styles */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0b63b5;
+  font-size: 1rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.input-icon-textarea {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  color: #0b63b5;
+  font-size: 1rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.contact-input {
+  height: 54px !important;
+  padding-left: 48px !important;
+  font-size: 1rem !important;
+  border: 2px solid rgba(11, 99, 181, 0.15) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.contact-input:focus {
+  border-color: #0b63b5 !important;
+  box-shadow: 0 0 0 0.2rem rgba(11, 99, 181, 0.15) !important;
+  outline: none !important;
+}
+
+.contact-input::placeholder {
+  color: #999 !important;
+  font-size: 0.95rem !important;
+}
+
+.contact-textarea {
+  padding-left: 48px !important;
+  padding-top: 16px !important;
+  font-size: 1rem !important;
+  border: 2px solid rgba(11, 99, 181, 0.15) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  resize: vertical !important;
+  min-height: 140px !important;
+}
+
+.contact-textarea:focus {
+  border-color: #0b63b5 !important;
+  box-shadow: 0 0 0 0.2rem rgba(11, 99, 181, 0.15) !important;
+  outline: none !important;
+}
+
+.contact-textarea::placeholder {
+  color: #999 !important;
+  font-size: 0.95rem !important;
+}
+
 .faq .accordion-button {
   font-weight: 600;
 }
