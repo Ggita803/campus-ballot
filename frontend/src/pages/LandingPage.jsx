@@ -352,7 +352,8 @@ const LandingPage = () => {
         className="d-flex align-items-center text-white"
         style={{
           width: "100%",
-          minHeight: "100vh",
+          // minHeight: "100vh",
+          height:"100vh",
           backgroundImage: "url('/images/hero-bg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
