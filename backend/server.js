@@ -47,7 +47,7 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "http://localhost:5173",           // local dev
+    "https://campus-ballot.onrender.com",           // local dev
     "https://campus-ballot.onrender.com",
     CORS_ORIGIN   // deployed frontend
   ],
@@ -120,7 +120,7 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "http://localhost:5173",
+      "https://campus-ballot.onrender.com",
       "https://campus-ballot.onrender.com",
       CORS_ORIGIN
     ],

@@ -4,7 +4,7 @@ export default function getImageUrl(p) {
   // If already an absolute URL, return as-is
   if (typeof p === 'string' && (p.startsWith('http://') || p.startsWith('https://'))) return p;
 
-  const backend = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const backend = import.meta.env.VITE_BACKEND_URL || 'https://campus-ballot-backend.onrender.com';
   if (typeof p === 'string' && p.startsWith('/uploads')) {
     return `${backend}${p}`;
   }
