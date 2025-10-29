@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173, // Set the default frontend port here
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://campus-ballot-backend.onrender.com',
         changeOrigin: true,
         secure: false,
       }
