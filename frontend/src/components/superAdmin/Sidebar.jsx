@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
@@ -12,17 +12,12 @@ const navItems = [
   { label: 'Help', icon: 'fa-solid fa-circle-question', to: '/super-admin/help' },
 ];
 
-export default function SuperAdminSidebar({ user }) {
+export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMobile }) {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'SA';
-
-  // Responsive sidebar toggle logic
-  // Show sidebar if screen is wide or not collapsed
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 992;
 
   return (
     <>
@@ -49,7 +44,7 @@ export default function SuperAdminSidebar({ user }) {
           width: collapsed ? 64 : 280,
           height: '100vh',
           position: 'fixed',
-          left: (!isMobile || !collapsed) ? 0 : -280,
+          left: isMobile && collapsed ? -280 : 0,
           top: 0,
           zIndex: 100,
           transition: 'left 0.2s, min-width 0.2s, width 0.2s',
@@ -87,7 +82,6 @@ export default function SuperAdminSidebar({ user }) {
               </div>
             </>
           )}
-          {/* Move toggle button to top right for better UX */}
           <button
             className="btn btn-sm btn-outline-secondary"
             style={{
@@ -152,7 +146,7 @@ export default function SuperAdminSidebar({ user }) {
           }
         `}</style>
       </aside>
-      {/* Show a floating button to open sidebar when collapsed on mobile */}
+      {/* Floating button to open sidebar when collapsed on mobile */}
       {isMobile && collapsed && (
         <button
           className="btn btn-primary"
