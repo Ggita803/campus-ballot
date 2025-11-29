@@ -112,8 +112,41 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   };
 
   return (
-    <div className="col-md-2 bg-white shadow-sm p-0 min-vh-100 d-flex flex-column justify-content-between">
-      <div>
+    <>
+      {/* Overlay for mobile drawer */}
+      {isMobile && !collapsed && (
+        <div
+          className="admin-sidebar-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.08)',
+            zIndex: 99,
+          }}
+          onClick={() => setCollapsed(true)}
+          aria-label="Close sidebar"
+        />
+      )}
+      <aside
+        className={`admin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
+        style={{
+          minWidth: collapsed ? 64 : 280,
+          width: collapsed ? 64 : 280,
+          height: '100vh',
+          position: 'fixed',
+          left: isMobile && collapsed ? -280 : 0,
+          top: 0,
+          zIndex: 100,
+          transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
+          boxShadow: '0 0 12px rgba(37,99,235,0.07)',
+          background: '#fff',
+          color: '#222'
+        }}
+        aria-label="Admin Sidebar"
+      >
         <div className="p-4 border-bottom text-center">
           {/* User Avatar */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -314,26 +347,6 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
           }
         `}</style>
       </aside>
-      {/* Floating button to open sidebar when collapsed on mobile */}
-      {isMobile && collapsed && (
-        <button
-          className="btn btn-primary"
-          style={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 102,
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.15)'
-          }}
-          onClick={() => setCollapsed(false)}
-          aria-label="Open sidebar"
-        >
-          <i className="fa-solid fa-bars"></i>
-        </button>
-      )}
     </>
   );
 }
