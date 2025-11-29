@@ -10,6 +10,12 @@ import { useState, useEffect } from "react";
 import useSocket from './hooks/useSocket';
 import VotingPage from "./pages/VotingPage";
 import LandingPage from "./pages/LandingPage";
+import SuperAdmin from './components/superAdmin/SuperAdmin';
+import GlobalSettings from './components/superAdmin/GlobalSettings';
+import AuditLogs from './components/superAdmin/AuditLogs';
+import ElectionOversight from './components/superAdmin/ElectionOversight';
+import DataMaintenance from './components/superAdmin/DataMaintenance';
+import Reporting from './components/superAdmin/Reporting';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -22,6 +28,8 @@ function ProtectedRoute({ user, requiredRole, children }) {
     // Redirect to appropriate dashboard based on user role
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;
+    }if(user.role === 'super_admin'){
+      return <Navigate to="/super-admin" replace />;
     } else {
       return <Navigate to="/student-dashboard" replace />;
     }
@@ -59,7 +67,7 @@ function App() {
     localStorage.removeItem("token");
     try {
       reconnectWithToken(null);
-    } catch (e) {
+    } catch {
       // ignore if socket not initialized
     }
   };
@@ -67,7 +75,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* Default redirect based on user role */}
+        <Route
+          path="/"
+          element={
+            currentUser ? (
+              currentUser.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : currentUser.role === 'super_admin' ? (
+                <Navigate to="/super-admin/dashboard" replace />
+              ) : (
+                <Navigate to="/student-dashboard" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -97,19 +121,12 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Default redirect based on user role */}
-        <Route 
-          path="/" 
+        <Route
+          path="/super-admin/*"
           element={
-            currentUser ? (
-              currentUser.role === 'admin' ? (
-                <Navigate to="/admin" replace />
-              ) : (
-                <Navigate to="/student-dashboard" replace />
-              )
-            ) : (
-              <Navigate to="/login" replace />
-            )
+            <ProtectedRoute user={currentUser} requiredRole="super_admin">
+              <SuperAdmin user={currentUser} onLogout={handleLogout} />
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" />} />
