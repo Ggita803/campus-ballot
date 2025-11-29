@@ -161,54 +161,31 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
         }}
         aria-label="Admin Sidebar"
       >
-        <div className="sidebar-header p-4 border-bottom text-center" style={{ padding: collapsed ? '1rem 0' : '2rem 0', position: 'relative' }}>
-          {/* Collapse/Expand Button */}
-          <button
-            className="btn btn-sm btn-outline-secondary"
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: collapsed ? 8 : 16,
-              width: collapsed ? 32 : 40,
-              zIndex: 101,
-              transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)'
-            }}
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
-              style={{
-                transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
-                transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)'
-              }}
-            ></i>
-          </button>
-          {/* User Avatar - only show when not collapsed */}
-          {!collapsed && (
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <img
-                src={profileImgSrc}
-                alt="Admin"
-                style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: '50%' }}
-                className="mb-2"
-              />
-              <button
-                className="btn btn-sm btn-light position-absolute top-0 end-0"
-                style={{ transform: 'translate(30%, -30%)' }}
-                onClick={onChooseFile}
-                title="Change profile picture"
-                aria-label="Change profile picture"
-              >
-                {uploading ? (
-                  <span className="spinner-border spinner-border-sm" role="status" />
-                ) : (
-                  <FontAwesomeIcon icon={faUserCircle} />
-                )}
-              </button>
-              {/* hidden input for fallback */}
-              <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-            </div>
-          )}
+        <div className="p-4 border-bottom text-center">
+          {/* User Avatar */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img
+              src={profileImgSrc}
+              alt="Admin"
+              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: '50%' }}
+              className="mb-2"
+            />
+            <button
+              className="btn btn-sm btn-light position-absolute top-0 end-0"
+              style={{ transform: 'translate(30%, -30%)' }}
+              onClick={onChooseFile}
+              title="Change profile picture"
+              aria-label="Change profile picture"
+            >
+              {uploading ? (
+                <span className="spinner-border spinner-border-sm" role="status" />
+              ) : (
+                <FontAwesomeIcon icon={faUserCircle} />
+              )}
+            </button>
+            {/* hidden input for fallback */}
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+          </div>
 
           {/* Upload modal */}
           {showUploadModal && (
@@ -384,26 +361,6 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
           }
         `}</style>
       </aside>
-      {/* Floating button to open sidebar when collapsed on mobile */}
-      {isMobile && collapsed && (
-        <button
-          className="btn btn-primary"
-          style={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 102,
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            boxShadow: '0 2px 8px rgba(37,99,235,0.15)'
-          }}
-          onClick={() => setCollapsed(false)}
-          aria-label="Open sidebar"
-        >
-          <i className="fa-solid fa-bars"></i>
-        </button>
-      )}
     </>
   );
 }
