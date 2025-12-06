@@ -55,7 +55,7 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 ### 🧭 Frontend (React.js)
 - Responsive UI for all devices
 - Role-based dashboards
-- Charts & analytics with **Recharts**
+- Charts & analytics with Chartjs ****
 - State management using **Redux Toolkit**
 - Accessibility & error boundaries
 - Notification panel for real-time updates
@@ -84,7 +84,7 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 
 | Layer | Technology |
 |-------|-------------|
-| **Frontend** | React.js, Redux Toolkit, Recharts |
+| **Frontend** | React.js, Redux Toolkit, Chartjs |
 | **Backend** | Node.js, Express.js |
 | **Database** | MongoDB (Mongoose ORM) |
 | **Authentication** | JWT, bcrypt |
