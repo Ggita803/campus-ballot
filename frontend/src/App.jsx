@@ -111,7 +111,9 @@ function App() {
           path="/student-dashboard/*"
           element={
             <ProtectedRoute user={currentUser} requiredRole="student">
-              <StudentDashboard user={currentUser} onLogout={handleLogout} />
+              <ThemeProvider>
+                <StudentDashboard user={currentUser} onLogout={handleLogout} />
+              </ThemeProvider>
             </ProtectedRoute>
           }
         />
