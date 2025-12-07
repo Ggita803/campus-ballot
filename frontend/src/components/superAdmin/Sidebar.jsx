@@ -22,7 +22,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
     const fetchLogCount = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('/api/audit-logs/count', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get('/api/logs/count', { headers: { Authorization: `Bearer ${token}` } });
         setLogCount(res.data.count || 0);
       } catch (err) {
         console.error('Error fetching log count', err);
