@@ -333,24 +333,23 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
               transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
             onMouseEnter={e => {
-              if (!e.target.classList.contains('active')) {
-                e.target.style.background = colors.sidebarHover;
-                e.target.style.color = colors.text;
-              }
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
             }}
             onMouseLeave={e => {
-              if (!e.target.classList.contains('active')) {
-                e.target.style.background = 'transparent';
-                e.target.style.color = colors.textSecondary;
-              }
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
             }}
           >
             <FontAwesomeIcon 
               icon={faTachometerAlt} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -370,12 +369,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faUsers} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -395,12 +406,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faBullhorn} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -420,12 +443,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faUserTie} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -445,12 +480,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faChartBar} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -470,12 +517,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faHistory} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -500,12 +559,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faBell} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -530,12 +601,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faChartPie} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -555,12 +638,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faCog} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}
@@ -580,12 +675,24 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               fontWeight: '500',
               borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
               background: isActive ? colors.sidebarHover : 'transparent',
+              transition: 'all 0.2s ease',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
             })}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = colors.sidebarHover;
+              e.currentTarget.style.color = colors.text;
+            }}
+            onMouseLeave={e => {
+              const isActive = e.currentTarget.classList.contains('active');
+              e.currentTarget.style.background = isActive ? colors.sidebarHover : 'transparent';
+              e.currentTarget.style.color = isActive ? colors.primary : colors.textSecondary;
+            }}
           >
             <FontAwesomeIcon 
               icon={faQuestionCircle} 
               style={{
-                fontSize: '1rem',
+                fontSize: collapsed ? '1.5rem' : '1rem',
                 width: collapsed ? 'auto' : '1rem',
                 marginRight: collapsed ? '0' : '0.75rem',
               }}

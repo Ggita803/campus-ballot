@@ -6,8 +6,8 @@ import { CSVLink } from 'react-csv';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const dummyAdmins = [
-  { id: 1, name: 'Jane Doe', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
-  { id: 2, name: 'John Smith', email: 'john@kyu.ac.ug', role: 'admin', status: 'inactive' },
+  { id: 1, name: 'Aine Bridget', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
+  { id: 2, name: 'Natu Nah', email: 'john@kyu.ac.ug', role: 'admin', status: 'inactive' },
   { id: 3, name: 'Super Admin', email: 'super@kyu.ac.ug', role: 'super_admin', status: 'active' },
 ];
 
