@@ -772,11 +772,13 @@ function Candidates({ user }) {
                           src={getImageUrl(candidate.symbol)}
                           alt="Symbol"
                           style={{
-                            width: 40,
-                            height: 40,
-                            objectFit: 'cover',
-                            borderRadius: '6px',
+                            width: 50,
+                            height: 50,
+                            objectFit: 'contain',
+                            borderRadius: '50%',
                             border: `1px solid ${colors.border}`,
+                            padding: '4px',
+                            backgroundColor: isDarkMode ? colors.surfaceHover : '#ffffff'
                           }}
                           onError={(e) => {
                             console.log('Symbol image failed to load:', candidate.symbol);
