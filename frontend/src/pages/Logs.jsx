@@ -37,9 +37,27 @@ function Logs({ user }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [actionFilter, setActionFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [filteredLogs, setFilteredLogs] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stats, setStats] = useState({
+    total: 0,
+    info: 0,
+    warning: 0,
+    error: 0,
+    success: 0
+  });
+  const logsPerPage = 10;
 
   // Form state for creating new log
   const [formData, setFormData] = useState({
@@ -343,13 +361,42 @@ function Logs({ user }) {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  // Calculate stats for log summary cards
+  const calculateStats = (logsData) => {
+    // Fix: Ensure logsData is an array
+    if (!Array.isArray(logsData)) {
+      console.warn('calculateStats received non-array data:', logsData);
+      setStats({ total: 0, info: 0, warning: 0, error: 0, success: 0 });
+      return;
+    }
+
+    const stats = {
+      total: logsData.length,
+      info: logsData.filter(log => log.status === 'success' && !log.errorMessage).length,
+      warning: logsData.filter(log => log.status === 'success' && log.errorMessage).length,
+      error: logsData.filter(log => log.status === 'failure').length,
+      success: logsData.filter(log => log.status === 'success').length
+    };
+    setStats(stats);
+  };
+
   // Pagination
   const indexOfLastLog = currentPage * logsPerPage;
   const indexOfFirstLog = indexOfLastLog - logsPerPage;
   const currentLogs = filteredLogs.slice(indexOfFirstLog, indexOfLastLog);
-  const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Update totalPages when filteredLogs changes
+  useEffect(() => {
+    const newTotalPages = Math.ceil(filteredLogs.length / logsPerPage);
+    setTotalPages(newTotalPages);
+    
+    // Reset to page 1 if current page is beyond the new total
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredLogs.length, currentPage, logsPerPage]);
 
   useEffect(() => {
     fetchLogs();
