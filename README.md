@@ -97,7 +97,7 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/yourusername/voting-system.git
+git clone https://github.com/Chemistry2i/campus-ballot.git
 cd voting-system
 cd server
 npm install
