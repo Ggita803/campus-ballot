@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
@@ -17,6 +18,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [logCount, setLogCount] = useState(0);
+  const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     const fetchLogCount = async () => {
@@ -62,7 +64,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         />
       )}
       <aside
-        className={`superadmin-sidebar bg-white shadow-sm${collapsed ? ' collapsed' : ''}`}
+        className={`superadmin-sidebar shadow-sm${collapsed ? ' collapsed' : ''}`}
         style={{
           minWidth: collapsed ? 64 : 280,
           width: collapsed ? 64 : 280,
@@ -72,9 +74,10 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
           top: 0,
           zIndex: 100,
           transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
-          boxShadow: '0 0 12px rgba(37,99,235,0.07)',
-          background: '#fff',
-          color: '#222'
+          boxShadow: isDarkMode ? '0 0 12px rgba(0,0,0,0.3)' : '0 0 12px rgba(37,99,235,0.07)',
+          background: isDarkMode ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)' : '#fff',
+          color: colors.text,
+          borderRight: `1px solid ${colors.border}`
         }}
         aria-label="Super Admin Sidebar"
       >
@@ -110,13 +113,14 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   top: 60,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: '#fff',
-                  color: '#222',
+                  background: colors.surface,
+                  color: colors.text,
                   borderRadius: 8,
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                  boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.12)',
                   minWidth: 160,
                   zIndex: 200,
-                  padding: '0.5rem 0'
+                  padding: '0.5rem 0',
+                  border: `1px solid ${colors.border}`
                 }}
               >
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
@@ -191,18 +195,20 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
                 <Link
                   to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold text-primary' : 'text-primary'}`}
+                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold' : ''}`}
                   style={{
-                    fontSize: '1em', // <-- changed from 1.08rem to 1em
+                    fontSize: '1em',
                     gap: '1rem',
                     padding: collapsed ? '0.85rem 0.5rem' : '0.85rem 1.5rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     borderRadius: 4,
                     fontWeight: isActive ? 700 : 500,
-                    background: isActive ? '#e7f1ff' : 'transparent',
-                    boxShadow: isActive ? '0 2px 8px rgba(37,99,235,0.07)' : 'none',
+                    background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
+                    boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
                     minWidth: collapsed ? 0 : 220,
-                    outline: 'none'
+                    outline: 'none',
+                    color: colors.text,
+                    borderLeft: isActive ? `3px solid ${colors.primary}` : 'none'
                   }}
                   aria-current={isActive ? 'page' : undefined}
                   tabIndex={0}
@@ -210,8 +216,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   onClick={() => isMobile && setCollapsed(true)}
                   title={collapsed ? item.label : undefined}
                 >
-                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: '#2563eb' }}></i>
-                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: '#2563eb' }}>{item.label}</span>}
+                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: colors.primary }}></i>
+                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: colors.text }}>{item.label}</span>}
                   {/* Badge for Audit Logs */}
                   {item.label === 'Audit Logs' && logCount > 0 && !collapsed && (
                     <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
@@ -225,13 +231,13 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         </nav>
         {/* Footer Section */}
         {!collapsed && (
-          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: '#888' }}>
-            <hr />
+          <div className="sidebar-footer text-center mt-auto py-3" style={{ fontSize: '0.95rem', color: colors.textMuted }}>
+            <hr style={{ borderColor: colors.border }} />
             <div>
               &copy; {new Date().getFullYear()} KYU Voting v1.0
             </div>
             <div>
-              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
+              <a href="https://kyu.ac.ug" target="_blank" rel="noopener noreferrer" style={{ color: colors.primary, textDecoration: 'none' }}>
                 University Site
               </a>
             </div>

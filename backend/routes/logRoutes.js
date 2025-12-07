@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { protect, adminOnly, superAdminOnly } = require('../middleware/authMiddleware');
 const {
   getAllLogs,
   createLog,
@@ -9,8 +9,17 @@ const {
   clearAllLogs
 } = require('../controllers/logController');
 
+// Middleware to allow both admin and super_admin
+const adminOrSuperAdmin = (req, res, next) => {
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'super_admin')) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied. Admin or Super Admin only.' });
+  }
+};
+
 // Get log count
-router.get('/count', protect, adminOnly, async (req, res) => {
+router.get('/count', protect, adminOrSuperAdmin, async (req, res) => {
   try {
     const Log = require('../models/Log');
     const count = await Log.countDocuments();
@@ -21,13 +30,13 @@ router.get('/count', protect, adminOnly, async (req, res) => {
 });
 
 // Search logs
-router.get('/search', protect, adminOnly, searchLogs);
+router.get('/search', protect, adminOrSuperAdmin, searchLogs);
 
 // Get all logs
-router.get('/', protect, adminOnly, getAllLogs);
+router.get('/', protect, adminOrSuperAdmin, getAllLogs);
 
 // Create a new log
-router.post('/', protect, adminOnly, createLog);
+router.post('/', protect, adminOrSuperAdmin, createLog);
 
 // Delete all logs
 router.delete('/', protect, adminOnly, clearAllLogs);
