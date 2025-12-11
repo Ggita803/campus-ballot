@@ -441,7 +441,7 @@ function StudentDashboard({ user }) {
           if (c.color === 'secondary') { bg = isDarkMode ? '#2d3748' : '#f1f3f5'; border = isDarkMode ? colors.border : '#e9ecef'; }
 
           return (
-            <div key={i} className="col-6 col-sm-4 col-md-3 col-lg-3">
+            <div key={i} className="col-6 col-sm-4 col-md-3 col-lg-3 col-xl-1-5">
               <div 
                 className="card shadow-sm h-100 stat-card-hover" 
                 style={{ 
@@ -1164,7 +1164,7 @@ function StudentDashboard({ user }) {
         className="min-vh-100"
         style={{
           background: isDarkMode ? colors.background : "#f8f9fa",
-          width: "100%",
+          width: "100vw",
           minHeight: "100vh",
           overflowX: "hidden",
           margin: 0,
