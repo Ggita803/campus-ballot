@@ -104,16 +104,14 @@ function OverviewCards({ stats }) {
         {cardData.map((card, index) => (
           <div key={index} className={cardClass} style={{ flex: '1 1 12.5%', maxWidth: '12.5%' }}>
             <div 
-              className="card h-100"
+              className={`card h-100 ${isDarkMode ? 'overview-card-dark' : ''}`}
               style={{
                 backgroundColor: isDarkMode ? colors.surface : card.bgColor,
                 transition: "all 0.3s ease",
                 cursor: "pointer",
                 minHeight: "120px",
-                border: "none",
+                border: isDarkMode ? "2px solid #0d6efd" : `1px solid ${card.color}20`,
                 borderRadius: "8px",
-                outline: isDarkMode ? "2px solid #0d6efd" : "none",
-                outlineOffset: "0px",
                 boxShadow: isDarkMode
                   ? "none"
                   : "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)"
@@ -134,7 +132,8 @@ function OverviewCards({ stats }) {
                       height: "40px",
                       backgroundColor: `${card.color}15`,
                       border: `2px solid ${card.color}`,
-                      boxShadow: isDarkMode ? "none" : `0 2px 4px ${card.color}20`
+                      boxShadow: isDarkMode ? "none" : `0 2px 4px ${card.color}20`,
+
                     }}
                   >
                     <FontAwesomeIcon 
@@ -190,6 +189,25 @@ function OverviewCards({ stats }) {
       </div>
       
   <style>{`
+        /* Override darkmode.css card styles for overview cards */
+        body.admin-dark-mode .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
+        .admin-dark-mode .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
+        .overview-card-dark.card {
+          border: 2px solid #0d6efd !important;
+          border-color: #0d6efd !important;
+          box-shadow: none !important;
+        }
+        
         @media (max-width: 1200px) {
           .col-xl-15 {
             flex: 1 1 25% !important;
