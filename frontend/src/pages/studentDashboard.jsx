@@ -1,8 +1,22 @@
 import "./swal-zindex-override.css";
+import "../styles/animations.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/useToast';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import ToastContainer from '../components/common/ToastContainer';
+import { SkeletonCard, SkeletonRow } from '../components/common/LoadingSkeleton';
+import QuickActionsWidget from '../components/student/QuickActionsWidget';
+import AnalyticsChart from '../components/student/AnalyticsChart';
+import ElectionCalendar from '../components/student/ElectionCalendar';
+import AchievementsBadges from '../components/student/AchievementsBadges';
+import ShareButton from '../components/student/ShareButton';
+import ReminderSystem from '../components/student/ReminderSystem';
+import CandidateComparison from '../components/student/CandidateComparison';
+import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal';
+import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
 axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
@@ -55,6 +69,7 @@ import ElectionCard from '../components/student/ElectionCard';
 
 function StudentDashboard({ user }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const { toasts, removeToast, success, error, info, warning } = useToast();
   const [elections, setElections] = useState([]);
   const [myVotes, setMyVotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +87,9 @@ function StudentDashboard({ user }) {
   const [showProfile, setShowProfile] = useState(false);
   const [activeView, setActiveView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [comparisonCandidates, setComparisonCandidates] = useState([]);
   const [electionStats, setElectionStats] = useState({
     total: 0,
     participated: 0,
@@ -145,6 +163,25 @@ function StudentDashboard({ user }) {
       if (interval) clearInterval(interval);
     };
   }, [isAutoRefresh, refreshInterval]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    { key: 'd', ctrl: true, callback: () => setActiveView('dashboard') },
+    { key: 'e', ctrl: true, callback: () => setActiveView('elections') },
+    { key: 'v', ctrl: true, callback: () => setActiveView('my-votes') },
+    { key: 'n', ctrl: true, callback: () => setActiveView('notifications') },
+    { key: 'p', ctrl: true, callback: () => setActiveView('profile') },
+    { key: 'h', ctrl: true, callback: () => setActiveView('history') },
+    { key: 'r', ctrl: true, callback: () => refreshData() },
+    { key: '?', ctrl: false, callback: () => setShowKeyboardShortcuts(true) },
+    { key: 'Escape', ctrl: false, callback: () => {
+      setShowElectionModal(false);
+      setShowProfile(false);
+      setShowNotificationModal(false);
+      setShowKeyboardShortcuts(false);
+      setShowComparisonModal(false);
+    }}
+  ]);
 
   const refreshData = () => {
     fetchElections();
@@ -347,19 +384,47 @@ function StudentDashboard({ user }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Generate verification code and receipt
+      const verificationCode = generateVerificationCode();
+      const election = elections.find(e => e._id === electionId);
+      const candidate = election?.candidates?.find(c => c._id === candidateId);
+      
       Swal.fire({
         title: 'Vote Cast Successfully!',
-        text: 'Thank you for participating in the democratic process.',
+        html: `
+          <p>Thank you for participating in the democratic process.</p>
+          <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; font-size: 14px; color: #666;">Verification Code:</p>
+            <p style="margin: 8px 0; font-size: 18px; font-weight: bold; font-family: monospace; color: #0d6efd;">${verificationCode}</p>
+          </div>
+          <button id="download-receipt" class="btn btn-outline-primary btn-sm mt-2">
+            <i class="fas fa-download"></i> Download Receipt
+          </button>
+        `,
         icon: 'success',
-        timer: 3000,
+        timer: 5000,
         timerProgressBar: true,
-        showConfirmButton: false
+        showConfirmButton: true,
+        didOpen: () => {
+          document.getElementById('download-receipt')?.addEventListener('click', () => {
+            generateVoteReceipt({
+              election,
+              candidate,
+              votedAt: new Date(),
+              verificationCode
+            });
+          });
+        }
       });
+      
+      // Show toast notification
+      success('Vote recorded successfully!');
       
       fetchMyVotes();
       fetchElections();
       calculateElectionStats(elections);
     } catch (err) {
+      error('Failed to cast vote. Please try again.');
       Swal.fire("Error", err.response?.data?.message || "Failed to vote", "error");
     }
   };
@@ -540,6 +605,25 @@ function StudentDashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Analytics Chart */}
+      <AnalyticsChart myVotes={myVotes} electionStats={electionStats} />
+
+      {/* Row with Calendar and Achievements */}
+      <div className="row g-3 mb-4">
+        <div className="col-lg-7">
+          <ElectionCalendar 
+            elections={elections} 
+            onElectionClick={(election) => openElectionDetails(election)} 
+          />
+        </div>
+        <div className="col-lg-5">
+          <AchievementsBadges myVotes={myVotes} electionStats={electionStats} />
+        </div>
+      </div>
+
+      {/* Reminder System */}
+      <ReminderSystem elections={elections.filter(e => getElectionStatus(e).status === 'upcoming')} />
     </div>
   ); }
 
@@ -2071,6 +2155,33 @@ function StudentDashboard({ user }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
+      {/* Quick Actions Widget */}
+      <QuickActionsWidget 
+        activeElections={elections.filter(e => getElectionStatus(e).status === 'active')}
+        onNavigate={setActiveView}
+        onVote={(election) => {
+          setSelectedElection(election);
+          setActiveView('elections');
+        }}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal 
+        isOpen={showKeyboardShortcuts} 
+        onClose={() => setShowKeyboardShortcuts(false)} 
+      />
+
+      {/* Candidate Comparison Modal */}
+      {showComparisonModal && selectedElection && (
+        <CandidateComparison 
+          candidates={selectedElection.candidates || []}
+          onClose={() => setShowComparisonModal(false)}
+        />
       )}
       </div>
     </>
