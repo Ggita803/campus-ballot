@@ -31,7 +31,7 @@ function ProtectedRoute({ user, requiredRole, children }) {
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;
     }if(user.role === 'super_admin'){
-      return <Navigate to="/super-admin" replace />;
+      return <Navigate to="/system-health" replace />;
     } else {
       return <Navigate to="/student-dashboard" replace />;
     }
