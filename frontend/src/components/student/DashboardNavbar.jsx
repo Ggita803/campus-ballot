@@ -7,10 +7,10 @@ const DashboardNavbar = ({ user, notifications, onProfile, onLogout }) => (
     style={{ background: "linear-gradient(90deg, red 0%, #1e293b 100%)", height: 56, padding: '0 0.75rem' }}
   >
     <div className="container-fluid">
-      <span className="navbar-brand d-flex align-items-center gap-2" style={{ lineHeight: '56px' }}>
+      <span className="navbar-brand d-flex align-items-center gap-2" style={{color:'white', lineHeight: '56px' }}>
         <FaUserGraduate size={22} />
-        <span className="fw-bold fs-5 d-none d-md-inline">Student Portal</span>
-        <span className="fw-bold fs-6 d-md-none">Portal</span>
+        <span className="fw-bold fs-5 d-none d-md-inline" style={{color:'white'}}>Student Portal</span>
+        <span className="fw-bold fs-6 d-md-none" style={{color:'white'}}>Portal</span>
       </span>
       <div className="d-flex align-items-center gap-2">
         <div className="dropdown">
