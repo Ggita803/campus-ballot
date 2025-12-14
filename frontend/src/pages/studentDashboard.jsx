@@ -468,7 +468,7 @@ function StudentDashboard({ user }) {
             : 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
           color: '#fff',
           borderRadius: '12px',
-          padding: "2.5rem 2rem
+          padding: '2.5rem 2rem'
         }}
       >
         <div className="d-flex align-items-center justify-content-between">
