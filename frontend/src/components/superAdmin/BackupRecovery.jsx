@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const BackupRecovery = () => {
+  const { isDarkMode, colors } = useTheme();
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -274,18 +276,18 @@ const BackupRecovery = () => {
           <h5 className="mb-0">Backup History</h5>
         </div>
         <div className="table-responsive">
-          <table className="table table-hover mb-0">
-            <thead className="table-light">
+          <table className="table table-hover mb-0" style={{ color: colors.text }}>
+            <thead style={{ background: isDarkMode ? colors.surface : '#f8f9fa', color: colors.text }}>
               <tr>
-                <th>Date & Time</th>
-                <th>Size</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Duration</th>
-                <th>Actions</th>
+                <th style={{ color: colors.text }}>Date & Time</th>
+                <th style={{ color: colors.text }}>Size</th>
+                <th style={{ color: colors.text }}>Type</th>
+                <th style={{ color: colors.text }}>Status</th>
+                <th style={{ color: colors.text }}>Duration</th>
+                <th style={{ color: colors.text }}>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ background: isDarkMode ? colors.surface : '#fff' }}>
               {backups.length > 0 ? (
                 backups.map(backup => (
                   <tr key={backup.id}>

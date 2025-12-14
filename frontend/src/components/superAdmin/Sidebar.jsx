@@ -86,19 +86,19 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         }}
         aria-label="Super Admin Sidebar"
       >
-        <div className="sidebar-header text-center py-4" style={{ padding: collapsed ? '1rem 0' : '2rem 0', position: 'relative' }}>
+        <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative' }}>
           {/* Avatar/Profile Dropdown */}
           <div
             className="avatar bg-primary text-white mx-auto mb-2"
             style={{
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               borderRadius: '50%',
-              fontSize: '2rem',
+              fontSize: '1.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: collapsed ? 0 : 12,
+              marginBottom: collapsed ? 0 : 8,
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               cursor: 'pointer',
               position: 'relative'
@@ -176,7 +176,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             ></i>
           </button>
         </div>
-        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation">
+        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 260px)', paddingBottom: '0.5rem' }}>
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.to;
             return (
@@ -204,7 +204,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   style={{
                     fontSize: '1em',
                     gap: '1rem',
-                    padding: collapsed ? '0.85rem 0.5rem' : '0.85rem 1.5rem',
+                    padding: collapsed ? '0.5rem 0.5rem' : '0.6rem 1rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     borderRadius: 4,
                     fontWeight: isActive ? 700 : 500,
@@ -238,12 +238,15 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         {!collapsed && (
           <div
             style={{
-              padding: '1rem 1.5rem',
+              padding: '0.75rem 1rem',
               borderTop: `1px solid ${colors.border}`,
               background: colors.surface,
               color: colors.textMuted,
-              fontSize: '0.75rem',
+              fontSize: '0.7rem',
               textAlign: 'center',
+              position: 'absolute',
+              bottom: 0,
+              width: '100%'
             }}
           >
             <div style={{ marginBottom: '0.5rem' }}>

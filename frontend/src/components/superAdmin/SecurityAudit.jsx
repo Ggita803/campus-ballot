@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const SecurityAudit = () => {
+  const { isDarkMode, colors } = useTheme();
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -225,19 +227,19 @@ const SecurityAudit = () => {
 
       {/* Logs Table */}
       <div className="table-responsive mb-4">
-        <table className="table table-hover">
-          <thead className="table-light">
+        <table className="table table-hover" style={{ color: colors.text }}>
+          <thead style={{ background: isDarkMode ? colors.surface : '#f8f9fa', color: colors.text }}>
             <tr>
-              <th>Admin</th>
-              <th>Action</th>
-              <th>Target</th>
-              <th>Type</th>
-              <th>Timestamp</th>
-              <th>IP Address</th>
-              <th>Status</th>
+              <th style={{ color: colors.text }}>Admin</th>
+              <th style={{ color: colors.text }}>Action</th>
+              <th style={{ color: colors.text }}>Target</th>
+              <th style={{ color: colors.text }}>Type</th>
+              <th style={{ color: colors.text }}>Timestamp</th>
+              <th style={{ color: colors.text }}>IP Address</th>
+              <th style={{ color: colors.text }}>Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{ background: isDarkMode ? colors.surface : '#fff' }}>
             {paginatedLogs.length > 0 ? (
               paginatedLogs.map(log => {
                 const badge = getActionBadge(log.type);

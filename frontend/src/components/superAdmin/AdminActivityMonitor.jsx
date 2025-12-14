@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const AdminActivityMonitor = () => {
+  const { isDarkMode, colors } = useTheme();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const SystemHealth = () => {
+  const { isDarkMode, colors } = useTheme();
   const [healthData, setHealthData] = useState(null);
-  const [metrics, setMetrics] = useState(null);
+  const [metricsHistory, setMetricsHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -23,20 +26,52 @@ const SystemHealth = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHealthData(res.data);
+      
+      // Add to metrics history for charts
+      const now = new Date();
+      const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setMetricsHistory(prev => {
+        const newHistory = [...prev, {
+          time: timeLabel,
+          cpu: res.data.cpuUsage,
+          memory: res.data.memoryUsage,
+          responseTime: res.data.apiResponseTime,
+          activeUsers: res.data.activeUsers
+        }];
+        // Keep only last 20 data points
+        return newHistory.slice(-20);
+      });
+      
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch system health', err);
       // Fallback dummy data
-      setHealthData({
+      const dummyData = {
         status: 'Healthy',
         uptime: '45 days 12 hours',
-        cpuUsage: 42,
-        memoryUsage: 58,
+        cpuUsage: Math.floor(Math.random() * 30) + 30,
+        memoryUsage: Math.floor(Math.random() * 20) + 50,
         databaseConnections: 15,
         activeUsers: 234,
-        apiResponseTime: 145,
+        apiResponseTime: Math.floor(Math.random() * 50) + 100,
         errorRate: 0.02,
+      };
+      setHealthData(dummyData);
+      
+      // Add to metrics history
+      const now = new Date();
+      const timeLabel = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setMetricsHistory(prev => {
+        const newHistory = [...prev, {
+          time: timeLabel,
+          cpu: dummyData.cpuUsage,
+          memory: dummyData.memoryUsage,
+          responseTime: dummyData.apiResponseTime,
+          activeUsers: dummyData.activeUsers
+        }];
+        return newHistory.slice(-20);
       });
+      
       setLoading(false);
     }
   };
@@ -208,6 +243,66 @@ const SystemHealth = () => {
           </div>
         </div>
       </div>
+
+      {/* Performance Charts */}
+      {metricsHistory.length > 0 && (
+        <div className="row g-3 mb-4">
+          <div className="col-md-6">
+            <div className="card">
+              <div className="card-header" style={{ background: isDarkMode ? colors.surface : '#fff', color: colors.text }}>
+                <h6 className="mb-0">CPU & Memory Usage Over Time</h6>
+              </div>
+              <div className="card-body" style={{ background: isDarkMode ? colors.surface : '#fff' }}>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={metricsHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+                    <XAxis dataKey="time" stroke={colors.textMuted} style={{ fontSize: '0.75rem' }} />
+                    <YAxis stroke={colors.textMuted} style={{ fontSize: '0.75rem' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: isDarkMode ? colors.surface : '#fff', 
+                        border: `1px solid ${colors.border}`,
+                        color: colors.text
+                      }} 
+                    />
+                    <Legend wrapperStyle={{ color: colors.text }} />
+                    <Area type="monotone" dataKey="cpu" stroke="#ef4444" fill="#ef444420" name="CPU %" />
+                    <Area type="monotone" dataKey="memory" stroke="#3b82f6" fill="#3b82f620" name="Memory %" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="card">
+              <div className="card-header" style={{ background: isDarkMode ? colors.surface : '#fff', color: colors.text }}>
+                <h6 className="mb-0">API Response Time & Active Users</h6>
+              </div>
+              <div className="card-body" style={{ background: isDarkMode ? colors.surface : '#fff' }}>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={metricsHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+                    <XAxis dataKey="time" stroke={colors.textMuted} style={{ fontSize: '0.75rem' }} />
+                    <YAxis yAxisId="left" stroke={colors.textMuted} style={{ fontSize: '0.75rem' }} />
+                    <YAxis yAxisId="right" orientation="right" stroke={colors.textMuted} style={{ fontSize: '0.75rem' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: isDarkMode ? colors.surface : '#fff', 
+                        border: `1px solid ${colors.border}`,
+                        color: colors.text
+                      }} 
+                    />
+                    <Legend wrapperStyle={{ color: colors.text }} />
+                    <Line yAxisId="left" type="monotone" dataKey="responseTime" stroke="#10b981" name="Response Time (ms)" />
+                    <Line yAxisId="right" type="monotone" dataKey="activeUsers" stroke="#f59e0b" name="Active Users" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alerts */}
       {healthData?.alerts && healthData.alerts.length > 0 && (
