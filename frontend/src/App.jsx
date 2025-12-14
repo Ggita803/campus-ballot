@@ -85,7 +85,7 @@ function App() {
               currentUser.role === 'admin' ? (
                 <Navigate to="/admin" replace />
               ) : currentUser.role === 'super_admin' ? (
-                <Navigate to="/super-admin/dashboard" replace />
+                <Navigate to="/super-admin/system-health" replace />
               ) : (
                 <Navigate to="/student-dashboard" replace />
               )
