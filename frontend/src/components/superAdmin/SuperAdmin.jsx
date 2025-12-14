@@ -9,6 +9,11 @@ import AuditLogs from './AuditLogs';
 import ElectionOversight from './ElectionOversight';
 import DataMaintenance from './DataMaintenance';
 import Reporting from './Reporting';
+import SystemHealth from './SystemHealth';
+import SecurityAudit from './SecurityAudit';
+import BackupRecovery from './BackupRecovery';
+import SystemConfiguration from './SystemConfiguration';
+import AdminActivityMonitor from './AdminActivityMonitor';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../admin/ThemeToggle';
 import '../../styles/darkmode.css';
@@ -114,12 +119,17 @@ const SuperAdmin = ({ user, onLogout }) => {
         >
           <Routes>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="manage-admins" element={<ManageAdmins />} />
+            <Route path="manage-admins" element={<ManageAdmins collapsed={collapsed} isMobile={isMobile} />} />
             <Route path="global-settings" element={<GlobalSettings />} />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="election-oversight" element={<ElectionOversight />} />
             <Route path="data-maintenance" element={<DataMaintenance />} />
             <Route path="reporting" element={<Reporting />} />
+            <Route path="system-health" element={<SystemHealth />} />
+            <Route path="security-audit" element={<SecurityAudit />} />
+            <Route path="backup-recovery" element={<BackupRecovery />} />
+            <Route path="system-config" element={<SystemConfiguration />} />
+            <Route path="admin-activity" element={<AdminActivityMonitor />} />
             <Route path="*" element={<Dashboard />} />
           </Routes>
         </div>

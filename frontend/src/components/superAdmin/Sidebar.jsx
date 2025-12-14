@@ -6,7 +6,12 @@ import { useTheme } from '../../contexts/ThemeContext';
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
   { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
-  { label: 'Global Settings', icon: 'fa-solid fa-sliders', to: '/super-admin/global-settings' },
+  { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
+  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
+  { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
+  { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
+  { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
+  { label: 'Global Settings', icon: 'fa-solid fa-cogs', to: '/super-admin/global-settings' },
   { label: 'Audit Logs', icon: 'fa-solid fa-clipboard-list', to: '/super-admin/audit-logs' },
   { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
   { label: 'Data Maintenance', icon: 'fa-solid fa-database', to: '/super-admin/data-maintenance' },
