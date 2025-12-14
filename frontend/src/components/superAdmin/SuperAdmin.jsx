@@ -130,7 +130,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             <Route path="backup-recovery" element={<BackupRecovery />} />
             <Route path="system-config" element={<SystemConfiguration />} />
             <Route path="admin-activity" element={<AdminActivityMonitor />} />
-            <Route path="*" element={<Dashboard />} />
+            <Route path="*" element={<SystemHealth />} />
           </Routes>
         </div>
       </main>
