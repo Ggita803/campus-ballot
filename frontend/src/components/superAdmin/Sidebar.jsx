@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -24,6 +24,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [logCount, setLogCount] = useState(0);
+  const [profileImage, setProfileImage] = useState(null);
+  const fileInputRef = useRef(null);
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
@@ -37,11 +39,36 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
       }
     };
     fetchLogCount();
+
+    // Load profile image from localStorage
+    const savedImage = localStorage.getItem('superAdminProfileImage');
+    if (savedImage) {
+      setProfileImage(savedImage);
+    }
   }, []);
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'SA';
+
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfileImage(base64String);
+        localStorage.setItem('superAdminProfileImage', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Trigger file upload
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
 
   // Accessibility: keyboard navigation
   const handleKeyDown = (e, idx) => {
@@ -91,9 +118,17 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         aria-label="Super Admin Sidebar"
       >
         <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative' }}>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
           {/* Avatar/Profile Dropdown */}
           <div
-            className="avatar bg-primary text-white mx-auto mb-2"
+            className="avatar bg-primary text-white mx-auto mb-2 avatar-upload-wrapper"
             style={{
               width: 48,
               height: 48,
@@ -105,18 +140,47 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
               marginBottom: collapsed ? 0 : 8,
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               cursor: 'pointer',
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundImage: profileImage ? `url(${profileImage})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
             }}
             tabIndex={0}
-            aria-label="Profile menu"
-            onClick={() => setShowDropdown(!showDropdown)}
-            onBlur={() => setShowDropdown(false)}
+            aria-label="Click to upload profile photo"
+            onClick={triggerFileUpload}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setShowDropdown(!showDropdown);
+            }}
           >
-            {initials}
+            {!profileImage && initials}
+            {/* Camera overlay on hover */}
+            <div
+              className="camera-overlay"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0,
+                transition: 'opacity 0.3s',
+                borderRadius: '50%'
+              }}
+            >
+              <i className="fa-solid fa-camera" style={{ fontSize: '1.2rem' }}></i>
+            </div>
             {/* Dropdown */}
             {!collapsed && showDropdown && (
               <div
                 className="profile-dropdown"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => e.stopPropagation()}
                 style={{
                   position: 'absolute',
                   top: 60,
@@ -135,6 +199,13 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
                   <i className="fa-solid fa-user me-2"></i> Profile
                 </div>
+                <div 
+                  className="dropdown-item px-3 py-2" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={triggerFileUpload}
+                >
+                  <i className="fa-solid fa-camera me-2"></i> Change Photo
+                </div>
                 <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
                   <i className="fa-solid fa-gear me-2"></i> Settings
                 </div>
@@ -151,7 +222,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 <i className="fa-solid fa-graduation-cap me-2"></i>Super Admin
               </span>
               <div className="mt-2 mb-2">
-                <span className="badge bg-danger" style={{ fontSize: '0.95rem', fontWeight: 600 }}>super_admin</span>
+                <span className="badge bg-danger" style={{ fontSize: '0.95rem', fontWeight: 600, borderRadius: '50px' }}>super_admin</span>
               </div>
               <div className="text-muted small mb-2" style={{ fontWeight: 500 }}>
                 Welcome, {user?.name || 'Super Admin'}
@@ -180,7 +251,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
             ></i>
           </button>
         </div>
-        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', flex: 1, paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: `${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'}` }}>
+        <nav className="nav flex-column px-2" role="navigation" aria-label="Sidebar navigation" style={{ overflowY: 'auto', overflowX: 'hidden', flex: 1, paddingBottom: '0.5rem', scrollbarWidth: 'thin', scrollbarColor: `${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f1f5f9'}` }}>
           {navItems.map((item, idx) => {
             const isActive = location.pathname === item.to;
             return (
@@ -281,6 +352,9 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         )}
         <style>{`
           .superadmin-sidebar { background: #fff; border-right: 1px solid #eee; }
+          .avatar-upload-wrapper:hover .camera-overlay {
+            opacity: 1 !important;
+          }
           .superadmin-sidebar .nav-link.active { background: #e7f1ff; border-radius: 12px; }
           .superadmin-sidebar .nav-link,
           .superadmin-sidebar .nav-link.active {
