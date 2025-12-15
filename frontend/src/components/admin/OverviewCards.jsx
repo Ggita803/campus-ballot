@@ -88,13 +88,13 @@ function OverviewCards({ stats }) {
       e.currentTarget.style.boxShadow = isDarkMode
         ? "none"
         : "0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1)";
-      e.currentTarget.style.borderColor = isDarkMode ? "#0d6efd" : `${card.color}40`;
+      e.currentTarget.style.borderColor = card.color;
     } else {
       e.currentTarget.style.transform = "translateY(0)";
       e.currentTarget.style.boxShadow = isDarkMode
         ? "none"
         : "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)";
-      e.currentTarget.style.borderColor = isDarkMode ? "#0d6efd" : `${card.color}20`;
+      e.currentTarget.style.borderColor = isDarkMode ? colors.border : '#e9ecef';
     }
   };
 
@@ -110,8 +110,9 @@ function OverviewCards({ stats }) {
                 transition: "all 0.3s ease",
                 cursor: "pointer",
                 minHeight: "120px",
-                border: isDarkMode ? "2px solid #0d6efd" : `1px solid ${card.color}20`,
-                borderRadius: "8px",
+                border: `2px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
+                borderRadius: "12px",
+                overflow: "hidden",
                 boxShadow: isDarkMode
                   ? "none"
                   : "0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)"
@@ -123,7 +124,7 @@ function OverviewCards({ stats }) {
               tabIndex={0}
               aria-label={`${card.title}: ${card.value} ${card.description}`}
             >
-              <div className="card-body text-center py-2 px-2 d-flex flex-column justify-content-center h-100">
+              <div className="card-body text-center py-2 px-2 d-flex flex-column justify-content-center h-100" style={{ borderRadius: "inherit" }}>
                 <div className="mb-1">
                   <div 
                     className="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto"
@@ -190,21 +191,9 @@ function OverviewCards({ stats }) {
       
   <style>{`
         /* Override darkmode.css card styles for overview cards */
-        body.admin-dark-mode .overview-card-dark.card {
-          border: 2px solid #0d6efd !important;
-          border-color: #0d6efd !important;
-          box-shadow: none !important;
-        }
-        
-        .admin-dark-mode .overview-card-dark.card {
-          border: 2px solid #0d6efd !important;
-          border-color: #0d6efd !important;
-          box-shadow: none !important;
-        }
-        
+        body.admin-dark-mode .overview-card-dark.card,
+        .admin-dark-mode .overview-card-dark.card,
         .overview-card-dark.card {
-          border: 2px solid #0d6efd !important;
-          border-color: #0d6efd !important;
           box-shadow: none !important;
         }
         
