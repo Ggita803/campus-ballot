@@ -3,6 +3,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FaImages, FaPlus } from 'react-icons/fa';
+import Loader from '../common/Loader';
 import MaterialsStats from './materials/MaterialsStats';
 import MaterialsFilter from './materials/MaterialsFilter';
 import MaterialsGrid from './materials/MaterialsGrid';
@@ -228,13 +229,7 @@ const CampaignMaterials = () => {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading materials..." />;
   }
 
   return (
@@ -280,7 +275,12 @@ const CampaignMaterials = () => {
           >
             <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
-       MaterialsStats stats={stats} />
+                <MaterialsStats stats={stats} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Upload Progress */}
       <UploadProgress progress={uploadProgress} />
@@ -295,7 +295,7 @@ const CampaignMaterials = () => {
       />
 
       {/* Materials Grid */}
-      <div className="row g-4">
+      <div className="row g-3 g-md-4" style={{ margin: '0', width: '100%' }}>
         <MaterialsGrid
           materials={filteredMaterials}
           onDownload={handleDownload}
@@ -310,3 +310,8 @@ const CampaignMaterials = () => {
         material={showPreview}
         onClose={() => setShowPreview(null)}
       />
+    </div>
+  );
+};
+
+export default CampaignMaterials;

@@ -20,6 +20,7 @@ import DataMaintenance from './components/superAdmin/DataMaintenance';
 import Reporting from './components/superAdmin/Reporting';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/darkmode.css';
+import SimpleCandidateTest from './components/SimpleCandidateTest';
 
 // ProtectedRoute component to guard dashboard routes
 function ProtectedRoute({ user, requiredRole, children }) {
@@ -94,14 +95,14 @@ function App() {
           path="/"
           element={
             currentUser ? (
-              currentUser.role === 'admin' ? (
+              currentUser.role === 'candidate' ? (
+                <Navigate to="/candidate" replace />
+              ) : currentUser.role === 'agent' ? (
+                <Navigate to="/agent" replace />
+              ) : currentUser.role === 'admin' ? (
                 <Navigate to="/admin" replace />
               ) : currentUser.role === 'super_admin' ? (
                 <Navigate to="/super-admin/system-health" replace />
-              ) : currentUser.additionalRoles?.includes('candidate') ? (
-                <Navigate to="/candidate" replace />
-              ) : currentUser.additionalRoles?.includes('agent') ? (
-                <Navigate to="/agent" replace />
               ) : (
                 <Navigate to="/student-dashboard" replace />
               )
@@ -142,8 +143,6 @@ function App() {
           }
         />
         <Route
-          path="/super-admin/*"
-          elem
           path="/candidate/*"
           element={
             <ProtectedRoute user={currentUser} requiredRole="candidate">
@@ -163,7 +162,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Routeent={
+        <Route
+          path="/super-admin/*"
+          element={
             <ProtectedRoute user={currentUser} requiredRole="super_admin">
               <ThemeProvider>
                 <SuperAdmin user={currentUser} onLogout={handleLogout} />

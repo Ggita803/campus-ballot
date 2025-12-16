@@ -33,7 +33,9 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
         borderRadius: '12px',
         transition: 'all 0.3s',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        maxWidth: '100%',
+        overflow: 'hidden'
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
@@ -44,7 +46,7 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      <div className="card-body p-3">
+      <div className="card-body" style={{ padding: '1rem' }}>
         {/* File Icon/Preview */}
         <div
           className="d-flex align-items-center justify-content-center mb-3"
@@ -72,7 +74,18 @@ const MaterialCard = ({ material, onDownload, onPreview, onDelete }) => {
         </div>
 
         {/* Material Info */}
-        <h6 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <h6 
+          className="fw-bold mb-2" 
+          style={{ 
+            color: colors.text,
+            fontSize: '0.95rem',
+            lineHeight: '1.3',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+          title={material.title}
+        >
           {material.title}
         </h6>
         <div className="d-flex justify-content-between align-items-center mb-2">

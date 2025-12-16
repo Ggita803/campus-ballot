@@ -96,24 +96,18 @@ const VoterEngagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading engagement data..." />;
   }
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div className="mb-4">
-        <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
           <FaComments className="me-2" style={{ color: '#3b82f6' }} />
           Voter Engagement
-        </h2>
-        <p className="text-muted mb-0">Interact with voters and share your vision</p>
+        </h4>
+        <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Interact with voters and share your vision</p>
       </div>
 
       {/* Stats */}
@@ -121,11 +115,12 @@ const VoterEngagement = () => {
 
       {/* Tabs */}
       <div className="mb-4">
-        <ul className="nav nav-pills">
+        <ul className="nav nav-pills" style={{ gap: '0.5rem' }}>
           <li className="nav-item">
             <button
               className={`nav-link ${activeTab === 'questions' ? 'active' : ''}`}
               onClick={() => setActiveTab('questions')}
+              style={{ marginRight: '0.5rem' }}
             >
               Q&A ({questions.length})
             </button>
@@ -134,6 +129,7 @@ const VoterEngagement = () => {
             <button
               className={`nav-link ${activeTab === 'announcements' ? 'active' : ''}`}
               onClick={() => setActiveTab('announcements')}
+              style={{ marginRight: '0.5rem' }}
             >
               Announcements ({announcements.length})
             </button>

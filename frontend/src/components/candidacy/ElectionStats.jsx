@@ -29,6 +29,7 @@ import {
   FaChartPie,
   FaDownload
 } from 'react-icons/fa';
+import Loader from '../common/Loader';
 
 const ElectionStats = () => {
   const { electionId } = useParams();
@@ -134,27 +135,21 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading election statistics..." />;
   }
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+          <div className="flex-grow-1">
+            <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
               <FaChartLine className="me-2" style={{ color: '#3b82f6' }} />
               Election Statistics
-            </h2>
+            </h4>
             <p className="text-muted mb-0">{stats.election.title}</p>
           </div>
           <div className="d-flex gap-2">
@@ -182,7 +177,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
       </div>
 
       {/* Key Metrics */}
-      <div className="row g-3 mb-4">
+      <div className="row g-3 mb-4" style={{ margin: '0', width: '100%' }}>
         <div className="col-12 col-sm-6 col-lg-3">
           <div
             className="card"

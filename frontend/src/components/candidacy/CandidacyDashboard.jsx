@@ -14,10 +14,12 @@ import {
   FaBullhorn,
   FaTasks
 } from 'react-icons/fa';
+import Loader from '../common/Loader';
 
 const CandidacyDashboard = () => {
   const { isDarkMode, colors } = useTheme();
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     elections: [],
     stats: {
@@ -32,7 +34,20 @@ const CandidacyDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchUserData();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/auth/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -159,24 +174,54 @@ const CandidacyDashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading dashboard..." />;
   }
 
   return (
     <div className="container-fluid p-4">
+      {/* Welcome Banner */}
+      <div 
+        className="mb-4"
+        style={{
+          background: `linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)`,
+          borderRadius: '12px',
+          color: '#fff',
+          padding: '2.5rem 2rem',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div className="d-flex align-items-center justify-content-between flex-wrap">
+          <div>
+            <h2 className="mb-2">Welcome back, {user?.name || 'Candidate'}! 👋</h2>
+            <p className="mb-0 opacity-90">Ready to manage your campaign? Let's make it count!</p>
+          </div>
+          {user?.profilePicture && (
+            <div
+              style={{
+                width: '70px',
+                height: '70px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                border: '3px solid rgba(255,255,255,0.3)'
+              }}
+            >
+              <img 
+                src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/uploads/${user.profilePicture}`} 
+                alt={user?.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-4">
-        <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
           <FaTrophy className="me-2" style={{ color: '#f59e0b' }} />
           Candidacy Dashboard
-        </h2>
-        <p className="text-muted mb-0">Manage your campaigns and track your performance</p>
+        </h4>
+        <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Manage your campaigns and track your performance</p>
       </div>
 
       {/* Stats Cards */}
@@ -204,19 +249,17 @@ const CandidacyDashboard = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-3">
-                  <div className="d-flex align-items-center justify-content-between mb-2">
-                    <div
-                      className="d-flex align-items-center justify-content-center"
-                      style={{
-                        width: '45px',
-                        height: '45px',
-                        borderRadius: '12px',
-                        backgroundColor: stat.bgColor
-                      }}
-                    >
-                      <Icon size={22} color={stat.color} />
-                    </div>
+                <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center text-center">
+                  <div
+                    className="d-flex align-items-center justify-content-center mb-3"
+                    style={{
+                      width: '45px',
+                      height: '45px',
+                      borderRadius: '12px',
+                      backgroundColor: stat.bgColor
+                    }}
+                  >
+                    <Icon size={22} color={stat.color} />
                   </div>
                   <h3 className="fw-bold mb-1" style={{ color: stat.color, fontSize: '1.8rem' }}>
                     {stat.value}
@@ -291,15 +334,15 @@ const CandidacyDashboard = () => {
             </div>
             <div className="card-body p-0">
               <div className="table-responsive">
-                <table className="table table-hover mb-0">
+                <table className="table table-hover mb-0" style={{ background: isDarkMode ? colors.surface : '#fff' }}>
                   <thead style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
                     <tr>
-                      <th style={{ color: colors.text, padding: '1rem' }}>Election Title</th>
-                      <th style={{ color: colors.text }}>Position</th>
-                      <th style={{ color: colors.text }}>Status</th>
-                      <th style={{ color: colors.text }}>Votes</th>
-                      <th style={{ color: colors.text }}>Ranking</th>
-                      <th style={{ color: colors.text }}>Actions</th>
+                      <th style={{ color: colors.text, padding: '1rem', borderColor: colors.border }}>Election Title</th>
+                      <th style={{ color: colors.text, borderColor: colors.border }}>Position</th>
+                      <th style={{ color: colors.text, borderColor: colors.border }}>Status</th>
+                      <th style={{ color: colors.text, borderColor: colors.border }}>Votes</th>
+                      <th style={{ color: colors.text, borderColor: colors.border }}>Ranking</th>
+                      <th style={{ color: colors.text, borderColor: colors.border }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -311,32 +354,37 @@ const CandidacyDashboard = () => {
                       </tr>
                     ) : (
                       dashboardData.elections.map((election) => (
-                        <tr key={election._id}>
-                          <td style={{ color: colors.text, padding: '1rem' }}>
+                        <tr key={election._id} style={{ borderColor: colors.border }}>
+                          <td style={{ color: colors.text, padding: '1rem', borderColor: colors.border }}>
                             <div className="fw-semibold">{election.title}</div>
-                            <small className="text-muted">
+                            <small style={{ color: colors.textSecondary }}>
                               {new Date(election.startDate).toLocaleDateString()} - {new Date(election.endDate).toLocaleDateString()}
                             </small>
                           </td>
-                          <td style={{ color: colors.text }}>
+                          <td style={{ color: colors.text, borderColor: colors.border }}>
                             <span className="badge bg-secondary">{election.position}</span>
                           </td>
-                          <td>{getStatusBadge(election.status)}</td>
-                          <td style={{ color: colors.text }}>
+                          <td style={{ borderColor: colors.border }}>{getStatusBadge(election.status)}</td>
+                          <td style={{ color: colors.text, borderColor: colors.border }}>
                             <div className="fw-semibold">{election.currentVotes}</div>
-                            <small className="text-muted">of {election.totalVoters}</small>
+                            <small style={{ color: colors.textSecondary }}>of {election.totalVoters}</small>
                           </td>
-                          <td style={{ color: colors.text }}>
+                          <td style={{ color: colors.text, borderColor: colors.border }}>
                             {election.ranking ? (
                               <span className="badge bg-primary">#{election.ranking}</span>
                             ) : (
-                              <span className="text-muted">N/A</span>
+                              <span style={{ color: colors.textSecondary }}>N/A</span>
                             )}
                           </td>
-                          <td>
+                          <td style={{ borderColor: colors.border }}>
                             <Link
                               to={`/candidacy/election/${election._id}`}
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm"
+                              style={{
+                                background: colors.primary,
+                                color: '#fff',
+                                border: 'none'
+                              }}
                             >
                               View Details
                             </Link>

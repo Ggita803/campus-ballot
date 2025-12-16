@@ -482,6 +482,7 @@ const login = asyncHandler(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        additionalRoles: user.additionalRoles || [],
         isVerified: user.isVerified,
         profilePicture: user.profilePicture,
       },

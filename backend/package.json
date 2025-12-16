@@ -18,7 +18,9 @@
 
     "seed": "nodemon seedAdmin.js",
 
-    "seedAdmin": "node seedAdmin.js"
+    "seedAdmin": "node seedAdmin.js",
+
+    "testUser": "node createTestUsers.js"
 
   },
 

@@ -16,6 +16,7 @@ import {
   FaCrown,
   FaUserShield
 } from 'react-icons/fa';
+import Loader from '../common/Loader';
 
 const AgentManagement = () => {
   const { isDarkMode, colors } = useTheme();
@@ -273,26 +274,20 @@ const AgentManagement = () => {
   );
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader message="Loading agents..." />;
   }
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid" style={{ padding: '1.5rem', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+          <div className="flex-grow-1">
+            <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
               <FaUserFriends className="me-2" style={{ color: '#3b82f6' }} />
               Agent Management
-            </h2>
-            <p className="text-muted mb-0">Manage your campaign team members</p>
+            </h4>
+            <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Manage your campaign team members</p>
           </div>
           <button
             className="btn btn-primary"
@@ -453,18 +448,18 @@ const AgentManagement = () => {
           borderRadius: '12px'
         }}
       >
-        <div className="card-body p-0">
+        <div className="card-body p-0" style={{ overflowX: 'auto' }}>
           <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+            <table className="table table-hover mb-0" style={{ minWidth: '800px' }}>
+              <thead style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', position: 'sticky', top: 0 }}>
                 <tr>
-                  <th style={{ color: colors.text, padding: '1rem' }}>Agent</th>
-                  <th style={{ color: colors.text }}>Role</th>
-                  <th style={{ color: colors.text }}>Contact</th>
-                  <th style={{ color: colors.text }}>Tasks</th>
-                  <th style={{ color: colors.text }}>Status</th>
-                  <th style={{ color: colors.text }}>Joined</th>
-                  <th style={{ color: colors.text }}>Actions</th>
+                  <th style={{ color: colors.text, padding: '1rem', minWidth: '200px' }}>Agent</th>
+                  <th style={{ color: colors.text, minWidth: '120px' }}>Role</th>
+                  <th style={{ color: colors.text, minWidth: '180px' }}>Contact</th>
+                  <th style={{ color: colors.text, minWidth: '100px' }}>Tasks</th>
+                  <th style={{ color: colors.text, minWidth: '100px' }}>Status</th>
+                  <th style={{ color: colors.text, minWidth: '100px' }}>Joined</th>
+                  <th style={{ color: colors.text, minWidth: '120px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -477,8 +472,8 @@ const AgentManagement = () => {
                   </tr>
                 ) : (
                   filteredAgents.map((agent) => (
-                    <tr key={agent._id}>
-                      <td style={{ padding: '1rem' }}>
+                    <tr key={agent._id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                      <td style={{ padding: '1rem', verticalAlign: 'middle' }}>
                         <div className="d-flex align-items-center gap-3">
                           <div
                             className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
@@ -495,14 +490,14 @@ const AgentManagement = () => {
                       <td style={{ verticalAlign: 'middle' }}>
                         {getRoleBadge(agent.role)}
                       </td>
-                      <td style={{ verticalAlign: 'middle' }}>
-                        <div style={{ color: colors.text }}>
-                          <div className="d-flex align-items-center gap-1 mb-1">
-                            <FaEnvelope size={12} />
-                            <small>{agent.email}</small>
+                      <td style={{ verticalAlign: 'middle', padding: '1rem' }}>
+                        <div style={{ color: colors.text, fontSize: '0.85rem', lineHeight: '1.4' }}>
+                          <div className="d-flex align-items-center gap-1 mb-1" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <FaEnvelope size={10} className="flex-shrink-0" />
+                            <small style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agent.email}</small>
                           </div>
                           <div className="d-flex align-items-center gap-1">
-                            <FaPhone size={12} />
+                            <FaPhone size={10} className="flex-shrink-0" />
                             <small>{agent.phone}</small>
                           </div>
                         </div>

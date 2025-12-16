@@ -51,26 +51,27 @@ const EngagementStats = ({ stats }) => {
   ];
 
   return (
-    <div className="row g-3 mb-4">
+    <div className="row g-3 mb-4" style={{ margin: '0', width: '100%' }}>
       {statsConfig.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="col-12 col-sm-6 col-lg-4 col-xl-2">
+          <div key={index} className="col-6 col-sm-4 col-lg-3 col-xl-2">
             <div
-              className="card"
+              className="card h-100"
               style={{
                 background: isDarkMode ? colors.surface : '#fff',
                 border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-                borderRadius: '12px'
+                borderRadius: '12px',
+                overflow: 'hidden'
               }}
             >
-              <div className="card-body p-3">
+              <div className="card-body" style={{ padding: '0.875rem' }}>
                 <div className="d-flex align-items-center gap-2">
                   <div
                     style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '10px',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
                       background: stat.bgColor,
                       display: 'flex',
                       alignItems: 'center',
