@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -38,7 +38,7 @@ const ElectionStats = () => {
   const [stats, setStats] = useState(null);
   const [timeRange, setTimeRange] = useState('all'); // all, week, day
 
-  const fetchElectionStats = async () => {
+  const fetchElectionStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`/api/candidate/election/${electionId}/stats?range=${timeRange}`, {
@@ -107,11 +107,11 @@ const ElectionStats = () => {
       });
       setLoading(false);
     }
-  };
+  }, [electionId, timeRange]);
 
   useEffect(() => {
     fetchElectionStats();
-  }, [electionId, timeRange]);
+  }, [fetchElectionStats]);
 
   const exportReport = () => {
     // Generate CSV report
@@ -192,27 +192,27 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
       </div>
 
       {/* Key Metrics */}
-      <div className="row g-3 mb-4" style={{ margin: '0', width: '100%' }}>
+      <div className="row g-3 mb-4">
         <div className="col-12 col-sm-6 col-lg-3">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
                   }}
                 >
                   <FaUsers size={24} color="#3b82f6" />
@@ -221,7 +221,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                   <h3 className="fw-bold mb-0" style={{ color: '#3b82f6' }}>
                     {stats.candidate.currentVotes}
                   </h3>
-                  <p className="text-muted mb-0 small">Total Votes</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Total Votes</p>
                 </div>
               </div>
             </div>
@@ -230,24 +230,24 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
                   }}
                 >
                   <FaPercentage size={24} color="#10b981" />
@@ -256,7 +256,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                   <h3 className="fw-bold mb-0" style={{ color: '#10b981' }}>
                     {stats.candidate.votePercentage}%
                   </h3>
-                  <p className="text-muted mb-0 small">Vote Share</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Vote Share</p>
                 </div>
               </div>
             </div>
@@ -265,24 +265,24 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(245, 158, 11, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)'
                   }}
                 >
                   <FaTrophy size={24} color="#f59e0b" />
@@ -291,7 +291,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                   <h3 className="fw-bold mb-0" style={{ color: '#f59e0b' }}>
                     #{stats.candidate.ranking}
                   </h3>
-                  <p className="text-muted mb-0 small">Current Ranking</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Current Ranking</p>
                 </div>
               </div>
             </div>
@@ -300,24 +300,24 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(139, 92, 246, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)'
                   }}
                 >
                   <FaChartBar size={24} color="#8b5cf6" />
@@ -326,7 +326,7 @@ ${stats.departmentBreakdown.map(d => `${d.department},${d.votes},${d.percentage}
                   <h3 className="fw-bold mb-0" style={{ color: '#8b5cf6' }}>
                     {stats.engagement.turnoutRate}%
                   </h3>
-                  <p className="text-muted mb-0 small">Turnout Rate</p>
+                  <p className="mb-0 small" style={{ color: colors.textSecondary }}>Turnout Rate</p>
                 </div>
               </div>
             </div>

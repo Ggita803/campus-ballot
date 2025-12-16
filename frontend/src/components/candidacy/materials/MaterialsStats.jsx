@@ -48,24 +48,24 @@ const MaterialsStats = ({ stats }) => {
         return (
           <div key={index} className="col-12 col-sm-6 col-lg-3">
             <div
-              className="card"
+              className="card h-100"
               style={{
                 background: isDarkMode ? colors.surface : '#fff',
                 border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-                borderRadius: '12px'
+                borderRadius: '8px',
+                overflow: 'hidden',
+                transition: 'all 0.3s ease'
               }}
             >
               <div className="card-body p-3">
                 <div className="d-flex align-items-center gap-3">
                   <div
+                    className="d-flex align-items-center justify-content-center"
                     style={{
                       width: '50px',
                       height: '50px',
-                      borderRadius: '12px',
-                      background: stat.bgColor,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      borderRadius: '50%',
+                      backgroundColor: stat.bgColor
                     }}
                   >
                     <Icon size={24} color={stat.color} />

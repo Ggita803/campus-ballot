@@ -318,24 +318,24 @@ const AgentManagement = () => {
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
                   }}
                 >
                   <FaUserFriends size={24} color="#3b82f6" />
@@ -353,24 +353,24 @@ const AgentManagement = () => {
 
         <div className="col-12 col-md-4">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
                   }}
                 >
                   <FaCheckCircle size={24} color="#10b981" />
@@ -388,24 +388,24 @@ const AgentManagement = () => {
 
         <div className="col-12 col-md-4">
           <div
-            className="card"
+            className="card h-100"
             style={{
               background: isDarkMode ? colors.surface : '#fff',
               border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-              borderRadius: '12px'
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
             }}
           >
-            <div className="card-body">
+            <div className="card-body p-3">
               <div className="d-flex align-items-center gap-3">
                 <div
+                  className="d-flex align-items-center justify-content-center"
                   style={{
                     width: '50px',
                     height: '50px',
-                    borderRadius: '12px',
-                    background: 'rgba(245, 158, 11, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)'
                   }}
                 >
                   <FaTasks size={24} color="#f59e0b" />
