@@ -473,23 +473,45 @@ const login = asyncHandler(async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    console.log("[LOGIN]:", user.email);
+    console.log("[LOGIN]:", user.email, "Role:", user.role);
+    
+    // Prepare user response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      additionalRoles: user.additionalRoles || [],
+      isVerified: user.isVerified,
+      profilePicture: user.profilePicture,
+    };
+
+    // Add candidate-specific fields if user is a candidate
+    if (user.role === 'candidate' && user.candidateInfo) {
+      console.log("[LOGIN] Adding candidate info for:", user.email);
+      userResponse.candidateInfo = user.candidateInfo;
+    }
+
     res.json({
       message: "Login successful",
       token: generateToken(user._id),
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        additionalRoles: user.additionalRoles || [],
-        isVerified: user.isVerified,
-        profilePicture: user.profilePicture,
-      },
+      user: userResponse,
     });
   } catch (error) {
     console.error("[LOGIN ERROR]:", error.message);
-    res.status(500).json({ message: "Server error during login" });
+    console.error("[LOGIN ERROR STACK]:", error.stack);
+    console.error("[LOGIN ERROR DETAILS]:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      path: error.path,
+      value: error.value
+    });
+    res.status(500).json({ 
+      message: "Server error during login", 
+      error: error.message,
+      errorType: error.name 
+    });
   }
 });
 
