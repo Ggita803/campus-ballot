@@ -184,15 +184,15 @@ const CandidacyDashboard = () => {
   }
 
   return (
-    <div className="container-fluid p-4">
+    <div className="container-fluid p-2">
       {/* Welcome Banner */}
       <div 
-        className="mb-4"
+        className="mb-2"
         style={{
           background: `linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)`,
           borderRadius: '12px',
           color: '#fff',
-          padding: '2.5rem 2rem',
+          padding: '1.5rem 1rem',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}
       >
@@ -222,8 +222,8 @@ const CandidacyDashboard = () => {
       </div>
 
       {/* Header */}
-      <div className="mb-4">
-        <h4 className="fw-bold mb-2" style={{ color: colors.text, fontSize: '1.25rem' }}>
+      <div className="mb-2">
+        <h4 className="fw-bold mb-1" style={{ color: colors.text, fontSize: '1.25rem' }}>
           <FaTrophy className="me-2" style={{ color: '#f59e0b' }} />
           Candidacy Dashboard
         </h4>
@@ -231,7 +231,7 @@ const CandidacyDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="row g-2 mb-4">
+      <div className="row g-2 mb-2">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -255,7 +255,7 @@ const CandidacyDashboard = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-2 d-flex flex-column align-items-center justify-content-center text-center">
+                <div className="card-body p-1 d-flex flex-column align-items-center justify-content-center text-center">
                   <div
                     className="d-flex align-items-center justify-content-center mb-2"
                     style={{
@@ -279,7 +279,7 @@ const CandidacyDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="row g-3 mb-4">
+      <div className="row g-2 mb-2">
         <div className="col-12">
           <div
             className="card"
