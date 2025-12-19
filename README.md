@@ -31,7 +31,6 @@ It’s **responsive**, **role-based**, and **fully deployed on Render** for clou
 - Manage student voter accounts
 - Perform System Backup of Data
 - Register and Manage Admins
-- etc
   
 **Admin:**
 - Create and manage elections
