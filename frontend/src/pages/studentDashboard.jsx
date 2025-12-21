@@ -98,6 +98,14 @@ function StudentDashboard({ user }) {
     completed: 0
   });
   
+  // Enhanced modal states
+  const [showVotingModal, setShowVotingModal] = useState(false);
+  const [selectedCandidateForVoting, setSelectedCandidateForVoting] = useState(null);
+  const [votingStep, setVotingStep] = useState(1); // 1: candidate review, 2: confirmation, 3: success
+  const [showCandidateComparison, setShowCandidateComparison] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState('side-by-side'); // 'side-by-side' or 'table'
+  const [selectedCandidatesForComparison, setSelectedCandidatesForComparison] = useState([]);
+  
   // Auto-refresh functionality
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
@@ -369,8 +377,30 @@ function StudentDashboard({ user }) {
     if (!result.isConfirmed) return;
 
     try {
-      const finalPosition = position || fallbackPosition;
-      console.log('Voting with:', { electionId, candidateId, position, fallbackPosition, finalPosition });
+      // Better position resolution with more fallbacks
+      let finalPosition = position || fallbackPosition;
+      
+      // If still no position, try to get it from the election/candidate data
+      if (!finalPosition) {
+        const election = elections.find(e => (e._id || e.id) === electionId);
+        const candidate = election?.candidates?.find(c => (c._id || c.id) === candidateId);
+        
+        finalPosition = candidate?.position || 
+                       candidate?.role || 
+                       candidate?.post ||
+                       (Array.isArray(election?.positions) && election.positions[0]) ||
+                       "General";
+      }
+      
+      console.log('Voting with:', { 
+        electionId, 
+        candidateId, 
+        position, 
+        fallbackPosition, 
+        finalPosition,
+        detectedFrom: position ? 'candidate.position' : fallbackPosition ? 'election.positions' : 'fallback'
+      });
+      
       if (!finalPosition) {
         Swal.fire({
           title: 'Error',
@@ -379,6 +409,7 @@ function StudentDashboard({ user }) {
         });
         return;
       }
+      
       await axios.post(
         `/api/votes`,
         { electionId: electionId, candidateId: candidateId, position: finalPosition },
@@ -387,8 +418,8 @@ function StudentDashboard({ user }) {
       
       // Generate verification code and receipt
       const verificationCode = generateVerificationCode();
-      const election = elections.find(e => e._id === electionId);
-      const candidate = election?.candidates?.find(c => c._id === candidateId);
+      const election = elections.find(e => (e._id || e.id) === electionId);
+      const candidate = election?.candidates?.find(c => (c._id || c.id) === candidateId);
       
       Swal.fire({
         title: 'Vote Cast Successfully!',
@@ -673,74 +704,82 @@ function StudentDashboard({ user }) {
       <div className="card-header border-0 py-3" 
            style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', background: isDarkMode ? colors.surfaceHover : '#fff', color: isDarkMode ? colors.text : undefined, borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
         <div className="row align-items-center g-2">
-          <div className="col-12 col-md-6 mb-2 mb-md-0">
+          {/* Title Row */}
+          <div className="col-12 mb-2">
             <h4 className="fw-bold mb-0 d-flex align-items-center gap-2">
               <FaPoll className="text-primary" /> All Elections
             </h4>
           </div>
           
-          <div className="col-12 col-md-6">
-            <div className="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-              {/* Auto-refresh controls - Simplified for mobile */}
-              <div className="d-flex align-items-center gap-1 flex-wrap mb-2 mb-md-0">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="autoRefresh"
-                    checked={isAutoRefresh}
-                    onChange={(e) => setIsAutoRefresh(e.target.checked)}
-                  />
-                  <label className="form-check-label small" htmlFor="autoRefresh" style={{ color: isDarkMode ? colors.text : undefined }}>
-                    Auto
-                  </label>
+          {/* Controls Row - Full Width */}
+          <div className="col-12">
+            <div className="row g-2 align-items-center">
+              {/* Auto-refresh controls */}
+              <div className="col-12 col-sm-6 col-lg-3">
+                <div className="d-flex align-items-center gap-2 w-100">
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="autoRefresh"
+                      checked={isAutoRefresh}
+                      onChange={(e) => setIsAutoRefresh(e.target.checked)}
+                    />
+                    <label className="form-check-label small text-nowrap" htmlFor="autoRefresh" style={{ color: isDarkMode ? colors.text : undefined }}>
+                      Auto
+                    </label>
+                  </div>
+                  <select
+                    className="form-select form-select-sm flex-grow-1"
+                    style={{ background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
+                    value={refreshInterval}
+                    onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                    disabled={!isAutoRefresh}
+                  >
+                    <option value={10000}>10s</option>
+                    <option value={30000}>30s</option>
+                    <option value={60000}>1m</option>
+                  </select>
+                  <button
+                    className="btn btn-sm"
+                    onClick={refreshData}
+                    title="Refresh now"
+                    style={{ background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', border: 'none' }}
+                  >
+                    <FaCog className={loading ? 'fa-spin' : ''} />
+                  </button>
                 </div>
-                <select
-                  className="form-select form-select-sm"
-                  style={{ width: '100px', background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
-                  value={refreshInterval}
-                  onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
-                  disabled={!isAutoRefresh}
-                >
-                  <option value={10000}>10s</option>
-                  <option value={30000}>30s</option>
-                  <option value={60000}>1m</option>
-                </select>
-                <button
-                  className="btn btn-sm"
-                  onClick={refreshData}
-                  title="Refresh now"
-                  style={{ background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', border: 'none' }}
-                >
-                  <FaCog className={loading ? 'fa-spin' : ''} />
-                </button>
               </div>
               
-              {/* Search and Filter - Responsive */}
-              <div className="d-flex flex-column flex-sm-row gap-2">
-                <div className="input-group" style={{ maxWidth: '300px', minWidth: '150px', flex: 1 }}>
+              {/* Search - Takes more space like in the image */}
+              <div className="col-12 col-sm-6 col-lg-6">
+                <div className="input-group">
                   <span className="input-group-text border-end-0" style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.textMuted : undefined }}>
                     <FaSearch className="text-muted" size={12} />
                   </span>
                   <input
                     type="text"
                     className="form-control form-control-sm border-start-0"
-                    placeholder="Search..."
+                    placeholder="Search elections..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{ background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
                   />
                 </div>
+              </div>
+
+              {/* Filter - Spans remaining space */}
+              <div className="col-12 col-lg-3">
                 <select 
-                  className="form-select form-select-sm" 
-                  style={{ maxWidth: '140px', minWidth: '100px', background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
+                  className="form-select form-select-sm w-100" 
+                  style={{ background: isDarkMode ? colors.inputBg : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', color: isDarkMode ? colors.text : undefined }}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="all">All</option>
-                  <option value="upcoming">Soon</option>
+                  <option value="all">All Elections</option>
+                  <option value="upcoming">Upcoming</option>
                   <option value="active">Active</option>
-                  <option value="completed">Done</option>
+                  <option value="completed">Completed</option>
                 </select>
               </div>
             </div>
@@ -2123,25 +2162,32 @@ function StudentDashboard({ user }) {
         </div>
       </div>
 
-      {/* Election Details Modal */}
+      {/* Enhanced Election Details Modal */}
       {selectedElection && showElectionModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title d-flex align-items-center gap-2">
-                  <FaPoll className="text-primary" />
-                  Election Details
-                </h5>
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, padding: '1rem' }}>
+          <div className="modal-dialog modal-xl modal-dialog-scrollable" style={{ margin: '2rem auto' }}>
+            <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : 'inherit', borderRadius: '4px' }}>
+              <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
+                <div className="d-flex align-items-center gap-3">
+                  <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 48, height: 48, background: isDarkMode ? colors.primary + '20' : 'rgba(59, 130, 246, 0.1)' }}>
+                    <FaPoll className="text-primary" size={20} />
+                  </div>
+                  <div>
+                    <h4 className="modal-title mb-0 fw-bold" style={{ fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem' }}>{selectedElection.title}</h4>
+                    <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.875rem' }}>Election Details & Voting</small>
+                  </div>
+                </div>
                 <button 
                   className="btn-close" 
                   onClick={() => {
                     setShowElectionModal(false);
                     setSelectedElection(null);
+                    setSelectedCandidatesForComparison([]);
+                    setShowCandidateComparison(false);
                   }}
                 ></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-0">
                 {(() => {
                   const { status, color, icon: StatusIcon } = getElectionStatus(selectedElection);
                   const voted = myVotes.some((v) => v.election === selectedElection._id);
@@ -2152,210 +2198,795 @@ function StudentDashboard({ user }) {
                   return (
                     <div>
                       {/* Election Header */}
-                      <div className="mb-4">
+                      <div className={`border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surface : '#fff', padding: window.innerWidth <= 768 ? '1rem' : '1.5rem' }}>
                         <div className="d-flex justify-content-between align-items-start mb-3">
-                          <h4 className="fw-bold mb-0">{selectedElection.title}</h4>
-                          <div className="d-flex gap-2">
-                            <span className={`badge bg-${color} d-flex align-items-center gap-1`}>
-                              <StatusIcon size={12} />
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
-                            {voted && (
-                              <span className="badge bg-success d-flex align-items-center gap-1">
-                                <FaCheckCircle size={12} />
-                                Voted
+                          <div className="flex-grow-1">
+                            <div className="d-flex flex-wrap gap-2 mb-3">
+                              <span className={`badge bg-${color} d-flex align-items-center gap-1 px-2 py-1`} style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>
+                                <StatusIcon size={12} />
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
                               </span>
+                              {voted && (
+                                <span className="badge bg-success d-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>
+                                  <FaCheckCircle size={12} />
+                                  Voted
+                                </span>
+                              )}
+                              {selectedElection.positions && Array.isArray(selectedElection.positions) && (
+                                <span className="badge bg-info d-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>
+                                  <FaUsers size={12} />
+                                  {selectedElection.positions.length} Position{selectedElection.positions.length > 1 ? 's' : ''}
+                                </span>
+                              )}
+                              <span className="badge bg-secondary d-flex align-items-center gap-1 px-2 py-1" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>
+                                <FaUsers size={12} />
+                                {approvedCandidates.length} Candidate{approvedCandidates.length > 1 ? 's' : ''}
+                              </span>
+                            </div>
+                            <p className={`mb-3`} style={{ color: isDarkMode ? colors.textSecondary : '#6c757d', fontSize: window.innerWidth <= 768 ? '0.85rem' : '0.95rem', lineHeight: 1.5 }}>{selectedElection.description}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Election Details Table */}
+                        <div className={`card border mb-4`} style={{ borderColor: isDarkMode ? colors.border : '#e9ecef', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderRadius: '4px' }}>
+                          <div className="card-body" style={{ padding: window.innerWidth <= 768 ? '0.75rem' : '1rem' }}>
+                            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.9rem' : '1rem' }}>
+                              <FaInfoCircle className="text-primary" size={16} />
+                              Election Information
+                            </h6>
+                            <div className="table-responsive">
+                              <table className={`table table-sm mb-0`} style={{ background: isDarkMode ? colors.surface : '#fff', borderRadius: '4px', overflow: 'hidden' }}>
+                                <thead className={`table-light`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                                  <tr>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                      <FaCalendarAlt className="text-primary me-1" size={12} />
+                                      Starts
+                                    </th>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                      <FaClock className="text-warning me-1" size={12} />
+                                      Ends
+                                    </th>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                      <FaPoll className="text-success me-1" size={12} />
+                                      Status
+                                    </th>
+                                    <th className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem', padding: '0.5rem' }}>
+                                      <FaUsers className="text-info me-1" size={12} />
+                                      Turnout
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                      <div className="fw-semibold">{new Date(selectedElection.startDate).toLocaleDateString()}</div>
+                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                        {new Date(selectedElection.startDate).toLocaleTimeString()}
+                                      </small>
+                                    </td>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                      <div className="fw-semibold">{new Date(selectedElection.endDate).toLocaleDateString()}</div>
+                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                        {formatTimeRemaining(selectedElection.endDate)}
+                                      </small>
+                                    </td>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                      <span className={`badge bg-${color}`} style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.75rem' }}>
+                                        <StatusIcon size={10} className="me-1" />
+                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                      </span>
+                                      <div>
+                                        <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                          {status === 'active' ? 'Voting open' : status === 'upcoming' ? 'Not started' : 'Completed'}
+                                        </small>
+                                      </div>
+                                    </td>
+                                    <td className="border-0" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.85rem', padding: '0.5rem' }}>
+                                      <div className="fw-semibold text-primary">{selectedElection.totalVotes || 0}</div>
+                                      <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.7rem' }}>
+                                        votes cast
+                                      </small>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Candidate Comparison Toggle */}
+                        {approvedCandidates.length > 1 && (
+                          <div className="d-flex flex-wrap gap-2 mb-3">
+                            <button
+                              className={`btn btn-sm ${showCandidateComparison ? 'btn-primary' : 'btn-outline-primary'}`}
+                              onClick={() => setShowCandidateComparison(!showCandidateComparison)}
+                              style={{ fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.8rem' }}
+                            >
+                              <FaEye className="me-1" />
+                              {showCandidateComparison ? 'Hide' : 'Show'} Comparison
+                            </button>
+                            {showCandidateComparison && (
+                              <div className="btn-group" role="group">
+                                <button
+                                  className={`btn btn-sm ${comparisonMode === 'side-by-side' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                  onClick={() => setComparisonMode('side-by-side')}
+                                  style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.75rem' }}
+                                >
+                                  Side by Side
+                                </button>
+                                <button
+                                  className={`btn btn-sm ${comparisonMode === 'table' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                  onClick={() => setComparisonMode('table')}
+                                  style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.75rem' }}
+                                >
+                                  Table View
+                                </button>
+                              </div>
                             )}
                           </div>
-                        </div>
-                        <p className="text-muted mb-3">{selectedElection.description}</p>
-                        
-                        {/* Election Timeline */}
-                        <div className="row g-3 mb-4">
-                          <div className="col-md-6">
-                            <div className="card border-0 bg-light">
-                              <div className="card-body p-3">
-                                <div className="d-flex align-items-center gap-2">
-                                  <FaCalendarAlt className="text-primary" />
-                                  <div>
-                                    <small className="text-muted d-block">Start Date</small>
-                                    <strong>{new Date(selectedElection.startDate).toLocaleDateString()}</strong>
-                                    <small className="text-muted d-block">
-                                      {new Date(selectedElection.startDate).toLocaleTimeString()}
-                                    </small>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className="card border-0 bg-light">
-                              <div className="card-body p-3">
-                                <div className="d-flex align-items-center gap-2">
-                                  <FaClock className="text-warning" />
-                                  <div>
-                                    <small className="text-muted d-block">End Date</small>
-                                    <strong>{new Date(selectedElection.endDate).toLocaleDateString()}</strong>
-                                    <small className="text-muted d-block">
-                                      {formatTimeRemaining(selectedElection.endDate)}
-                                    </small>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Candidates Section */}
-                      <div>
-                        <div className="d-flex align-items-center justify-content-between mb-3">
-                          <div className="d-flex align-items-center gap-2">
-                            <FaUsers className="text-primary" />
-                            <h5 className="fw-bold mb-0">Candidates ({approvedCandidates.length})</h5>
-                            {/* If the election has a single position, show it for clarity */}
-                            {selectedElection && Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 && (
-                              <span className="badge bg-success text-white ms-2" style={{ fontSize: '0.85rem' }}>
-                                {selectedElection.positions[0]}
-                              </span>
-                            )}
-                          </div>
-                          {/* If the election has multiple positions, show a compact label */}
-                          {selectedElection && Array.isArray(selectedElection.positions) && selectedElection.positions.length > 1 && (
-                            <small className="text-muted">{selectedElection.positions.length} positions</small>
-                          )}
-                        </div>
-                        
-                        {approvedCandidates.length > 0 ? (
-                          <div className="row g-3">
-                            {approvedCandidates.map((candidate, idx) => (
-                              <div className="col-md-6" key={candidate._id || candidate.id}>
-                                <div className="card border h-100" 
-                                     style={{ borderRadius: '10px', background: voted ? '#f8f9fa' : 'white' }}>
-                                  <div className="card-body p-3">
-                                    <div className="d-flex align-items-center mb-3">
-                                      <img
-                                        src={getImageUrl(candidate.photo || "/default-avatar.png")}
-                                        alt={candidate.name}
-                                        style={{
-                                          width: 60,
-                                          height: 60,
-                                          objectFit: "cover",
-                                          borderRadius: "50%",
-                                          border: "3px solid #e5e7eb",
-                                        }}
-                                        className="me-3"
-                                      />
-                                      <div className="flex-grow-1">
-                                        <div className="d-flex align-items-center justify-content-between">
-                                          <div style={{ minWidth: 0 }}>
-                                            <h6 className="fw-bold mb-1 text-truncate" title={candidate.name}>
-                                              <span className="badge bg-secondary text-white me-2">#{idx + 1}</span>
-                                              {candidate.name}
-                                              {candidate.position && (
-                                                <span className="badge bg-success text-white ms-2" style={{ fontSize: '0.75rem' }}>{candidate.position}</span>
-                                              )}
-                                            </h6>
-                                            <div className="d-flex align-items-center gap-2 mt-1">
-                                              {candidate.symbol && (
-                                                <img src={getImageUrl(candidate.symbol)} alt={`${candidate.party || 'Party'} symbol`} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
-                                              )}
-                                              <p className="text-muted mb-0">{candidate.party || 'Independent'}</p>
+                      <div style={{ padding: window.innerWidth <= 768 ? '1rem' : '1.5rem' }}>
+                        {showCandidateComparison && approvedCandidates.length > 1 ? (
+                          // Comparison View
+                          comparisonMode === 'side-by-side' ? (
+                            <div className="row g-3">
+                              {approvedCandidates.map((candidate, idx) => (
+                                <div className="col-lg-6" key={candidate._id || candidate.id}>
+                                  <div className={`card border h-100 position-relative`} 
+                                       style={{ 
+                                         borderRadius: '4px', 
+                                         background: voted ? (isDarkMode ? colors.surfaceHover : '#f8f9fa') : (isDarkMode ? colors.surface : 'white'),
+                                         borderColor: selectedCandidatesForComparison.includes(candidate._id) ? '#007bff' : (isDarkMode ? colors.border : '#dee2e6'),
+                                         borderWidth: selectedCandidatesForComparison.includes(candidate._id) ? '2px' : '1px'
+                                       }}>
+                                    <div className="card-body" style={{ padding: window.innerWidth <= 768 ? '1rem' : '1.5rem' }}>
+                                      <div className="d-flex align-items-start gap-2 mb-3">
+                                        <div className="position-relative">
+                                          <img
+                                            src={getImageUrl(candidate.photo || "/default-avatar.png")}
+                                            alt={candidate.name}
+                                            style={{
+                                              width: window.innerWidth <= 768 ? 50 : 70,
+                                              height: window.innerWidth <= 768 ? 50 : 70,
+                                              objectFit: "cover",
+                                              borderRadius: "50%",
+                                              border: "2px solid #e5e7eb",
+                                            }}
+                                          />
+                                          <span className="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-primary" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '0.7rem' }}>
+                                            #{idx + 1}
+                                          </span>
+                                        </div>
+                                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                          <h5 className="fw-bold mb-2 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.9rem' : '1.1rem' }}>
+                                            <span className="text-truncate" title={candidate.name}>{candidate.name}</span>
+                                            {candidate.position && (
+                                              <span className="badge bg-success" style={{ fontSize: window.innerWidth <= 768 ? '0.6rem' : '0.7rem' }}>{candidate.position}</span>
+                                            )}
+                                          </h5>
+                                          <div className="d-flex align-items-center gap-2 mb-2">
+                                            {candidate.symbol && (
+                                              <img src={getImageUrl(candidate.symbol)} alt={`${candidate.party || 'Party'} symbol`} 
+                                                   style={{ width: window.innerWidth <= 768 ? 24 : 32, height: window.innerWidth <= 768 ? 24 : 32, objectFit: 'contain', borderRadius: 4 }} />
+                                            )}
+                                            <div>
+                                              <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>{candidate.party || 'Independent'}</div>
+                                              <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.75rem' }}>Party Affiliation</small>
                                             </div>
                                           </div>
                                         </div>
-                                        {candidate.manifesto && (
-                                          <small className="text-muted d-block mt-2" style={{ maxWidth: '100%' }}>{candidate.manifesto}</small>
-                                        )}
-                                        {/* Quick takeaway / What not to miss */}
-                                        {candidate.manifesto && (
-                                          <div className="alert alert-warning py-2 mt-2" role="alert">
-                                            <strong>Quick takeaway:</strong> {candidate.manifesto.length > 140 ? `${candidate.manifesto.slice(0, 140)}...` : candidate.manifesto}
+                                      </div>
+                                      
+                                      {/* Candidate Details */}
+                                      {candidate.manifesto && (
+                                        <div className="mb-3">
+                                          <h6 className="fw-semibold mb-2 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>
+                                            <FaFileAlt className="text-primary" size={window.innerWidth <= 768 ? 12 : 14} />
+                                            Manifesto
+                                          </h6>
+                                          <div className={`p-2 rounded`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.85rem', lineHeight: 1.4 }}>
+                                            {candidate.manifesto.length > (window.innerWidth <= 768 ? 100 : 200) ? (
+                                              <>
+                                                {candidate.manifesto.slice(0, window.innerWidth <= 768 ? 100 : 200)}...
+                                                <button className="btn btn-link p-0 ms-1 text-decoration-none" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>
+                                                  Read more
+                                                </button>
+                                              </>
+                                            ) : candidate.manifesto}
                                           </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Vote Stats */}
+                                      {typeof candidate.votes === "number" && (
+                                        <div className="mb-3">
+                                          <h6 className="fw-semibold mb-2 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>
+                                            <FaChartBar className="text-success" size={window.innerWidth <= 768 ? 12 : 14} />
+                                            Current Standing
+                                          </h6>
+                                          <div className="d-flex align-items-center gap-3">
+                                            <div className="progress flex-grow-1" style={{ height: window.innerWidth <= 768 ? '8px' : '12px' }}>
+                                              <div 
+                                                className="progress-bar bg-gradient"
+                                                style={{ 
+                                                  width: `${Math.min((candidate.votes / Math.max(...approvedCandidates.map(c => c.votes || 0), 1)) * 100, 100)}%`,
+                                                  background: 'linear-gradient(45deg, #007bff, #0056b3)'
+                                                }}
+                                              ></div>
+                                            </div>
+                                            <div className="text-end">
+                                              <div className="fw-bold text-primary" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>{candidate.votes}</div>
+                                              <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.65rem' : '0.75rem' }}>votes</small>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Action Buttons */}
+                                      <div className="d-grid gap-2">
+                                        {voted ? (
+                                          <button className="btn btn-success disabled" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>
+                                            <FaCheckCircle className="me-2" /> You Voted
+                                          </button>
+                                        ) : status === 'active' ? (
+                                          <button
+                                            className="btn btn-primary"
+                                            onClick={() => {
+                                              setSelectedCandidateForVoting(candidate);
+                                              setVotingStep(1);
+                                              setShowVotingModal(true);
+                                            }}
+                                            style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}
+                                          >
+                                            <FaVoteYea className="me-2" /> Vote for {candidate.name}
+                                          </button>
+                                        ) : (
+                                          <button className="btn btn-secondary disabled" style={{ fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>
+                                            <FaLock className="me-2" /> 
+                                            {status === 'upcoming' ? 'Not Started' : 'Election Ended'}
+                                          </button>
                                         )}
                                       </div>
                                     </div>
-                                    
-                                    {typeof candidate.votes === "number" && (
-                                      <div className="mb-3">
-                                        <small className="text-muted">Current Votes:</small>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            // Table Comparison View
+                            <div className="table-responsive">
+                              <table className={`table table-hover`} style={{ background: isDarkMode ? colors.surface : '#fff' }}>
+                                <thead className={`table-light`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                                  <tr>
+                                    <th width="5%">#</th>
+                                    <th width="25%">Candidate</th>
+                                    <th width="15%">Party</th>
+                                    <th width="35%">Manifesto</th>
+                                    <th width="10%">Votes</th>
+                                    <th width="10%">Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {approvedCandidates.map((candidate, idx) => (
+                                    <tr key={candidate._id || candidate.id}>
+                                      <td>
+                                        <span className="badge bg-primary">#{idx + 1}</span>
+                                      </td>
+                                      <td>
                                         <div className="d-flex align-items-center gap-2">
-                                          <div className="progress flex-grow-1" style={{ height: '8px' }}>
+                                          <img
+                                            src={getImageUrl(candidate.photo || "/default-avatar.png")}
+                                            alt={candidate.name}
+                                            style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "50%" }}
+                                          />
+                                          <div>
+                                            <div className="fw-semibold">{candidate.name}</div>
+                                            {candidate.position && (
+                                              <small className="badge bg-success">{candidate.position}</small>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <div className="d-flex align-items-center gap-2">
+                                          {candidate.symbol && (
+                                            <img src={getImageUrl(candidate.symbol)} alt="symbol" 
+                                                 style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                                          )}
+                                          <span>{candidate.party || 'Independent'}</span>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <div style={{ fontSize: '0.85rem' }}>
+                                          {candidate.manifesto ? (
+                                            candidate.manifesto.length > 100 ? 
+                                            `${candidate.manifesto.slice(0, 100)}...` : candidate.manifesto
+                                          ) : (
+                                            <em className="text-muted">No manifesto provided</em>
+                                          )}
+                                        </div>
+                                      </td>
+                                      <td>
+                                        {typeof candidate.votes === "number" ? (
+                                          <div className="text-center">
+                                            <div className="fw-bold text-primary">{candidate.votes}</div>
+                                            <small className="text-muted">votes</small>
+                                          </div>
+                                        ) : (
+                                          <span className="text-muted">-</span>
+                                        )}
+                                      </td>
+                                      <td>
+                                        {voted ? (
+                                          <button className="btn btn-sm btn-success disabled">
+                                            <FaCheckCircle />
+                                          </button>
+                                        ) : status === 'active' ? (
+                                          <button
+                                            className="btn btn-sm btn-primary"
+                                            onClick={() => {
+                                              setSelectedCandidateForVoting(candidate);
+                                              setVotingStep(1);
+                                              setShowVotingModal(true);
+                                            }}
+                                            title={`Vote for ${candidate.name}`}
+                                          >
+                                            <FaVoteYea />
+                                          </button>
+                                        ) : (
+                                          <button className="btn btn-sm btn-secondary disabled">
+                                            <FaLock />
+                                          </button>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )
+                        ) : (
+                          // Regular Card View
+                          approvedCandidates.length > 0 ? (
+                            <div className="row g-4">
+                              {approvedCandidates.map((candidate, idx) => (
+                                <div className="col-lg-6" key={candidate._id || candidate.id}>
+                                  <div className={`card border h-100`} 
+                                       style={{ 
+                                         borderRadius: '12px', 
+                                         background: voted ? (isDarkMode ? colors.surfaceHover : '#f8f9fa') : (isDarkMode ? colors.surface : 'white'),
+                                         borderColor: isDarkMode ? colors.border : '#dee2e6',
+                                         transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                                       }}
+                                       onMouseEnter={(e) => {
+                                         if (!voted && status === 'active') {
+                                           e.currentTarget.style.transform = 'translateY(-2px)';
+                                           e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                                         }
+                                       }}
+                                       onMouseLeave={(e) => {
+                                         e.currentTarget.style.transform = 'none';
+                                         e.currentTarget.style.boxShadow = 'none';
+                                       }}>
+                                    <div className="card-body p-4">
+                                      <div className="d-flex align-items-center gap-3 mb-3">
+                                        <div className="position-relative">
+                                          <img
+                                            src={getImageUrl(candidate.photo || "/default-avatar.png")}
+                                            alt={candidate.name}
+                                            style={{
+                                              width: 70,
+                                              height: 70,
+                                              objectFit: "cover",
+                                              borderRadius: "50%",
+                                              border: "3px solid #e5e7eb",
+                                            }}
+                                          />
+                                          <span className="position-absolute bottom-0 end-0 badge bg-primary rounded-pill">
+                                            #{idx + 1}
+                                          </span>
+                                        </div>
+                                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                          <h5 className="fw-bold mb-1 text-truncate" title={candidate.name}>
+                                            {candidate.name}
+                                            {candidate.position && (
+                                              <span className="badge bg-success ms-2" style={{ fontSize: '0.7rem' }}>{candidate.position}</span>
+                                            )}
+                                          </h5>
+                                          <div className="d-flex align-items-center gap-2 mb-1">
+                                            {candidate.symbol && (
+                                              <img src={getImageUrl(candidate.symbol)} alt={`${candidate.party || 'Party'} symbol`} 
+                                                   style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
+                                            )}
+                                            <span className="text-muted">{candidate.party || 'Independent'}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      {candidate.manifesto && (
+                                        <div className={`p-3 mb-3 rounded`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                                          <strong className="text-primary">Manifesto:</strong>
+                                          <div className="mt-1">
+                                            {candidate.manifesto.length > 150 ? (
+                                              `${candidate.manifesto.slice(0, 150)}...`
+                                            ) : candidate.manifesto}
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {typeof candidate.votes === "number" && (
+                                        <div className="mb-3">
+                                          <div className="d-flex justify-content-between align-items-center mb-1">
+                                            <small className="text-muted fw-semibold">Current Votes</small>
+                                            <strong className="text-primary">{candidate.votes}</strong>
+                                          </div>
+                                          <div className="progress" style={{ height: '8px' }}>
                                             <div 
                                               className="progress-bar bg-primary"
                                               style={{ 
-                                                width: `${Math.min((candidate.votes / Math.max(...approvedCandidates.map(c => c.votes || 0))) * 100, 100)}%` 
+                                                width: `${Math.min((candidate.votes / Math.max(...approvedCandidates.map(c => c.votes || 0), 1)) * 100, 100)}%`
                                               }}
                                             ></div>
                                           </div>
-                                          <strong className="text-primary">{candidate.votes}</strong>
                                         </div>
+                                      )}
+                                      
+                                      <div className="d-grid">
+                                        {voted ? (
+                                          <button className="btn btn-success disabled">
+                                            <FaCheckCircle className="me-2" /> You Voted
+                                          </button>
+                                        ) : status === 'active' ? (
+                                          <button
+                                            className="btn btn-primary"
+                                            onClick={() => {
+                                              setSelectedCandidateForVoting(candidate);
+                                              setVotingStep(1);
+                                              setShowVotingModal(true);
+                                            }}
+                                          >
+                                            <FaVoteYea className="me-2" /> Vote for {candidate.name}
+                                          </button>
+                                        ) : (
+                                          <button className="btn btn-secondary disabled">
+                                            <FaLock className="me-2" /> 
+                                            {status === 'upcoming' ? 'Not Started' : 'Election Ended'}
+                                          </button>
+                                        )}
                                       </div>
-                                    )}
-                                    
-                                    {voted ? (
-                                      <button className="btn btn-success w-100 disabled">
-                                        <FaCheckCircle className="me-2" /> Voted
-                                      </button>
-                                    ) : status === 'active' ? (
-                                      <button
-                                        className="btn btn-primary w-100"
-                                        onClick={() => {
-                                          setShowElectionModal(false);
-                                          handleVote(
-                                            selectedElection._id,
-                                            candidate._id,
-                                            candidate.position,
-                                            Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 ? selectedElection.positions[0] : undefined
-                                          );
-                                        }}
-                                      >
-                                        <FaVoteYea className="me-2" /> Vote for {candidate.name}
-                                      </button>
-                                    ) : (
-                                      <button className="btn btn-secondary w-100 disabled">
-                                        <FaLock className="me-2" /> 
-                                        {status === 'upcoming' ? 'Election Not Started' : 'Election Ended'}
-                                      </button>
-                                    )}
+                                    </div>
                                   </div>
                                 </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-5">
+                              <div className={`mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center`} 
+                                   style={{ width: 80, height: 80, background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                                <FaUsers className="text-muted" size={32} />
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-4">
-                            <FaUsers className="text-muted mb-3" size={48} />
-                            <h6 className="text-muted">No candidates available</h6>
-                            <p className="text-muted">Candidates will appear here once approved.</p>
-                          </div>
+                              <h5 className="fw-bold mb-2">No Candidates Yet</h5>
+                              <p className="text-muted">Candidates will appear here once they are approved for this election.</p>
+                            </div>
+                          )
                         )}
                       </div>
                     </div>
                   );
                 })()}
               </div>
-              <div className="modal-footer">
-                <button 
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowElectionModal(false);
-                    setSelectedElection(null);
-                  }}
-                >
-                  Close
-                </button>
-                {selectedElection && getElectionStatus(selectedElection).status === 'active' && 
-                 !myVotes.some((v) => v.election === selectedElection._id) && (
+              <div className={`modal-footer border-top d-flex justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                <div>
+                  {selectedElection && getElectionStatus(selectedElection).status === 'active' && 
+                   !myVotes.some((v) => v.election === selectedElection._id) && (
+                    <small className="text-success d-flex align-items-center gap-1">
+                      <FaUnlock size={12} />
+                      Voting is currently open
+                    </small>
+                  )}
+                </div>
+                <div className="d-flex gap-2">
                   <button 
-                    className="btn btn-primary"
-                    onClick={() => setActiveView('elections')}
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowElectionModal(false);
+                      setSelectedElection(null);
+                      setSelectedCandidatesForComparison([]);
+                      setShowCandidateComparison(false);
+                    }}
                   >
-                    <FaVoteYea className="me-2" />
-                    Go to Voting
+                    Close
                   </button>
-                )}
+                  {selectedElection && getElectionStatus(selectedElection).status === 'active' && 
+                   !myVotes.some((v) => v.election === selectedElection._id) && (
+                    <button 
+                      className="btn btn-primary d-flex align-items-center gap-2"
+                      onClick={() => {
+                        setShowElectionModal(false);
+                        setActiveView('elections');
+                      }}
+                    >
+                      <FaVoteYea />
+                      Go to Elections Page
+                    </button>
+                  )}
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Voting Modal */}
+      {showVotingModal && selectedCandidateForVoting && (
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060, padding: '1rem' }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered" style={{ margin: '2rem auto' }}>
+            <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', color: isDarkMode ? colors.text : 'inherit', borderRadius: '4px' }}>
+              {votingStep === 1 && (
+                // Step 1: Candidate Review
+                <>
+                  <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa', padding: '1rem 1.5rem' }}>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 40, height: 40, background: 'rgba(59, 130, 246, 0.1)' }}>
+                        <FaVoteYea className="text-primary" size={16} />
+                      </div>
+                      <div>
+                        <h4 className="modal-title mb-0 fw-bold" style={{ fontSize: window.innerWidth <= 768 ? '1rem' : '1.25rem' }}>Confirm Your Choice</h4>
+                        <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>Review candidate details before voting</small>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-close" 
+                      onClick={() => {
+                        setShowVotingModal(false);
+                        setSelectedCandidateForVoting(null);
+                        setVotingStep(1);
+                      }}
+                    ></button>
+                  </div>
+                  <div className="modal-body" style={{ padding: window.innerWidth <= 768 ? '1.5rem' : '2rem' }}>
+                    {/* Candidate Details */}
+                    <div className="text-center mb-4">
+                      <img
+                        src={getImageUrl(selectedCandidateForVoting.photo || "/default-avatar.png")}
+                        alt={selectedCandidateForVoting.name}
+                        style={{
+                          width: window.innerWidth <= 768 ? 80 : 120,
+                          height: window.innerWidth <= 768 ? 80 : 120,
+                          objectFit: "cover",
+                          borderRadius: "50%",
+                          border: "4px solid #007bff",
+                          boxShadow: '0 4px 20px rgba(0, 123, 255, 0.3)'
+                        }}
+                      />
+                      <h3 className="fw-bold mt-3 mb-1" style={{ fontSize: window.innerWidth <= 768 ? '1.1rem' : '1.5rem' }}>{selectedCandidateForVoting.name}</h3>
+                      <p className="text-primary mb-0" style={{ fontSize: window.innerWidth <= 768 ? '0.85rem' : '1rem' }}>{selectedCandidateForVoting.party || 'Independent'}</p>
+                      {selectedCandidateForVoting.position && (
+                        <span className="badge bg-success mt-2" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>{selectedCandidateForVoting.position}</span>
+                      )}
+                    </div>
+                    
+                    {/* Election Info */}
+                    <div className={`alert d-flex align-items-center gap-3`} style={{ background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>
+                      <FaInfoCircle className="text-primary" size={window.innerWidth <= 768 ? 16 : 20} />
+                      <div>
+                        <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 768 ? '0.85rem' : '0.95rem' }}>Election: {selectedElection.title}</div>
+                        <small className="text-muted" style={{ fontSize: window.innerWidth <= 768 ? '0.7rem' : '0.8rem' }}>You are about to cast your vote for this candidate</small>
+                      </div>
+                    </div>
+                    
+                    {/* Candidate Manifesto */}
+                    {selectedCandidateForVoting.manifesto && (
+                      <div className="mb-4">
+                        <h5 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 768 ? '0.95rem' : '1.1rem' }}>
+                          <FaFileAlt className="text-primary" size={window.innerWidth <= 768 ? 14 : 16} />
+                          Candidate Manifesto
+                        </h5>
+                        <div className={`p-3 rounded`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}` }}>
+                          <p className="mb-0" style={{ lineHeight: 1.6, fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem' }}>{selectedCandidateForVoting.manifesto}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Warning Notice */}
+                    <div className={`alert alert-warning d-flex align-items-center gap-3`} style={{ background: 'rgba(255, 193, 7, 0.1)', border: '1px solid rgba(255, 193, 7, 0.3)', fontSize: window.innerWidth <= 768 ? '0.75rem' : '0.85rem' }}>
+                      <FaExclamationTriangle className="text-warning" size={window.innerWidth <= 768 ? 14 : 16} />
+                      <div>
+                        <strong>Important:</strong> Once you cast your vote, it cannot be changed or withdrawn. Please review your choice carefully.
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`modal-footer border-top justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setShowVotingModal(false);
+                        setSelectedCandidateForVoting(null);
+                        setVotingStep(1);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="btn btn-primary btn-lg px-4"
+                      onClick={() => setVotingStep(2)}
+                    >
+                      <FaVoteYea className="me-2" />
+                      Proceed to Vote
+                    </button>
+                  </div>
+                </>
+              )}
+              
+              {votingStep === 2 && (
+                // Step 2: Final Confirmation
+                <>
+                  <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 48, height: 48, background: 'rgba(220, 53, 69, 0.1)' }}>
+                        <FaExclamationTriangle className="text-danger" size={20} />
+                      </div>
+                      <div>
+                        <h4 className="modal-title mb-0 fw-bold text-danger">Final Confirmation</h4>
+                        <small className="text-muted">This action cannot be undone</small>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-close" 
+                      onClick={() => {
+                        setShowVotingModal(false);
+                        setSelectedCandidateForVoting(null);
+                        setVotingStep(1);
+                      }}
+                    ></button>
+                  </div>
+                  <div className="modal-body p-4 text-center">
+                    <div className="mb-4">
+                      <FaVoteYea className="text-primary mb-3" size={64} />
+                      <h3 className="fw-bold">Cast Your Vote</h3>
+                      <p className="text-muted mb-0">Are you absolutely sure you want to vote for:</p>
+                    </div>
+                    
+                    <div className={`p-4 rounded border`} style={{ background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderColor: isDarkMode ? colors.border : '#e9ecef' }}>
+                      <div className="d-flex align-items-center justify-content-center gap-3 mb-2">
+                        <img
+                          src={getImageUrl(selectedCandidateForVoting.photo || "/default-avatar.png")}
+                          alt={selectedCandidateForVoting.name}
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "cover",
+                            borderRadius: "50%"
+                          }}
+                        />
+                        <div className="text-start">
+                          <h5 className="fw-bold mb-1">{selectedCandidateForVoting.name}</h5>
+                          <p className="text-muted mb-0">{selectedCandidateForVoting.party || 'Independent'}</p>
+                        </div>
+                      </div>
+                      <small className="text-muted">For: {selectedElection.title}</small>
+                    </div>
+                    
+                    <div className="alert alert-danger mt-4 d-flex align-items-center gap-3">
+                      <FaLock className="text-danger" />
+                      <div className="text-start">
+                        <strong>Final Warning:</strong> After confirmation, your vote will be permanently recorded and cannot be changed.
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`modal-footer border-top justify-content-between`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <button 
+                      className="btn btn-secondary"
+                      onClick={() => setVotingStep(1)}
+                    >
+                      <FaArrowUp className="me-2" />
+                      Go Back
+                    </button>
+                    <button 
+                      className="btn btn-danger btn-lg px-4"
+                      onClick={async () => {
+                        try {
+                          setVotingStep(3);
+                          // Call the handleVote function to cast the vote
+                          await handleVote(
+                            selectedElection._id,
+                            selectedCandidateForVoting._id,
+                            selectedCandidateForVoting.position,
+                            Array.isArray(selectedElection.positions) && selectedElection.positions.length === 1 ? selectedElection.positions[0] : undefined
+                          );
+                          // Close the election modal if it's open
+                          setShowElectionModal(false);
+                          // Close modal after a short delay
+                          setTimeout(() => {
+                            setShowVotingModal(false);
+                            setSelectedCandidateForVoting(null);
+                            setVotingStep(1);
+                          }, 3000);
+                        } catch (error) {
+                          console.error('Voting failed:', error);
+                          setVotingStep(2); // Go back to confirmation step
+                        }
+                      }}
+                    >
+                      <FaCheckCircle className="me-2" />
+                      Confirm Vote
+                    </button>
+                  </div>
+                </>
+              )}
+              
+              {votingStep === 3 && (
+                // Step 3: Success
+                <>
+                  <div className={`modal-header border-bottom`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 48, height: 48, background: 'rgba(34, 197, 94, 0.1)' }}>
+                        <FaCheckCircle className="text-success" size={20} />
+                      </div>
+                      <div>
+                        <h4 className="modal-title mb-0 fw-bold text-success">Vote Submitted!</h4>
+                        <small className="text-muted">Your vote has been recorded</small>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn-close" 
+                      onClick={() => {
+                        setShowVotingModal(false);
+                        setSelectedCandidateForVoting(null);
+                        setVotingStep(1);
+                      }}
+                    ></button>
+                  </div>
+                  <div className="modal-body p-4 text-center">
+                    <div className="mb-4">
+                      <div className={`mx-auto rounded-circle d-flex align-items-center justify-content-center mb-3`} 
+                           style={{ width: 100, height: 100, background: 'rgba(34, 197, 94, 0.1)' }}>
+                        <FaCheckCircle className="text-success" size={48} />
+                      </div>
+                      <h3 className="fw-bold text-success">Vote Recorded Successfully!</h3>
+                      <p className="text-muted">Thank you for participating in the democratic process.</p>
+                    </div>
+                    
+                    <div className={`p-4 rounded border`} style={{ background: isDarkMode ? 'rgba(34, 197, 94, 0.05)' : 'rgba(34, 197, 94, 0.05)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                      <h5 className="fw-bold mb-2">Your Vote Summary</h5>
+                      <div className="d-flex align-items-center justify-content-center gap-3">
+                        <img
+                          src={getImageUrl(selectedCandidateForVoting.photo || "/default-avatar.png")}
+                          alt={selectedCandidateForVoting.name}
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "cover",
+                            borderRadius: "50%"
+                          }}
+                        />
+                        <div className="text-start">
+                          <div className="fw-bold">{selectedCandidateForVoting.name}</div>
+                          <div className="text-muted">{selectedCandidateForVoting.party || 'Independent'}</div>
+                        </div>
+                      </div>
+                      <small className="text-muted d-block mt-2">Election: {selectedElection.title}</small>
+                    </div>
+                  </div>
+                  <div className={`modal-footer border-top justify-content-center`} style={{ borderColor: isDarkMode ? colors.border : '#dee2e6', background: isDarkMode ? colors.surfaceHover : '#f8f9fa' }}>
+                    <button 
+                      className="btn btn-success"
+                      onClick={() => {
+                        setShowVotingModal(false);
+                        setSelectedCandidateForVoting(null);
+                        setVotingStep(1);
+                        setActiveView('my-votes');
+                      }}
+                    >
+                      <FaEye className="me-2" />
+                      View My Votes
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
