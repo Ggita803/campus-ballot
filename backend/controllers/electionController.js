@@ -76,7 +76,7 @@ const getAllElections = asyncHandler(async (req, res) => {
       query = query.populate({
         path: "candidates",
         match: { status: "approved" },
-        select: "name party photo status votes"
+        select: "name party photo status votes position"
       });
     }
 

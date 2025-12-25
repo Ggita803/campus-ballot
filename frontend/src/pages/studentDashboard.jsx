@@ -438,12 +438,25 @@ function StudentDashboard({ user }) {
         finalPosition,
         detectedFrom: position ? 'candidate.position' : fallbackPosition ? 'election.positions' : 'fallback',
         selectedCandidateForVotingPosition: selectedCandidateForVoting?.position,
-        selectedElectionPositions: selectedElection?.positions
+        selectedElectionPositions: selectedElection?.positions,
+        candidateObject: selectedCandidateForVoting,
+        electionObject: selectedElection
       });
       
       console.log('Selected Election:', selectedElection);
       console.log('Selected Candidate:', selectedCandidateForVoting);
       console.log('Election candidates:', elections.find(e => (e._id || e.id) === electionId)?.candidates);
+      
+      // If still no position, try to find it from the actual candidate in the election
+      if (!finalPosition) {
+        const currentElection = elections.find(e => (e._id || e.id) === electionId);
+        const currentCandidate = currentElection?.candidates?.find(c => (c._id || c.id) === candidateId);
+        
+        if (currentCandidate?.position) {
+          finalPosition = currentCandidate.position;
+          console.log('Found position from election candidate:', finalPosition);
+        }
+      }
       
       // Validate that we have the required data
       if (!electionId) {
