@@ -12,6 +12,7 @@ const {
     updateProfile,
     changePassword,
     resendVerification,
+    resendPasswordReset,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -47,6 +48,9 @@ router.put('/change-password', protect, changePassword);
 
 // Resend verification email
 router.post('/resend-verification', resendVerification);
+
+// Resend password reset email
+router.post('/resend-password-reset', resendPasswordReset);
 
 // Export the router
 

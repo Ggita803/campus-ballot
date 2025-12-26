@@ -36,6 +36,8 @@
 
     "africastalking": "^0.7.3",
 
+    "axios": "^1.13.2",
+
     "bcryptjs": "^3.0.2",
 
     "colors": "^1.4.0",

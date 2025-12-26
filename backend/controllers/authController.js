@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
+//         const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://campus-ballot.onrender.com/reset-password/${token}`;
+//         const resetUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
@@ -394,7 +394,7 @@ const register = asyncHandler(async (req, res) => {
     await newUser.save();
 
     /* ------------------ EMAIL VERIFICATION ------------------ */
-    const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
+    const verifyUrl = `${process.env.BASE_URL}/verify/${verificationToken}`;
     const html = `
       <h2>Verify Your Email</h2>
       <p>Hello ${newUser.name},</p>
@@ -566,12 +566,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
     user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
     await user.save();
 
-    const resetUrl = `https://campus-ballot.onrender.com/reset-password/${token}`;
+    const resetUrl = `${process.env.BASE_URL}/reset-password/${token}`;
     const html = `
       <h2>Reset Your Password</h2>
       <p>Hello ${user.name},</p>
       <p>Click below to reset your password:</p>
       <a href="${resetUrl}" target="_blank">Reset Password</a>
+      <p><small>This link will expire in 30 minutes.</small></p>
     `;
 
     try {
@@ -673,6 +674,62 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 /* -------------------------------------------------------
+   @desc   Resend password reset email
+--------------------------------------------------------- */
+const resendPasswordReset = asyncHandler(async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate new reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 minutes
+    await user.save();
+
+    // Send password reset email
+    const resetUrl = `${process.env.BASE_URL}/reset-password/${resetToken}`;
+    const html = `
+      <h2>Reset Your Password</h2>
+      <p>Hello ${user.name},</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}" target="_blank">Reset Password</a>
+      <p><small>This link will expire in 30 minutes.</small></p>
+    `;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Password Reset Request - New Link",
+        html,
+      });
+      console.log("[RESEND PASSWORD RESET]: Email sent to:", user.email);
+      res.json({
+        message: `New password reset link sent to ${email}. Please check your inbox and spam folder.`
+      });
+    } catch (emailError) {
+      console.error("[RESEND PASSWORD RESET EMAIL ERROR]:", emailError.message);
+      res.status(500).json({
+        message: "Failed to send password reset email. Please try again later."
+      });
+    }
+  } catch (error) {
+    console.error("[RESEND PASSWORD RESET ERROR]:", error.message);
+    res.status(500).json({ message: "Error resending password reset email" });
+  }
+});
+
+/* -------------------------------------------------------
    @desc   Resend verification email
 --------------------------------------------------------- */
 const resendVerification = asyncHandler(async (req, res) => {
@@ -701,7 +758,7 @@ const resendVerification = asyncHandler(async (req, res) => {
     await user.save();
 
     // Send verification email
-    const verifyUrl = `https://campus-ballot.onrender.com/verify/${verificationToken}`;
+    const verifyUrl = `${process.env.BASE_URL}/verify/${verificationToken}`;
     const html = `
       <h2>Verify Your Email</h2>
       <p>Hello ${user.name},</p>
@@ -742,6 +799,7 @@ module.exports = {
     getProfile,
     updateProfile,
     changePassword,
+    resendPasswordReset,
     resendVerification
 };
 
