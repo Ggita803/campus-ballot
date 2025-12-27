@@ -145,6 +145,8 @@ function Register() {
     phone: "",
   });
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Remove dark mode classes from body when this component mounts
   useEffect(() => {
@@ -195,6 +197,17 @@ function Register() {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+
+  // Check if terms are accepted
+  if (!acceptedTerms) {
+    Swal.fire({
+      title: 'Terms Required',
+      text: 'Please read and accept the Terms and Conditions to continue.',
+      icon: 'warning',
+      confirmButtonColor: '#2563eb'
+    });
+    return;
+  }
 
   // If registering as a student, enforce institutional email format
   if (form.role === 'student') {
@@ -254,7 +267,7 @@ function Register() {
   }
 };
 
-    // Handler for Login link
+  // Handler for Login link
   const handleLoginRedirect = (e) => {
     e.preventDefault();
     Swal.fire({
@@ -277,18 +290,176 @@ function Register() {
     };
   }, []);
 
+  // Terms and Conditions Modal Component
+  const TermsModal = () => {
+    if (!showTermsModal) return null;
+
+    return (
+      <div 
+        className="modal d-block" 
+        style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        onClick={() => setShowTermsModal(false)}
+      >
+        <div 
+          className="modal-dialog modal-dialog-scrollable modal-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-content">
+            <div className="modal-header" style={{ backgroundColor: '#2563eb', color: 'white' }}>
+              <h5 className="modal-title">Terms and Conditions</h5>
+              <button 
+                type="button" 
+                className="btn-close btn-close-white" 
+                onClick={() => setShowTermsModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="terms-content">
+                <h6 className="fw-bold text-primary mb-3">Campus Ballot - Terms of Service</h6>
+                
+                <p className="small text-muted mb-3">
+                  <strong>Last Updated:</strong> {new Date().toLocaleDateString()}
+                </p>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">1. Platform Overview</h6>
+                  <p className="small">
+                    Campus Ballot is an <strong>unofficial, student-developed</strong> online voting platform designed 
+                    for educational and demonstration purposes at Kyambogo University. This platform is not affiliated 
+                    with, endorsed by, or officially recognized by Kyambogo University administration.
+                  </p>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">2. Use of Institutional Email</h6>
+                  <p className="small">
+                    By registering, you acknowledge that:
+                  </p>
+                  <ul className="small">
+                    <li>Your institutional email (@std.kyu.ac.ug) is used solely for identity verification and preventing duplicate registrations</li>
+                    <li>We do not have access to your university email account or password</li>
+                    <li>Your email is stored securely and will not be shared with third parties</li>
+                    <li>This platform operates independently from university email systems</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">3. Data Privacy & Security</h6>
+                  <ul className="small">
+                    <li>Your personal information (name, email, student ID, faculty, course) is collected only for authentication and voting purposes</li>
+                    <li>Voting records are anonymized - your vote cannot be traced back to your identity</li>
+                    <li>We implement industry-standard security measures to protect your data</li>
+                    <li>Your phone number is optional and used only for account recovery</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">4. Voting Integrity</h6>
+                  <p className="small">
+                    You agree to:
+                  </p>
+                  <ul className="small">
+                    <li>Use only your own student credentials - no impersonation</li>
+                    <li>Vote only once per election/poll</li>
+                    <li>Not attempt to manipulate, hack, or compromise the voting system</li>
+                    <li>Report any suspicious activity or security vulnerabilities</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">5. Disclaimer & Limitations</h6>
+                  <ul className="small">
+                    <li>This platform is provided "as is" without warranties of any kind</li>
+                    <li>Results from this platform are <strong>not official</strong> and should not be used for formal decision-making</li>
+                    <li>The platform may be unavailable during maintenance or due to technical issues</li>
+                    <li>We reserve the right to suspend accounts that violate these terms</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">6. Account Responsibilities</h6>
+                  <ul className="small">
+                    <li>You are responsible for maintaining the confidentiality of your password</li>
+                    <li>Notify us immediately of any unauthorized access to your account</li>
+                    <li>Provide accurate and truthful information during registration</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">7. Content Guidelines</h6>
+                  <p className="small">
+                    When participating in polls or elections, you agree not to:
+                  </p>
+                  <ul className="small">
+                    <li>Post offensive, discriminatory, or hateful content</li>
+                    <li>Engage in harassment or bullying of candidates or other users</li>
+                    <li>Spread misinformation or false claims</li>
+                  </ul>
+                </section>
+
+                <section className="mb-4">
+                  <h6 className="fw-bold">8. Contact & Support</h6>
+                  <p className="small">
+                    For questions, concerns, or to report issues, please contact the platform administrators 
+                    through the support channels provided within the application.
+                  </p>
+                </section>
+
+                <div className="alert alert-info mt-4">
+                  <small>
+                    <strong>Important Notice:</strong> By accepting these terms, you confirm that you are a current 
+                    student at Kyambogo University and understand that this is an educational project, not an 
+                    official university system.
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setShowTermsModal(false)}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={() => {
+                  setAcceptedTerms(true);
+                  setShowTermsModal(false);
+                  Swal.fire({
+                    title: 'Terms Accepted',
+                    text: 'You can now complete your registration.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                  });
+                }}
+                style={{ backgroundColor: '#2563eb' }}
+              >
+                Accept Terms
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="d-flex align-items-center justify-content-center"
       style={{ width: "100vw", minHeight: "100vh", backgroundColor: "#f3f4f6", fontFamily: " ''Arial, sans-serif" }}
     >
+      <TermsModal />
       <div
         className={`register-container d-flex shadow-lg ${styles["register-container"]}`}
         style={{
           borderRadius: 7,
           background: "#fff",
           overflow: "hidden",
-          maxWidth: "900px",
+          maxWidth: "950px",
           width: "100%",
         }}
       >
@@ -549,12 +720,49 @@ function Register() {
                 </div>
               </div>
             </div>
-            <div className="mt-4">
+            
+            {/* Terms and Conditions Checkbox */}
+            <div className="mt-3">
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="termsCheckbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                  required
+                />
+                <label 
+                  className="form-check-label" 
+                  htmlFor="termsCheckbox"
+                  style={{ cursor: 'pointer', fontSize: '0.8em' }}
+                >
+                  I agree to the{' '}
+                  <span
+                    className="text-primary fw-bold"
+                    style={{ textDecoration: 'underline', cursor: 'pointer', fontSize: "0.8em" }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowTermsModal(true);
+                    }}
+                  >
+                    Terms and Conditions
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-3">
               <button
                 className="btn btn-primary px-4 py-2 fw-bold w-100"
                 type="submit"
-                disabled={loading}
-                style={{ paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
+                disabled={loading || !acceptedTerms}
+                style={{ 
+                  paddingTop: '0.75rem', 
+                  paddingBottom: '0.75rem',
+                  opacity: !acceptedTerms ? 0.6 : 1
+                }}
               >
                 {loading ? "Registering..." : "Register"}
               </button>
