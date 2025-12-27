@@ -74,7 +74,7 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
   ]);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -513,39 +513,77 @@ function AdminDashboardContent({ user: initialUser, onLogout }) {
               element={
                 <>
                   {/* Banner */}
-                  <div
-                    className="mb-4 rounded shadow-sm"
+                  <div 
+                    className="mb-4 rounded-3 position-relative overflow-hidden"
                     style={{
-                      background:
-                        "linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)",
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      minHeight: 90,
-                      padding: "2.5rem 2rem", // Increased padding
+                      background: isDarkMode 
+                        ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' 
+                        : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+                      color: '#fff',
+                      boxShadow: '0 8px 24px rgba(37, 99, 235, 0.15)',
+                      padding: '2.5rem 2rem'
                     }}
                   >
-                    <div>
-                      <h2 className="fw-bold mb-1" style={{ fontSize: "2rem" }}>
-                        <i className="fa-solid fa-crown me-2 text-warning"></i>
-                        Welcome, Admin!
-                      </h2>
-                      <div style={{ fontSize: "1.1rem", opacity: 0.95 }}>
-                        Manage your campus voting system with full control and
-                        oversight.
+                    <div className="position-relative" style={{ zIndex: 1 }}>
+                      <div className="d-flex align-items-center gap-3 mb-3">
+                        <div 
+                          className="d-flex align-items-center justify-content-center"
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)'
+                          }}
+                        >
+                          <i className="fa-solid fa-crown text-warning" style={{ fontSize: '1.8rem' }}></i>
+                        </div>
+                        <div>
+                          <h2 className="mb-1 fw-bold">Welcome, Admin!</h2>
+                          <p className="mb-0 opacity-90">Manage your campus voting system with full control and oversight</p>
+                        </div>
+                      </div>
+                      <div className="d-flex gap-4 mt-3">
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="fa-solid fa-shield-halved"></i>
+                          <span className="small">Full Control</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="fa-solid fa-chart-line"></i>
+                          <span className="small">Real-time Analytics</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="fa-solid fa-users-gear"></i>
+                          <span className="small">User Management</span>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <img
-                        src="/superadmin-banner.svg"
-                        alt="Super Admin"
-                        style={{ height: 64, marginLeft: 24 }}
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    </div>
+                    
+                    {/* Decorative elements */}
+                    <div 
+                      className="position-absolute"
+                      style={{
+                        top: '-40px',
+                        right: '-40px',
+                        width: '200px',
+                        height: '200px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        filter: 'blur(40px)'
+                      }}
+                    />
+                    <div 
+                      className="position-absolute"
+                      style={{
+                        bottom: '-20px',
+                        right: '100px',
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        filter: 'blur(30px)'
+                      }}
+                    />
                   </div>
                   <h4 className="mb-4 fw-bold text-primary">System Overview</h4>
                   <OverviewCards stats={stats} />

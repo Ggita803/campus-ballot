@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Election = require("../models/Election");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
+const Log = require("../models/Log");
 
 // @desc    Get system summary for super admin dashboard
 // @route   GET /api/super-admin/reports/system-summary
@@ -175,10 +176,114 @@ const deleteAdmin = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get admin activities
+// @route   GET /api/super-admin/admin-activities
+// @access  Super Admin only
+const getAdminActivities = asyncHandler(async (req, res) => {
+  try {
+    const { limit = 50, adminId, action, startDate, endDate } = req.query;
+    
+    // Build query for admins only
+    const query = {
+      user: { $ne: null }
+    };
+    
+    // Filter by specific admin if provided
+    if (adminId) {
+      query.user = adminId;
+    }
+    
+    // Filter by action if provided
+    if (action) {
+      query.action = action;
+    }
+    
+    // Date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+    
+    const logs = await Log.find(query)
+      .populate('user', 'name email role')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+    
+    // Filter for admin/super_admin actions only
+    const adminLogs = logs.filter(log => 
+      log.user && (log.user.role === 'admin' || log.user.role === 'super_admin')
+    );
+    
+    // Transform to match frontend format
+    const activities = adminLogs.map(log => ({
+      id: log._id,
+      adminId: log.user._id,
+      adminName: log.user.name,
+      adminEmail: log.user.email,
+      action: formatAction(log.action, log.entityType),
+      target: log.details || log.entityId || 'N/A',
+      module: log.entityType,
+      timestamp: log.createdAt,
+      status: log.status,
+      ipAddress: log.ipAddress || 'Unknown',
+      userAgent: log.userAgent,
+      errorMessage: log.errorMessage
+    }));
+    
+    res.json(activities);
+  } catch (error) {
+    console.error('Error fetching admin activities:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Helper function to format action names
+const formatAction = (action, entityType) => {
+  const actionMap = {
+    'create': `${entityType} Created`,
+    'update': `${entityType} Updated`,
+    'delete': `${entityType} Deleted`,
+    'login': 'Admin Login',
+    'logout': 'Admin Logout',
+    'vote': 'Vote Recorded',
+    'view': `${entityType} Viewed`,
+    'maintenance': 'Maintenance Action',
+    'backup': 'Backup Created',
+    'security': 'Security Action',
+    'configuration': 'Settings Changed'
+  };
+  return actionMap[action] || `${action} - ${entityType}`;
+};
+
+// @desc    Get list of admins for filtering
+// @route   GET /api/super-admin/admins-list
+// @access  Super Admin only
+const getAdminsList = asyncHandler(async (req, res) => {
+  try {
+    const admins = await User.find({ 
+      $or: [{ role: 'admin' }, { role: 'super_admin' }] 
+    }).select('_id name email role');
+    
+    const adminList = admins.map(admin => ({
+      id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role
+    }));
+    
+    res.json(adminList);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = {
   getSystemSummary,
   getAllAdmins,
   createAdmin,
   updateAdminStatus,
-  deleteAdmin
+  deleteAdmin,
+  getAdminActivities,
+  getAdminsList
 };
