@@ -28,11 +28,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, setCollapsed, isMobile }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
-  const [profilePic, setProfilePic] = useState(user?.profilePicture || '/default-avatar.png');
-  const profileImgSrc = getImageUrl(profilePic);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [logCount, setLogCount] = useState(0);
   const { isDarkMode, colors } = useTheme();
@@ -41,16 +37,20 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
   const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   useEffect(() => {
-    // Sync profile picture from localStorage
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.profilePicture) {
-          setProfilePic(parsed.profilePicture);
+    // Sync profile picture from user prop or localStorage
+    if (user?.profilePicture) {
+      setProfilePic(user.profilePicture);
+    } else {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (parsed.profilePicture) {
+            setProfilePic(parsed.profilePicture);
+          }
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
         }
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
       }
     }
 
@@ -68,7 +68,31 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
       }
     };
     fetchCounts();
-  }, []);
+  }, [user?.profilePicture]);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  // Helper function to get the correct image URL
+  const getProfileImageSrc = () => {
+    if (!profilePic) return null;
+    
+    // If it's a base64 string, use it directly
+    if (profilePic.startsWith('data:image')) {
+      return profilePic;
+    }
+    
+    // If it's a path starting with /uploads, use getImageUrl
+    if (profilePic.startsWith('/uploads')) {
+      return getImageUrl(profilePic);
+    }
+    
+    // Otherwise, assume it's a complete URL or base64
+    return profilePic;
+  };
+
+  const profileImgSrc = getProfileImageSrc();
 
   const onChooseFile = () => {
     setShowUploadModal(true);
@@ -253,16 +277,20 @@ function Sidebar({ user, navigate, onOpenCreateElection, onLogout, collapsed, se
               >
                 {uploading ? (
                   <span className="spinner-border spinner-border-sm" role="status" />
-                ) : profilePic && profilePic !== '/default-avatar.png' ? (
+                ) : profileImgSrc ? (
                   <img 
                     src={profileImgSrc} 
                     alt="Profile" 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                    onError={(e) => { 
+                      console.error('Image failed to load:', profileImgSrc);
+                      e.target.style.display = 'none'; 
+                      e.target.nextSibling.style.display = 'flex'; 
+                    }}
                   />
                 ) : null}
                 <div style={{ 
-                  display: profilePic && profilePic !== '/default-avatar.png' ? 'none' : 'flex',
+                  display: profileImgSrc ? 'none' : 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   width: '100%',
