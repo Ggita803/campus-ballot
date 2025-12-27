@@ -48,8 +48,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
   origin: [
-    "www.campusballot.tech",           // local dev
-    "www.campusballot.tech",
+    "https://campusballot.tech",           // local dev
+    "https://campusballot.tech",
     CORS_ORIGIN   // deployed frontend
   ],
   credentials: true
@@ -122,8 +122,8 @@ const server = http.createServer(app);
 const io = new IOServer(server, {
   cors: {
     origin: [
-      "www.campusballot.tech",
-      "www.campusballot.tech",
+      "https://campusballot.tech",
+      "https://campusballot.tech",
       CORS_ORIGIN
     ],
     methods: ["GET", "POST"],
