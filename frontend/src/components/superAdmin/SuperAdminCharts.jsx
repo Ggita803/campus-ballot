@@ -92,9 +92,13 @@ export default function SuperAdminCharts() {
   }, []);
 
   if (loading) return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 200 }}>
-      <div className="spinner-border text-primary" role="status" />
-      <span className="ms-3">Loading charts...</span>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading charts...</p>
+      </div>
     </div>
   );
 

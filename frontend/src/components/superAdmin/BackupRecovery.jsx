@@ -169,7 +169,16 @@ const BackupRecovery = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-5">Loading backup data...</div>;
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading backup data...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="container-fluid">

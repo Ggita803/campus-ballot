@@ -287,11 +287,11 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                 )}
                 <Link
                   to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-2 ${isActive ? 'active fw-bold' : ''}`}
+                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-1 ${isActive ? 'active fw-bold' : ''}`}
                   style={{
-                    fontSize: '1em',
-                    gap: '1rem',
-                    padding: collapsed ? '0.5rem 0.5rem' : '0.6rem 1rem',
+                    fontSize: '0.6em',
+                    gap: '0.75rem',
+                    padding: collapsed ? '0.45rem 0.45rem' : '0.5rem 0.9rem',
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     borderRadius: 4,
                     fontWeight: isActive ? 700 : 500,

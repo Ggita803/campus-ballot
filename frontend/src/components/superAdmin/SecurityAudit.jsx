@@ -143,7 +143,16 @@ const SecurityAudit = () => {
   const totalPages = Math.ceil(filteredLogs.length / pageSize);
   const paginatedLogs = filteredLogs.slice((page - 1) * pageSize, page * pageSize);
 
-  if (loading) return <div className="text-center py-5">Loading security audit logs...</div>;
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading security audit logs...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="container-fluid">

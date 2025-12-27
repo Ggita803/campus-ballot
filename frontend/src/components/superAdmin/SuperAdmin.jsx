@@ -119,7 +119,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             </div>
 
             <div className="d-flex align-items-center gap-3">
-              <span className="badge bg-primary" style={{ fontSize: '0.9rem', fontWeight: 600, padding: '0.5rem 1rem', borderRadius: '10px' }}>
+              <span className="badge bg-primary" style={{ fontSize: '0.9rem', fontWeight: 600, padding: '1rem 1rem', borderRadius: '50px' }}>
                 Welcome, {user?.name}
               </span>
             </div>

@@ -42,9 +42,13 @@ const SuperAdminDashboard = ({ user }) => {
   }, []);
 
   if (loading) return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 200 }}>
-      <div className="spinner-border text-primary" role="status" />
-      <span className="ms-3">Loading dashboard...</span>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+      <div className="text-center">
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading dashboard...</p>
+      </div>
     </div>
   );
 
@@ -56,38 +60,53 @@ const SuperAdminDashboard = ({ user }) => {
         minHeight: '100vh',
         transition: 'margin-left 0.2s, width 0.2s',
         width: '100%',
+        marginTop: "-40px"
       }}
     >
       {/* Banner */}
-      <div
-        className="mb-4 rounded shadow-sm"
+      <div 
+        className="mb-4 mt-0 rounded-3 position-relative overflow-hidden"
         style={{
-          background: 'linear-gradient(90deg, #2563eb 0%, #60a5fa 100%)',
+          background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
           color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          minHeight: 90,
+          boxShadow: '0 8px 24px rgba(37, 99, 235, 0.15)',
           padding: '2.5rem 2rem',
-          marginTop: '-2.5rem',
+          // marginTop: "-10px"
         }}
       >
-        <div>
-          <h2 className="fw-bold mb-1" style={{ fontSize: '2rem' }}>
-            <i className="fa-solid fa-crown me-2 text-warning"></i>
-            Welcome, Super Admin!
-          </h2>
-          <div style={{ fontSize: '1.1rem', opacity: 0.95 }}>
-            Manage your campus voting system with full control and oversight.
+        <div className="position-relative" style={{ zIndex: 1 }}>
+          <div className="d-flex align-items-center gap-3 mb-3">
+            <div 
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <i className="fa-solid fa-crown text-warning" style={{ fontSize: '1.8rem' }}></i>
+            </div>
+            <div>
+              <h2 className="mb-1 fw-bold">Welcome, Super Admin!</h2>
+              <p className="mb-0 opacity-90">Manage your campus voting system with full control and oversight</p>
+            </div>
           </div>
-        </div>
-        <div>
-          <img
-            src="/superadmin-banner.svg"
-            alt="Super Admin"
-            style={{ height: 64, marginLeft: 24 }}
-            onError={e => { e.target.style.display = 'none'; }}
-          />
+          <div className="d-flex gap-4 mt-3">
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-shield-halved"></i>
+              <span className="small">Full Access</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-users-gear"></i>
+              <span className="small">Admin Management</span>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <i className="fa-solid fa-chart-line"></i>
+              <span className="small">System Analytics</span>
+            </div>
+          </div>
         </div>
       </div>
       {/* Use the OverviewCards component for stats display */}
