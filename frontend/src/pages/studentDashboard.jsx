@@ -19,7 +19,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -947,17 +947,25 @@ function StudentDashboard({ user }) {
                       </div>
                     </div>
                     <div className="mb-3">
-                      <small className="text-muted">Voted for:</small>
-                      <div className="fw-semibold text-primary">
-                        {typeof vote.candidateName === 'string' ? vote.candidateName :
-                          (typeof vote.candidate === 'string' ? vote.candidate :
-                            (vote.candidate && typeof vote.candidate === 'object') ?
-                              (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
-                              : 'Unknown Candidate')}
+                      <small className="text-muted">Vote Status:</small>
+                      <div className="fw-semibold text-success">
+                        <FaCheckCircle className="me-1" size={14} />
+                        Vote Successfully Cast
                       </div>
+                      {vote._id && (
+                        <div className="mt-2">
+                          <small className="text-muted d-block">Verification ID:</small>
+                          <code className="text-muted" style={{ fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                            {vote._id.slice(-8).toUpperCase()}
+                          </code>
+                        </div>
+                      )}
                     </div>
                     <div className="d-flex justify-content-between align-items-center">
-                      <span className="badge bg-success">Completed</span>
+                      <span className="badge bg-success">
+                        <FaLock className="me-1" size={10} />
+                        Private
+                      </span>
                       <small className="text-muted">
                         <FaClock className="me-1" />
                         {vote.createdAt ? new Date(vote.createdAt).toLocaleTimeString() : 'N/A'}
