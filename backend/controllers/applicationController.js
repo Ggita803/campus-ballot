@@ -7,6 +7,10 @@ const Election = require('../models/Election');
 // @access  Authenticated (candidate)
 const createApplication = asyncHandler(async (req, res) => {
   try {
+    console.log('Application submission received');
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
+    
     // Multer puts files in req.files and text fields in req.body
     const {
       user,
@@ -53,8 +57,10 @@ const createApplication = asyncHandler(async (req, res) => {
       election,
       { $addToSet: { candidates: candidate._id } }
     );
+    console.log('Application created successfully:', candidate._id);
     res.status(201).json({ message: 'Application submitted', candidate });
   } catch (error) {
+    console.error('Application submission error:', error);
     res.status(500).json({ message: error.message });
   }
 });
