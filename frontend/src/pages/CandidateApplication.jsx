@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import Select from 'react-select';
 import { useTheme } from '../contexts/ThemeContext';
 import ugandaPartiesOptions from '../utils/ugandaParties.js';
 
+// Configure axios baseURL from environment variable
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 
 export default function CandidateApplication({ user, users = [] }) {
   const { isDarkMode, colors } = useTheme();
@@ -74,10 +77,9 @@ export default function CandidateApplication({ user, users = [] }) {
         const userId = user?._id || form.user;
         if (!userId) return;
         
-        const res = await fetch(`/api/candidates?user=${userId}`, {
+        const { data } = await axios.get(`/api/candidates?user=${userId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
         if (data.candidates) {
           setExistingApplications(data.candidates.map(c => c.election?._id || c.election));
         }
@@ -94,10 +96,9 @@ export default function CandidateApplication({ user, users = [] }) {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/elections', {
+        const { data } = await axios.get('/api/elections', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const data = await res.json();
         setElections(data.elections || []);
       } catch (err) {
         setElections([]);
@@ -115,9 +116,9 @@ export default function CandidateApplication({ user, users = [] }) {
       setLoadingPositions(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`/api/elections/${form.election}`,
-          { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await res.json();
+        const { data } = await axios.get(`/api/elections/${form.election}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         console.log('Election data:', data); // Debug log
         // Backend returns election object directly, so data.positions should work
         const positionsArray = data.positions || [];
@@ -201,14 +202,11 @@ export default function CandidateApplication({ user, users = [] }) {
         if (value) formData.append(key, value);
       });
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/applications', {
-        method: 'POST',
+      await axios.post('/api/applications', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        }
       });
-      if (!res.ok) throw new Error('Failed to submit');
       setSuccess(true);
       setShowSuccessModal(true);
       localStorage.removeItem('candidateApplicationDraft');
