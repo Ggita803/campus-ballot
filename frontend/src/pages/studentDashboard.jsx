@@ -1481,11 +1481,7 @@ function StudentDashboard({ user }) {
                           (vote.election && typeof vote.election === 'object') ?
                             (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
                             : 'Unknown Election')}</strong></p>
-                      <p className="mb-0 text-muted">Candidate: {typeof vote.candidateName === 'string' ? vote.candidateName :
-                        (typeof vote.candidate === 'string' ? vote.candidate :
-                          (vote.candidate && typeof vote.candidate === 'object') ?
-                            (vote.candidate.name || vote.candidate.fullName || vote.candidate._id || 'Unknown Candidate')
-                            : 'Unknown Candidate')}</p>
+                      <p className="mb-0 text-muted">Candidate: [Hidden for privacy]</p>
                     </div>
                   </div>
                 </div>
