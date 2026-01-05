@@ -20,7 +20,7 @@ import KeyboardShortcutsModal from '../components/student/KeyboardShortcutsModal
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -230,11 +230,20 @@ function StudentDashboard({ user }) {
 
   const calculateElectionStats = (electionsData) => {
     const now = new Date();
+    
+    // Filter to only include elections user is eligible for
+    const eligibleElections = electionsData.filter(election => {
+      const hasRestrictions = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+      return hasRestrictions 
+        ? (user?.faculty && election.allowedFaculties.includes(user.faculty))
+        : true;
+    });
+    
     const stats = {
-      total: electionsData.length,
+      total: eligibleElections.length,
       participated: myVotes.length,
-      upcoming: electionsData.filter(e => new Date(e.startDate) > now).length,
-      completed: electionsData.filter(e => new Date(e.endDate) < now).length
+      upcoming: eligibleElections.filter(e => new Date(e.startDate) > now).length,
+      completed: eligibleElections.filter(e => new Date(e.endDate) < now).length
     };
     setElectionStats(stats);
   };
@@ -358,7 +367,17 @@ function StudentDashboard({ user }) {
     const matchesSearch = (election.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
                          (election.description || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesStatus = statusFilter === "all" || getElectionStatus(election).status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    // Faculty eligibility check - only show elections user is eligible for
+    // If election has faculty restrictions, user MUST be in that list
+    const hasRestrictions = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+    const isEligibleByFaculty = hasRestrictions 
+      ? (user?.faculty && election.allowedFaculties.includes(user.faculty))
+      : true; // No restrictions = everyone can see it
+    
+    console.log('Election:', election.title, 'hasRestrictions:', hasRestrictions, 'allowedFaculties:', election.allowedFaculties, 'userFaculty:', user?.faculty, 'isEligible:', isEligibleByFaculty);
+    
+    return matchesSearch && matchesStatus && isEligibleByFaculty;
   });
 
 
@@ -885,6 +904,7 @@ function StudentDashboard({ user }) {
               <ElectionCard
                 key={election._id || election.id}
                 election={election}
+                user={user}
                 myVotes={myVotes}
                 handleVote={handleVote}
                 openElectionDetails={openElectionDetails}
@@ -1481,7 +1501,7 @@ function StudentDashboard({ user }) {
                           (vote.election && typeof vote.election === 'object') ?
                             (vote.election.title || vote.election.name || vote.election._id || 'Unknown Election')
                             : 'Unknown Election')}</strong></p>
-                      <p className="mb-0 text-muted">Candidate: [Hidden for privacy]</p>
+                      <p className="mb-0 text-muted">Candidate: Confidential</p>
                     </div>
                   </div>
                 </div>

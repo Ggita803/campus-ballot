@@ -38,6 +38,17 @@ const castVote = asyncHandler(async (req, res) => {
       return res.status(403).json({ message: 'Voting has ended' });
     }
 
+    // Check if user's faculty is allowed to vote (if allowedFaculties is specified)
+    if (election.allowedFaculties && election.allowedFaculties.length > 0) {
+      const userFaculty = req.user.faculty;
+      if (!userFaculty) {
+        return res.status(403).json({ message: 'Your faculty information is missing. Please update your profile.' });
+      }
+      if (!election.allowedFaculties.includes(userFaculty)) {
+        return res.status(403).json({ message: 'Your faculty is not eligible to participate in this election.' });
+      }
+    }
+
     // If not abstain, check candidate
     let candidate = null;
     if (!abstain) {

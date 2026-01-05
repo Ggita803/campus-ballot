@@ -49,6 +49,10 @@ const ElectionSchema = new mongoose.Schema({
         ref: 'User',
         default: null
     },
+    allowedFaculties: [{
+        type: String,
+        trim: true
+    }],
     eligibility: {
         faculty: {
             type: String,

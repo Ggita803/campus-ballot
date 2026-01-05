@@ -51,7 +51,7 @@
 //         await newUser.save();
 
 //         // Send verification email
-//         const verifyUrl = `https://www.campusballot.tech/verify/${verificationToken}`;
+//         const verifyUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/verify/${verificationToken}`;
 //         const html = `
 //             <h2>Verify Your Email</h2>
 //             <p>Hello ${newUser.name},</p>
@@ -182,7 +182,7 @@
 //         user.resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
 //         await user.save();
 
-//         const resetUrl = `https://www.campusballot.tech/reset-password/${token}`;
+//         const resetUrl = `https://studious-space-robot-674g6rw49gg3rxr5-5173.app.github.dev/reset-password/${token}`;
 //         const html = `
 //             <h2>Reset Your Password</h2>
 //             <p>Hello ${user.name},</p>
@@ -371,14 +371,12 @@ const register = asyncHandler(async (req, res) => {
         .json({ message: "User already exists with this email." });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create user (store normalized email)
+    // Password will be hashed automatically by the User model's pre-save middleware
     const newUser = await User.create({
       name,
       email: normalizedEmail,
-      password: hashedPassword,
+      password: password, // Don't hash here - the model does it
       role,
       studentId,
       faculty,
@@ -497,6 +495,15 @@ const login = asyncHandler(async (req, res) => {
       isVerified: user.isVerified,
       profilePicture: user.profilePicture,
     };
+
+    // Add student-specific fields if user is a student
+    if (user.role === 'student') {
+      userResponse.studentId = user.studentId;
+      userResponse.faculty = user.faculty;
+      userResponse.course = user.course;
+      userResponse.yearOfStudy = user.yearOfStudy;
+      userResponse.gender = user.gender;
+    }
 
     // Add candidate-specific fields if user is a candidate
     if (user.role === 'candidate' && user.candidateInfo) {

@@ -25,9 +25,14 @@ import {
   faBan,
   faPoll,
   faExclamationTriangle,
-  faBullhorn
+  faBullhorn,
+  faChevronDown,
+  faChevronRight
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "../contexts/ThemeContext";
+
+// Set axios base URL
+axios.defaults.baseURL = "https://api.campusballot.tech";
 
 function Elections({ user }) {
   const [elections, setElections] = useState([]);
@@ -39,6 +44,7 @@ function Elections({ user }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedElection, setSelectedElection] = useState(null);
+  const [facultiesExpanded, setFacultiesExpanded] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     ongoing: 0,
@@ -55,8 +61,25 @@ function Elections({ user }) {
     endDate: "",
     endAmPm: 'AM',
     status: "upcoming",
-    positions: ["President", "Vice President", "Secretary"]
+    positions: ["President", "Vice President", "Secretary"],
+    allowedFaculties: []
   });
+
+  // List of all faculties
+  const allFaculties = [
+    "Computing and Information Science",
+    "Engineering",
+    "Science",
+    "Management & Entrepreneurship",
+    "Arts and Humanities",
+    "Social Sciences",
+    "Built Environment",
+    "Agriculture",
+    "Art and Industrial Design",
+    "Education",
+    "Special Needs & Rehabilitation",
+    "Vocational Studies"
+  ];
 
   const { isDarkMode, colors } = useTheme();
 
@@ -216,7 +239,7 @@ function Elections({ user }) {
     setFilteredElections(filtered);
   };
 
-  const handleCreate = async (e) => {
+  const handleCreate = async (e)=> {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
@@ -247,6 +270,10 @@ function Elections({ user }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        Swal.fire("Error", "You must be logged in to edit elections", "error");
+        return;
+      }
       // Prepare payload: convert datetime-local + AM/PM to ISO
       const payload = {
         ...formData,
@@ -255,6 +282,8 @@ function Elections({ user }) {
       };
       // Do not send status from the client; let server compute based on dates
       delete payload.status;
+
+      console.log('Updating election:', selectedElection._id, 'Payload:', payload);
 
       await axios.put(`/api/elections/${selectedElection._id}`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -266,7 +295,8 @@ function Elections({ user }) {
       fetchElections();
     } catch (error) {
       console.error("Error updating election:", error);
-      Swal.fire("Error", "Failed to update election", "error");
+      console.error("Error details:", error.response?.data);
+      Swal.fire("Error", error.response?.data?.message || "Failed to update election", "error");
     }
   };
 
@@ -284,15 +314,31 @@ function Elections({ user }) {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`/api/elections/${election._id}`, {
+        if (!token) {
+          Swal.fire("Error", "You must be logged in to delete elections", "error");
+          return;
+        }
+
+        console.log('Deleting election:', election._id);
+
+        const response = await axios.delete(`/api/elections/${election._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log('Delete response:', response);
+
+        // Immediately remove from state for instant UI update
+        setElections(prev => prev.filter(e => (e._id || e.id) !== (election._id || election.id)));
+        setFilteredElections(prev => prev.filter(e => (e._id || e.id) !== (election._id || election.id)));
+
         Swal.fire("Deleted!", "Election has been deleted.", "success");
-        fetchElections();
+        
+        // Refresh to ensure data consistency
+        await fetchElections();
       } catch (error) {
         console.error("Error deleting election:", error);
-        Swal.fire("Error", "Failed to delete election", "error");
+        console.error("Error details:", error.response?.data);
+        Swal.fire("Error", error.response?.data?.message || "Failed to delete election", "error");
       }
     }
   };
@@ -347,7 +393,8 @@ function Elections({ user }) {
       endDate: "",
       endAmPm: 'AM',
       status: "upcoming",
-      positions: ["President", "Vice President", "Secretary"]
+      positions: ["President", "Vice President", "Secretary"],
+      allowedFaculties: []
     });
     setSelectedElection(null);
   };
@@ -455,7 +502,7 @@ function Elections({ user }) {
           All Elections
         </h3>
         <div className="d-flex align-items-center flex-wrap">
-          <button className="btn btn-success me-2" onClick={() => setShowCreateModal(true)}>
+          <button className="btn btn-success me-2" onClick={() => setShowCreateModal(true)} disabled>
             <i className="fa fa-plus me-2"></i> Create Election
           </button>
           <button className="btn btn-outline-primary me-2" onClick={exportToCSV}>
@@ -731,6 +778,51 @@ function Elections({ user }) {
                       </div>
                     </div>
                     <div className="col-12 mb-3">
+                      <label className="form-label fw-bold">Allowed Faculties</label>
+                      <div className="border rounded p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <div className="form-check mb-2">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="selectAllFaculties"
+                            checked={(formData.allowedFaculties || []).length === allFaculties.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({...formData, allowedFaculties: [...allFaculties]});
+                              } else {
+                                setFormData({...formData, allowedFaculties: []});
+                              }
+                            }}
+                          />
+                          <label className="form-check-label fw-bold" htmlFor="selectAllFaculties">
+                            All Faculties
+                          </label>
+                        </div>
+                        <hr />
+                        {allFaculties.map((faculty, index) => (
+                          <div className="form-check" key={index}>
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id={`faculty-${index}`}
+                              checked={(formData.allowedFaculties || []).includes(faculty)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({...formData, allowedFaculties: [...formData.allowedFaculties, faculty]});
+                                } else {
+                                  setFormData({...formData, allowedFaculties: formData.allowedFaculties.filter(f => f !== faculty)});
+                                }
+                              }}
+                            />
+                            <label className="form-check-label" htmlFor={`faculty-${index}`}>
+                              {faculty}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <small className="text-muted">Select which faculties can participate in this election. Leave empty for all faculties.</small>
+                    </div>
+                    <div className="col-12 mb-3">
                       <label className="form-label fw-bold">Status</label>
                       <select
                         className="form-select"
@@ -839,6 +931,83 @@ function Elections({ user }) {
                           <option value="PM">PM</option>
                         </select>
                       </div>
+                    </div>
+                    <div className="col-12 mb-3">
+                      <label className="form-label fw-bold">Allowed Faculties</label>
+                      <div className="border rounded">
+                        {/* Accordion Header */}
+                        <div 
+                          className="d-flex justify-content-between align-items-center p-3"
+                          style={{ 
+                            cursor: 'pointer',
+                            backgroundColor: colors.surface,
+                            borderBottom: facultiesExpanded ? `1px solid ${colors.border}` : 'none'
+                          }}
+                          onClick={() => setFacultiesExpanded(!facultiesExpanded)}
+                        >
+                          <div className="d-flex align-items-center">
+                            <FontAwesomeIcon 
+                              icon={facultiesExpanded ? faChevronDown : faChevronRight} 
+                              className="me-2"
+                              style={{ color: colors.primary }}
+                            />
+                            <span style={{ fontWeight: 500, color: colors.text }}>
+                              {(formData.allowedFaculties || []).length === 0 
+                                ? 'All Faculties' 
+                                : `${(formData.allowedFaculties || []).length} Selected`}
+                            </span>
+                          </div>
+                          <span className="badge bg-primary">
+                            {(formData.allowedFaculties || []).length} / {allFaculties.length}
+                          </span>
+                        </div>
+                        
+                        {/* Accordion Body */}
+                        {facultiesExpanded && (
+                          <div className="p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                            <div className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="editSelectAllFaculties"
+                                checked={(formData.allowedFaculties || []).length === allFaculties.length}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({...formData, allowedFaculties: [...allFaculties]});
+                                  } else {
+                                    setFormData({...formData, allowedFaculties: []});
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label fw-bold" htmlFor="editSelectAllFaculties">
+                                All Faculties
+                              </label>
+                            </div>
+                            <hr />
+                            {allFaculties.map((faculty, index) => (
+                              <div className="form-check" key={index}>
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  id={`edit-faculty-${index}`}
+                                  checked={(formData.allowedFaculties || []).includes(faculty)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setFormData({...formData, allowedFaculties: [...formData.allowedFaculties, faculty]});
+                                    } else {
+                                      setFormData({...formData, allowedFaculties: formData.allowedFaculties.filter(f => f !== faculty)});
+                                    }
+                                  }}
+                                />
+                                <label className="form-check-label" htmlFor={`edit-faculty-${index}`}>
+                                  {faculty}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <small className="text-muted">Select which faculties can participate in this election. Leave empty for all faculties.</small>
                     </div>
                     <div className="col-12 mb-3">
                       <label className="form-label fw-bold">Status</label>

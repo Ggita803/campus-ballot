@@ -8,7 +8,7 @@ const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivit
 // @access  Admin only
 const createElection = asyncHandler(async (req, res) => {
   try {
-    const { title, description, startDate, endDate, positions, eligibility } = req.body;
+    const { title, description, startDate, endDate, positions, eligibility, allowedFaculties } = req.body;
 
     if (!title || !description || !startDate || !endDate || !positions) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -35,6 +35,7 @@ const createElection = asyncHandler(async (req, res) => {
       endDate,
       positions,
       eligibility,
+      allowedFaculties: allowedFaculties || [], // Add allowedFaculties field
       status: computedStatus,
       createdBy: req.user._id,
     });
@@ -154,7 +155,7 @@ const updateElection = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Election not found" });
     }
 
-    const fields = ["title", "description", "startDate", "endDate", "positions", "eligibility", "status"];
+    const fields = ["title", "description", "startDate", "endDate", "positions", "eligibility", "status", "allowedFaculties"];
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
         // Defensive mapping: accept legacy 'active' sent by older frontends

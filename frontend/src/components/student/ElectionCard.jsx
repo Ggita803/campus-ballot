@@ -33,6 +33,7 @@ const getPartyInfo = (partyName) => {
 
 export default function ElectionCard({
   election,
+  user,
   myVotes = [],
   handleVote,
   openElectionDetails,
@@ -44,6 +45,11 @@ export default function ElectionCard({
   setVotingStep,
 }) {
   const approvedCandidates = (election.candidates || []).filter((c) => c.status === 'approved');
+  
+  // Check if user's faculty is eligible for this election
+  const isEligibleByFaculty = !election.allowedFaculties || 
+    election.allowedFaculties.length === 0 || 
+    (user?.faculty && election.allowedFaculties.includes(user.faculty));
   
   // More precise vote checking - check if user voted for this specific election and position
   const voted = myVotes.some((vote) => {
@@ -143,6 +149,22 @@ export default function ElectionCard({
               </div>
             </div>
           </div>
+
+          {/* Faculty Eligibility Notice - Only show as info since ineligible users won't see this election */}
+          {election.allowedFaculties && election.allowedFaculties.length > 0 && (
+            <div className="alert alert-info py-2 px-3 mb-3" style={{ fontSize: '0.85rem', borderRadius: '6px' }}>
+              <div className="d-flex align-items-start gap-2">
+                <FaUsers className="mt-1" size={14} />
+                <div>
+                  <strong>Open to:</strong>{' '}
+                  {election.allowedFaculties.length === 1 
+                    ? election.allowedFaculties[0]
+                    : election.allowedFaculties.slice(0, -1).join(', ') + ' and ' + election.allowedFaculties[election.allowedFaculties.length - 1]
+                  }
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Candidates Section with Enhanced Design */}
           <div>

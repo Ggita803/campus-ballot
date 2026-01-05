@@ -177,8 +177,10 @@ function CreateElection({ onCreated }) {
         startDate: toIsoWithAmPm(startDate, startAmPm),
         endDate: toIsoWithAmPm(endDate, endAmPm),
         timezone,
-    // The Election model expects positions as an array of strings. Send names only to match schema.
-    positions: positions.map(p => (p.name || '').trim()),
+        // The Election model expects positions as an array of strings. Send names only to match schema.
+        positions: positions.map(p => (p.name || '').trim()),
+        // Send allowedFaculties directly for faculty-based restrictions
+        allowedFaculties: eligibilityType === 'faculty' ? faculties : [],
         eligibility: {
           type: eligibilityType,
           faculties: eligibilityType === 'faculty' ? faculties : undefined,
@@ -377,6 +379,55 @@ function CreateElection({ onCreated }) {
                   value={faculties.map(f => ({ value: f, label: f }))}
                   onChange={vals => setFaculties(vals ? vals.map(v => v.value) : [])}
                   classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                      '&:hover': {
+                        borderColor: colors.primary
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused ? colors.primary : colors.inputBg,
+                      color: state.isFocused ? '#fff' : colors.text,
+                      '&:hover': {
+                        backgroundColor: colors.primary,
+                        color: '#fff'
+                      }
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: isDarkMode ? colors.primary : '#e0e7ff'
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: isDarkMode ? '#fff' : colors.text
+                    }),
+                    multiValueRemove: (base) => ({
+                      ...base,
+                      color: isDarkMode ? '#fff' : colors.text,
+                      '&:hover': {
+                        backgroundColor: '#dc2626',
+                        color: '#fff'
+                      }
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: colors.text
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: colors.text
+                    })
+                  }}
                 />
               </div>
             )}
@@ -390,6 +441,55 @@ function CreateElection({ onCreated }) {
                   value={cohorts.map(c => ({ value: c, label: c }))}
                   onChange={vals => setCohorts(vals ? vals.map(v => v.value) : [])}
                   classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                      '&:hover': {
+                        borderColor: colors.primary
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused ? colors.primary : colors.inputBg,
+                      color: state.isFocused ? '#fff' : colors.text,
+                      '&:hover': {
+                        backgroundColor: colors.primary,
+                        color: '#fff'
+                      }
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: isDarkMode ? colors.primary : '#e0e7ff'
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: isDarkMode ? '#fff' : colors.text
+                    }),
+                    multiValueRemove: (base) => ({
+                      ...base,
+                      color: isDarkMode ? '#fff' : colors.text,
+                      '&:hover': {
+                        backgroundColor: '#dc2626',
+                        color: '#fff'
+                      }
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: colors.text
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: colors.text
+                    })
+                  }}
                 />
               </div>
             )}
