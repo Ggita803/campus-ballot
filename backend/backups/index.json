@@ -1,0 +1,20 @@
+[
+  {
+    "id": "73cbab73-dd7d-44b7-b58f-74882de8c506",
+    "timestamp": "2026-01-06T18:07:33.802Z",
+    "size": "67.00 B",
+    "type": "manual",
+    "status": "completed",
+    "duration": "1 seconds",
+    "filename": "backup-73cbab73-dd7d-44b7-b58f-74882de8c506.zip"
+  },
+  {
+    "id": "58ebb3da-416b-4de2-ac95-daa25dbc2e13",
+    "timestamp": "2026-01-06T18:07:37.869Z",
+    "size": "67.00 B",
+    "type": "manual",
+    "status": "completed",
+    "duration": "1 seconds",
+    "filename": "backup-58ebb3da-416b-4de2-ac95-daa25dbc2e13.zip"
+  }
+]

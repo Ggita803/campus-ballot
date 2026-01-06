@@ -100,8 +100,18 @@ const createLog = asyncHandler(async (req, res) => {
       ipAddress: ipAddress || req.ip,
       userAgent: userAgent || req.get('User-Agent')
     });
-    
-    res.status(201).json(log);
+    // Populate for richer emit payload
+    const populated = await log.populate('user', 'name email role');
+
+    // Emit socket event for real-time consumers
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('logs:new', populated);
+    } catch (e) {
+      // non-fatal
+    }
+
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create log', error: error.message });
   }
@@ -119,6 +129,12 @@ const deleteLog = asyncHandler(async (req, res) => {
     }
     
     await log.deleteOne();
+    // Emit deletion event
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('logs:deleted', { id: req.params.id });
+    } catch (e) {}
+
     res.json({ message: 'Log deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to delete log', error: error.message });
@@ -176,6 +192,12 @@ const searchLogs = asyncHandler(async (req, res) => {
 const clearAllLogs = asyncHandler(async (req, res) => {
   try {
     const result = await Log.deleteMany({});
+    // Emit cleared event
+    try {
+      const io = req.app.get('io');
+      if (io) io.emit('logs:cleared');
+    } catch (e) {}
+
     res.json({ 
       message: `Successfully deleted ${result.deletedCount} log entries`,
       deletedCount: result.deletedCount

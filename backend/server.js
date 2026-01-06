@@ -32,6 +32,8 @@ const metaRoutes = require('./routes/metaRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const superAdminRoutes = require('./routes/superAdminRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const backupController = require('./controllers/backupController');
+const cron = require('node-cron');
 
 
 // Create Express App
@@ -191,4 +193,52 @@ server.listen(PORT, async () => {
     console.error("❌ Database connection failed".red, error);
     process.exit(1);
   }
+
+  // Schedule automatic backups based on stored schedule
+  try {
+    scheduleBackups(app);
+  } catch (err) {
+    console.error('Failed to schedule backups:', err.message);
+  }
 });
+
+function scheduleBackups(app) {
+  const existing = app.get('backupTask');
+  if (existing) existing.stop();
+
+  const setup = async () => {
+    const cfg = await backupController.getScheduleConfig();
+    if (!cfg.enabled) {
+      console.log('📦 Backups: schedule disabled');
+      app.set('backupTask', null);
+      return;
+    }
+    const [hh, mm] = (cfg.time || '02:00').split(':');
+    const hour = Number(hh) || 2;
+    const minute = Number(mm) || 0;
+    const cronExpr = buildCron(cfg.frequency, minute, hour);
+
+    const task = cron.schedule(cronExpr, async () => {
+      try {
+        const result = await backupController.performBackup({ app, type: 'scheduled' });
+        console.log(`📦 Scheduled backup created at ${result.timestamp}`);
+      } catch (e) {
+        console.error('Scheduled backup failed:', e.message);
+      }
+    }, { timezone: 'UTC' });
+
+    app.set('backupTask', task);
+    console.log(`📦 Backups scheduled: ${cfg.frequency} at ${cfg.time} (cron: ${cronExpr})`);
+  };
+
+  setup();
+  app.set('scheduleBackups', () => scheduleBackups(app));
+}
+
+function buildCron(freq, minute, hour) {
+  const m = Math.max(0, Math.min(59, minute));
+  const h = Math.max(0, Math.min(23, hour));
+  if (freq === 'weekly') return `0 ${m} ${h} * * 0`; // Sundays
+  if (freq === 'monthly') return `0 ${m} ${h} 1 * *`; // First of month
+  return `0 ${m} ${h} * * *`; // Daily
+}

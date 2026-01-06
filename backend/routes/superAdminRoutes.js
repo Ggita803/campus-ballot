@@ -10,6 +10,7 @@ const {
   getAdminActivities,
   getAdminsList
 } = require('../controllers/superAdminController');
+const backup = require('../controllers/backupController');
 
 const { protect, superAdminOnly, hasRole } = require('../middleware/authMiddleware');
 
@@ -27,3 +28,12 @@ router.get('/admin-activities', protect, hasRole('admin', 'super_admin'), getAdm
 router.get('/admins-list', protect, superAdminOnly, getAdminsList);
 
 module.exports = router;
+
+// Backup & Recovery endpoints (Super Admin only)
+router.get('/backups', protect, superAdminOnly, backup.listBackups);
+router.post('/backups/create', protect, superAdminOnly, backup.createBackup);
+router.post('/backups/:id/restore', protect, superAdminOnly, backup.restoreBackup);
+router.get('/backups/:id/download', protect, superAdminOnly, backup.downloadBackup);
+router.delete('/backups/:id', protect, superAdminOnly, backup.deleteBackup);
+router.get('/backup-schedule', protect, superAdminOnly, backup.getSchedule);
+router.put('/backup-schedule', protect, superAdminOnly, backup.updateSchedule);

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
+import { io } from 'socket.io-client';
 
 const SecurityAudit = () => {
   const { isDarkMode, colors } = useTheme();
@@ -12,79 +13,316 @@ const SecurityAudit = () => {
   const [searchUser, setSearchUser] = useState('');
   const [dateRange, setDateRange] = useState('7days');
   const [page, setPage] = useState(1);
+  const [securityMetrics, setSecurityMetrics] = useState({
+    totalEvents: 0,
+    failedLogins: 0,
+    suspiciousActivities: 0,
+    activeAdmins: 0,
+    criticalAlerts: 0
+  });
+  const [suspiciousIPs, setSuspiciousIPs] = useState([]);
   const pageSize = 20;
 
   useEffect(() => {
     fetchAuditLogs();
+    const interval = setInterval(() => fetchAuditLogs({ silent: true }), 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const socketUrl = useMemo(() => {
+    if (import.meta?.env?.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+    try {
+      const { protocol, hostname, port } = window.location;
+      if (hostname.includes('app.github.dev')) {
+        // Replace -5173. with -5000. style URLs
+        const replaced = hostname.replace('-5173.', '-5000.');
+        return `${protocol}//${replaced}`;
+      }
+      if (port === '5173') return `${protocol}//${hostname}:5000`;
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!socketUrl) return;
+    const token = localStorage.getItem('token');
+    const socket = io(socketUrl, { auth: { token } });
+
+    const transformIncoming = (log) => {
+      const action = (log.action || '').toLowerCase();
+      const status = (log.status || 'success').toLowerCase();
+      const details = typeof log.details === 'string' ? log.details : (log.details || '');
+      return {
+        id: log._id,
+        admin: log.user?.name || 'System',
+        adminId: log.user?._id || null,
+        userRole: log.user?.role || null,
+        action,
+        target: log.entityType || 'System',
+        type: determineLogType(action, details, status),
+        timestamp: log.createdAt || new Date().toISOString(),
+        ipAddress: log.ipAddress || 'Unknown',
+        status,
+        details,
+        userAgent: log.userAgent || 'Unknown',
+        severity: calculateSeverity({ action, status, details })
+      };
+    };
+
+    socket.on('connect', () => {
+      // noop; could show connectivity badge if desired
+    });
+
+    socket.on('logs:new', (log) => {
+      setLogs(prev => {
+        const next = [transformIncoming(log), ...prev];
+        calculateSecurityMetrics(next);
+        detectSuspiciousActivity(next);
+        return next;
+      });
+    });
+
+    socket.on('logs:deleted', ({ id }) => {
+      setLogs(prev => {
+        const next = prev.filter(l => l.id !== id && l.id !== (id?._id || id));
+        calculateSecurityMetrics(next);
+        detectSuspiciousActivity(next);
+        return next;
+      });
+    });
+
+    socket.on('logs:cleared', () => {
+      setLogs([]);
+      calculateSecurityMetrics([]);
+      setSuspiciousIPs([]);
+    });
+
+    return () => {
+      socket.close();
+    };
+  }, [socketUrl]);
 
   useEffect(() => {
     applyFilters();
   }, [logs, filterType, searchUser, dateRange]);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = async ({ silent } = {}) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/api/super-admin/security-audit', {
+      
+      // Fetch logs from the actual logs endpoint
+      const logsRes = await axios.get('/api/logs', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLogs(res.data);
-      setLoading(false);
+      
+      // API returns an object { logs, totalPages, currentPage, total }
+      const payload = logsRes.data;
+      const sourceLogs = Array.isArray(payload) ? payload : (Array.isArray(payload?.logs) ? payload.logs : []);
+      
+      // Transform logs to security audit format (align with backend schema)
+      const transformedLogs = sourceLogs.map((log, index) => {
+        const adminName = log.user?.name || log.userName || 'System';
+        const adminId = log.user?._id || log.userId || null;
+        const userRole = log.user?.role || null;
+        const action = (log.action || '').toLowerCase();
+        const status = (log.status || 'success').toLowerCase();
+        const entityType = log.entityType || 'System';
+        const timestamp = log.createdAt || log.timestamp || new Date().toISOString();
+        const details = typeof log.details === 'string' ? log.details : (log.details || '');
+        const derivedType = determineLogType(action, details, status);
+        return {
+          id: log._id || index,
+          admin: adminName,
+          adminId,
+          userRole,
+          action: action || 'unknown',
+          target: entityType,
+          type: derivedType,
+          timestamp,
+          ipAddress: log.ipAddress || 'Unknown',
+          status,
+          details,
+          userAgent: log.userAgent || 'Unknown',
+          severity: calculateSeverity({ action, status, details })
+        };
+      });
+      
+      setLogs(transformedLogs);
+      calculateSecurityMetrics(transformedLogs);
+      detectSuspiciousActivity(transformedLogs);
+      if (!silent) setLoading(false);
     } catch (err) {
       console.error('Failed to fetch audit logs', err);
-      // Fallback dummy data
-      setLogs([
-        {
-          id: 1,
-          admin: 'Jane Doe',
-          action: 'Created Election',
-          target: 'Presidential Election 2024',
-          type: 'CREATE',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          ipAddress: '192.168.1.100',
-          status: 'success'
-        },
-        {
-          id: 2,
-          admin: 'John Smith',
-          action: 'Modified Election Settings',
-          target: 'Guild Election 2024',
-          type: 'UPDATE',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          ipAddress: '192.168.1.101',
-          status: 'success'
-        },
-        {
-          id: 3,
-          admin: 'Admin User',
-          action: 'Failed Login Attempt',
-          target: 'Invalid Credentials',
-          type: 'LOGIN_FAILED',
-          timestamp: new Date(Date.now() - 10800000).toISOString(),
-          ipAddress: '192.168.1.150',
-          status: 'failed'
-        },
-      ]);
-      setLoading(false);
+      
+      // Use realistic fallback data
+      const fallbackLogs = generateRecentSystemLogs();
+      setLogs(fallbackLogs);
+      calculateSecurityMetrics(fallbackLogs);
+      if (!silent) setLoading(false);
     }
+  };
+  
+  const determineLogType = (action, message, status) => {
+    const text = (message || '').toLowerCase();
+    if (action === 'login' && status === 'failure') return 'LOGIN_FAILED';
+    if (action === 'login') return 'LOGIN';
+    if (action === 'logout') return 'LOGOUT';
+    if (action === 'create') return 'CREATE';
+    if (action === 'update') return 'UPDATE';
+    if (action === 'delete') return 'DELETE';
+    if (action === 'vote') return 'VOTE';
+    if (action === 'maintenance') return 'MAINTENANCE';
+    if (action === 'backup') return 'BACKUP';
+    if (action === 'security') return 'SECURITY';
+    if (action === 'configuration') return 'CONFIGURATION';
+    if (text.includes('export') || text.includes('download')) return 'EXPORT';
+    if (text.includes('permission') || text.includes('role')) return 'PERMISSION_CHANGE';
+    if (text.includes('access') && text.includes('denied')) return 'ACCESS_DENIED';
+    return 'OTHER';
+  };
+  
+  const calculateSeverity = (log) => {
+    const action = (log.action || '').toLowerCase();
+    const status = (log.status || '').toLowerCase();
+    const details = (log.details || '').toLowerCase();
+    if (status === 'failure' || action === 'delete' || details.includes('denied') || details.includes('error')) {
+      return 'critical';
+    }
+    if (action === 'update' || details.includes('permission') || details.includes('export')) {
+      return 'warning';
+    }
+    return 'info';
+  };
+  
+  const calculateSecurityMetrics = (logsData) => {
+    const metrics = {
+      totalEvents: logsData.length,
+      failedLogins: logsData.filter(log => log.type === 'LOGIN_FAILED').length,
+      suspiciousActivities: logsData.filter(log => log.severity === 'critical').length,
+      activeAdmins: new Set(
+        logsData
+          .filter(log => log.userRole === 'admin' || log.userRole === 'super_admin')
+          .map(log => log.adminId)
+          .filter(Boolean)
+      ).size,
+      criticalAlerts: logsData.filter(log => 
+        log.severity === 'critical' && 
+        new Date(log.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      ).length
+    };
+    setSecurityMetrics(metrics);
+  };
+  
+  const detectSuspiciousActivity = (logsData) => {
+    const ipCounts = {};
+    const ipFailures = {};
+    
+    logsData.forEach(log => {
+      const ip = log.ipAddress;
+      ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+      if (log.status === 'failure' || log.type === 'LOGIN_FAILED') {
+        ipFailures[ip] = (ipFailures[ip] || 0) + 1;
+      }
+    });
+    
+    const suspicious = Object.keys(ipFailures)
+      .filter(ip => ipFailures[ip] >= 3 || ipCounts[ip] > 50)
+      .map(ip => ({
+        ip,
+        failedAttempts: ipFailures[ip],
+        totalRequests: ipCounts[ip],
+        riskLevel: ipFailures[ip] >= 5 ? 'high' : ipFailures[ip] >= 3 ? 'medium' : 'low'
+      }));
+    
+    setSuspiciousIPs(suspicious);
+  };
+  
+  const generateRecentSystemLogs = () => {
+    const now = Date.now();
+    return [
+      {
+        id: 1,
+        admin: 'System Admin',
+        adminId: 'sys_001',
+        action: 'Created Election',
+        target: 'Student Council Election 2026',
+        type: 'CREATE',
+        timestamp: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.100',
+        status: 'success',
+        severity: 'info',
+        userAgent: 'Mozilla/5.0'
+      },
+      {
+        id: 2,
+        admin: 'John Doe',
+        adminId: 'admin_001',
+        action: 'Modified User Permissions',
+        target: 'user@example.com',
+        type: 'PERMISSION_CHANGE',
+        timestamp: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.101',
+        status: 'success',
+        severity: 'warning',
+        userAgent: 'Mozilla/5.0'
+      },
+      {
+        id: 3,
+        admin: 'Unknown User',
+        adminId: null,
+        action: 'Failed Login Attempt',
+        target: 'Invalid Credentials',
+        type: 'LOGIN_FAILED',
+        timestamp: new Date(now - 30 * 60 * 1000).toISOString(),
+        ipAddress: '203.0.113.45',
+        status: 'failed',
+        severity: 'critical',
+        userAgent: 'curl/7.68.0'
+      },
+      {
+        id: 4,
+        admin: 'Jane Smith',
+        adminId: 'admin_002',
+        action: 'Exported Election Data',
+        target: 'All Elections Report',
+        type: 'EXPORT',
+        timestamp: new Date(now - 12 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.102',
+        status: 'success',
+        severity: 'warning',
+        userAgent: 'Mozilla/5.0'
+      },
+      {
+        id: 5,
+        admin: 'System Admin',
+        adminId: 'sys_001',
+        action: 'Deleted Candidate',
+        target: 'Test Candidate',
+        type: 'DELETE',
+        timestamp: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.100',
+        status: 'success',
+        severity: 'critical',
+        userAgent: 'Mozilla/5.0'
+      }
+    ];
   };
 
   const applyFilters = () => {
     let filtered = logs;
 
-    // Filter by type
     if (filterType !== 'all') {
       filtered = filtered.filter(log => log.type === filterType);
     }
 
-    // Filter by user
     if (searchUser) {
       filtered = filtered.filter(log => 
         log.admin.toLowerCase().includes(searchUser.toLowerCase())
       );
     }
 
-    // Filter by date range
     const now = new Date();
     const dateMs = {
       '7days': 7 * 24 * 60 * 60 * 1000,
@@ -104,21 +342,24 @@ const SecurityAudit = () => {
 
   const getActionBadge = (type) => {
     const badges = {
-      'CREATE': { bg: 'success', text: 'Create' },
-      'UPDATE': { bg: 'info', text: 'Update' },
-      'DELETE': { bg: 'danger', text: 'Delete' },
-      'LOGIN': { bg: 'primary', text: 'Login' },
-      'LOGIN_FAILED': { bg: 'warning', text: 'Failed Login' },
-      'EXPORT': { bg: 'secondary', text: 'Export' },
-      'PERMISSION_CHANGE': { bg: 'warning', text: 'Permission Change' }
+      'CREATE': { bg: 'success', text: 'Create', icon: 'fa-plus' },
+      'UPDATE': { bg: 'info', text: 'Update', icon: 'fa-edit' },
+      'DELETE': { bg: 'danger', text: 'Delete', icon: 'fa-trash' },
+      'LOGIN': { bg: 'primary', text: 'Login', icon: 'fa-sign-in' },
+      'LOGOUT': { bg: 'secondary', text: 'Logout', icon: 'fa-sign-out' },
+      'LOGIN_FAILED': { bg: 'warning', text: 'Failed Login', icon: 'fa-exclamation-triangle' },
+      'ACCESS_DENIED': { bg: 'danger', text: 'Access Denied', icon: 'fa-ban' },
+      'EXPORT': { bg: 'secondary', text: 'Export', icon: 'fa-download' },
+      'PERMISSION_CHANGE': { bg: 'warning', text: 'Permission Change', icon: 'fa-key' },
+      'VOTE': { bg: 'primary', text: 'Vote', icon: 'fa-vote-yea' },
+      'OTHER': { bg: 'secondary', text: 'Other', icon: 'fa-info-circle' }
     };
-    const badge = badges[type] || { bg: 'secondary', text: type };
-    return badge;
+    return badges[type] || { bg: 'secondary', text: type, icon: 'fa-info-circle' };
   };
 
   const exportLogs = () => {
     const csv = [
-      ['Admin', 'Action', 'Target', 'Type', 'Timestamp', 'IP Address', 'Status'],
+      ['Admin', 'Action', 'Target', 'Type', 'Timestamp', 'IP Address', 'Status', 'Severity'],
       ...filteredLogs.map(log => [
         log.admin,
         log.action,
@@ -126,7 +367,8 @@ const SecurityAudit = () => {
         log.type,
         new Date(log.timestamp).toLocaleString(),
         log.ipAddress,
-        log.status
+        log.status,
+        log.severity || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -149,7 +391,7 @@ const SecurityAudit = () => {
         <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
           <span className="visually-hidden">Loading...</span>
         </div>
-        <p className="mt-3 text-muted">Loading security audit logs...</p>
+        <p className="mt-3 fw-bold" style={{ color: colors.text }}>Loading security audit logs...</p>
       </div>
     </div>
   );
@@ -157,51 +399,166 @@ const SecurityAudit = () => {
   return (
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold">Security Audit Logs</h3>
-        <button className="btn btn-sm btn-outline-primary" onClick={exportLogs}>
-          <i className="fa-solid fa-download me-2"></i>Export CSV
-        </button>
+        <div>
+          <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
+            <i className="fa-solid fa-shield-halved me-2 text-primary"></i>
+            Security Audit & Monitoring
+          </h3>
+          <p className="text-muted mb-0 small">Real-time security event tracking and analysis</p>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="btn btn-sm btn-outline-primary" onClick={fetchAuditLogs}>
+            <i className="fa-solid fa-refresh me-2"></i>Refresh
+          </button>
+          <button className="btn btn-sm btn-primary" onClick={exportLogs}>
+            <i className="fa-solid fa-download me-2"></i>Export CSV
+          </button>
+        </div>
       </div>
 
+      {/* Security Metrics Dashboard (restyled) */}
+      <div className="row g-2 mb-3">
+        {[
+          { key: 'totalEvents', label: 'Total Events', icon: 'fa-clipboard-list', tone: '#3b82f6', value: securityMetrics.totalEvents },
+          { key: 'failedLogins', label: 'Failed Logins', icon: 'fa-shield-halved', tone: '#ef4444', value: securityMetrics.failedLogins },
+          { key: 'suspiciousActivities', label: 'Suspicious Activity', icon: 'fa-exclamation-triangle', tone: '#f59e0b', value: securityMetrics.suspiciousActivities },
+          { key: 'activeAdmins', label: 'Active Admins', icon: 'fa-users', tone: '#10b981', value: securityMetrics.activeAdmins },
+          { key: 'criticalAlerts', label: 'Critical (24h)', icon: 'fa-bell', tone: '#dc2626', value: securityMetrics.criticalAlerts },
+          { key: 'suspiciousIPs', label: 'Suspicious IPs', icon: 'fa-ban', tone: '#f43f5e', value: suspiciousIPs.length },
+        ].map((m) => (
+          <div key={m.key} className="col-12 col-sm-6 col-md-4 col-xl-2">
+            <div
+              className="h-100"
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${colors.border}`,
+                background: isDarkMode
+                  ? `linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%)`
+                  : `linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)`,
+                boxShadow: isDarkMode
+                  ? '0 8px 24px rgba(0,0,0,0.35)'
+                  : '0 8px 24px rgba(37,99,235,0.08)',
+                overflow: 'hidden'
+              }}
+            >
+              <div className="p-3 d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-3">
+                  <div
+                    aria-hidden
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${m.tone}20 0%, ${m.tone}10 100%)`,
+                      color: m.tone,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 6px 16px ${m.tone}33`
+                    }}
+                  >
+                    <i className={`fa-solid ${m.icon}`} style={{ fontSize: '1.25rem' }}></i>
+                  </div>
+                  <div>
+                    <div className="small fw-semibold" style={{ color: colors.textMuted }}>{m.label}</div>
+                    <div className="fw-bold" style={{ color: colors.text, fontSize: '1.5rem', lineHeight: 1 }}>
+                      {m.value}
+                    </div>
+                  </div>
+                </div>
+                <i className="fa-solid fa-chevron-right" style={{ color: colors.textMuted, opacity: 0.6 }}></i>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Suspicious IPs Alert */}
+      {suspiciousIPs.length > 0 && (
+        <div className="alert alert-warning d-flex align-items-center mb-4" role="alert">
+          <i className="fa-solid fa-triangle-exclamation me-3" style={{ fontSize: '1.5rem' }}></i>
+          <div className="flex-grow-1">
+            <h6 className="mb-1 fw-bold">⚠️ Suspicious Activity Detected!</h6>
+            <p className="mb-0 small">Found {suspiciousIPs.length} IP address(es) with suspicious patterns. Review immediately.</p>
+          </div>
+          <button className="btn btn-sm btn-warning" onClick={() => {
+            const ipList = suspiciousIPs.map(ip => `${ip.ip} - ${ip.failedAttempts} failed attempts (${ip.riskLevel} risk)`).join('<br/>');
+            Swal.fire({
+              title: 'Suspicious IP Addresses',
+              html: `<div style="text-align: left;">${ipList}</div>`,
+              icon: 'warning',
+              confirmButtonText: 'Acknowledge',
+              width: '600px'
+            });
+          }}>
+            View Details
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
-      <div className="card mb-4">
+      <div className="card mb-4" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
+        <div className="card-header" style={{ background: isDarkMode ? colors.cardBg : '#f8f9fa', borderBottom: `1px solid ${colors.border}` }}>
+          <h6 className="mb-0 fw-bold" style={{ color: colors.text }}>
+            <i className="fa-solid fa-filter me-2"></i>Filter Audit Logs
+          </h6>
+        </div>
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-3">
-              <label className="form-label">Action Type</label>
+              <label className="form-label small fw-bold" style={{ color: colors.text }}>Action Type</label>
               <select
                 className="form-select"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
+                style={{
+                  background: isDarkMode ? colors.inputBg : '#fff',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`
+                }}
               >
                 <option value="all">All Actions</option>
                 <option value="CREATE">Create</option>
                 <option value="UPDATE">Update</option>
                 <option value="DELETE">Delete</option>
                 <option value="LOGIN">Login</option>
+                <option value="LOGOUT">Logout</option>
                 <option value="LOGIN_FAILED">Failed Login</option>
+                <option value="ACCESS_DENIED">Access Denied</option>
                 <option value="EXPORT">Export</option>
                 <option value="PERMISSION_CHANGE">Permission Change</option>
+                <option value="VOTE">Vote</option>
+                <option value="OTHER">Other</option>
               </select>
             </div>
 
             <div className="col-md-3">
-              <label className="form-label">Admin</label>
+              <label className="form-label small fw-bold" style={{ color: colors.text }}>Admin</label>
               <input
                 type="text"
                 className="form-control"
                 placeholder="Search admin name..."
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
+                style={{
+                  background: isDarkMode ? colors.inputBg : '#fff',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`
+                }}
               />
             </div>
 
             <div className="col-md-3">
-              <label className="form-label">Date Range</label>
+              <label className="form-label small fw-bold" style={{ color: colors.text }}>Date Range</label>
               <select
                 className="form-select"
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
+                style={{
+                  background: isDarkMode ? colors.inputBg : '#fff',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`
+                }}
               >
                 <option value="7days">Last 7 Days</option>
                 <option value="30days">Last 30 Days</option>
@@ -219,8 +576,13 @@ const SecurityAudit = () => {
                   setSearchUser('');
                   setDateRange('7days');
                 }}
+                style={{
+                  background: isDarkMode ? colors.inputBg : '#fff',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`
+                }}
               >
-                Reset Filters
+                <i className="fa-solid fa-rotate-right me-2"></i>Reset Filters
               </button>
             </div>
           </div>
@@ -228,86 +590,191 @@ const SecurityAudit = () => {
       </div>
 
       {/* Results Count */}
-      <div className="mb-3">
-        <small className="text-muted">
-          Showing {paginatedLogs.length} of {filteredLogs.length} logs
-        </small>
+      <div className="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+          <small style={{ color: colors.textMuted }}>
+            Showing <strong>{paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
+          </small>
+        </div>
+        <div className="d-flex gap-2">
+          <span className="badge bg-success">
+            <i className="fa-solid fa-circle-dot me-1" style={{ animation: 'pulse 2s infinite' }}></i>
+            Live Monitoring
+          </span>
+          <span className="badge bg-info">Updated: {new Date().toLocaleTimeString()}</span>
+        </div>
       </div>
 
       {/* Logs Table */}
-      <div className="table-responsive mb-4">
-        <table className="table table-hover" style={{ color: colors.text }}>
-          <thead style={{ background: isDarkMode ? colors.surface : '#f8f9fa', color: colors.text }}>
-            <tr>
-              <th style={{ color: colors.text }}>Admin</th>
-              <th style={{ color: colors.text }}>Action</th>
-              <th style={{ color: colors.text }}>Target</th>
-              <th style={{ color: colors.text }}>Type</th>
-              <th style={{ color: colors.text }}>Timestamp</th>
-              <th style={{ color: colors.text }}>IP Address</th>
-              <th style={{ color: colors.text }}>Status</th>
-            </tr>
-          </thead>
-          <tbody style={{ background: isDarkMode ? colors.surface : '#fff' }}>
-            {paginatedLogs.length > 0 ? (
-              paginatedLogs.map(log => {
-                const badge = getActionBadge(log.type);
-                return (
-                  <tr key={log.id}>
-                    <td>
-                      <strong>{log.admin}</strong>
-                    </td>
-                    <td>{log.action}</td>
-                    <td>{log.target}</td>
-                    <td>
-                      <span className={`badge bg-${badge.bg}`}>
-                        {badge.text}
-                      </span>
-                    </td>
-                    <td>
-                      <small>{new Date(log.timestamp).toLocaleString()}</small>
-                    </td>
-                    <td>
-                      <code>{log.ipAddress}</code>
-                    </td>
-                    <td>
-                      <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
-                        {log.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
+      <div className="card" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
+        <div className="table-responsive">
+          <table className="table mb-0">
+            <thead style={{ background: isDarkMode ? colors.cardBg : '#f8f9fa', borderBottom: `2px solid ${colors.border}` }}>
               <tr>
-                <td colSpan="7" className="text-center py-4 text-muted">
-                  No audit logs found
-                </td>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Admin</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Action</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Target</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Type</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Timestamp</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>IP Address</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Status</th>
+                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Severity</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginatedLogs.length > 0 ? (
+                paginatedLogs.map(log => {
+                  const badge = getActionBadge(log.type);
+                  return (
+                    <tr 
+                      key={log.id} 
+                      style={{ 
+                        borderBottom: `1px solid ${colors.border}`,
+                        background: isDarkMode ? colors.surface : '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = isDarkMode ? colors.surface : '#fff';
+                      }}
+                    >
+                      <td style={{ padding: '0.75rem' }}>
+                        <div className="d-flex align-items-center gap-2">
+                          <div style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '50%',
+                            background: colors.primary,
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold'
+                          }}>
+                            {log.admin.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div>
+                            <strong style={{ color: colors.text }}>{log.admin}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{ color: colors.text, fontWeight: 500 }}>{log.action}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{ color: colors.text }}>{log.target}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span className={`badge bg-${badge.bg}`}>
+                          <i className={`fa-solid ${badge.icon} me-1`}></i>
+                          {badge.text}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <div style={{ color: colors.text, fontWeight: 500 }}>
+                          {new Date(log.timestamp).toLocaleDateString()}
+                        </div>
+                        <small style={{ color: colors.textMuted }}>
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </small>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <code style={{ 
+                          background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
+                          color: colors.text
+                        }}>
+                          {log.ipAddress}
+                        </code>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
+                          <i className={`fa-solid fa-${log.status === 'success' ? 'check' : 'times'} me-1`}></i>
+                          {log.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span className={`badge ${
+                          log.severity === 'critical' ? 'bg-danger' :
+                          log.severity === 'warning' ? 'bg-warning' : 'bg-info'
+                        }`}>
+                          {log.severity}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr style={{ background: isDarkMode ? colors.surface : '#fff' }}>
+                  <td colSpan="8" className="text-center py-5" style={{ color: colors.textMuted }}>
+                    <i className="fa-solid fa-inbox fa-3x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                    <p className="mb-0">No audit logs found matching your filters</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <nav>
-          <ul className="pagination">
-            <li className={`page-item${page === 1 ? ' disabled' : ''}`}>
-              <button className="page-link" onClick={() => setPage(page - 1)}>Previous</button>
-            </li>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <li key={i + 1} className={`page-item${page === i + 1 ? ' active' : ''}`}>
-                <button className="page-link" onClick={() => setPage(i + 1)}>
-                  {i + 1}
+        <div className="d-flex justify-content-center mt-4">
+          <nav>
+            <ul className="pagination">
+              <li className={`page-item${page === 1 ? ' disabled' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => setPage(page - 1)}
+                  style={{
+                    background: isDarkMode ? colors.surface : '#fff',
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`
+                  }}
+                >
+                  <i className="fa-solid fa-chevron-left"></i>
                 </button>
               </li>
-            ))}
-            <li className={`page-item${page === totalPages ? ' disabled' : ''}`}>
-              <button className="page-link" onClick={() => setPage(page + 1)}>Next</button>
-            </li>
-          </ul>
-        </nav>
+              {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <li key={pageNum} className={`page-item${page === pageNum ? ' active' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setPage(pageNum)}
+                      style={{
+                        background: page === pageNum ? colors.primary : (isDarkMode ? colors.surface : '#fff'),
+                        color: page === pageNum ? '#fff' : colors.text,
+                        border: `1px solid ${page === pageNum ? colors.primary : colors.border}`
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  </li>
+                );
+              })}
+              <li className={`page-item${page === totalPages ? ' disabled' : ''}`}>
+                <button 
+                  className="page-link" 
+                  onClick={() => setPage(page + 1)}
+                  style={{
+                    background: isDarkMode ? colors.surface : '#fff',
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`
+                  }}
+                >
+                  <i className="fa-solid fa-chevron-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       )}
     </div>
   );
