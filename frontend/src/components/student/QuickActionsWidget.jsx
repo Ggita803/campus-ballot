@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { FaBolt, FaVoteYea, FaHistory, FaBell, FaTimes } from 'react-icons/fa';
+import { FaBolt, FaVoteYea, FaHistory, FaBell, FaTimes, FaUsers } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
   const { isDarkMode, colors } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (activeElections.length === 0) return null;
+  // Don't show widget if no eligible elections
+  if (!activeElections || activeElections.length === 0) return null;
 
   return (
     <>
@@ -48,7 +49,7 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
               bottom: '90px',
               right: '24px',
               background: isDarkMode ? colors.surface : '#fff',
-              borderRadius: '12px',
+              borderRadius: '8px',
               boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
               padding: '16px',
               zIndex: 999,
@@ -85,6 +86,19 @@ const QuickActionsWidget = ({ activeElections, onNavigate, onVote }) => {
             <hr style={{ borderColor: isDarkMode ? colors.border : '#e9ecef' }} />
 
             <div className="d-grid gap-2">
+              <button
+                className="btn btn-sm btn-outline-primary text-start"
+                onClick={() => {
+                  onNavigate('candidates');
+                  setIsOpen(false);
+                }}
+                style={{
+                  borderColor: isDarkMode ? colors.border : '#dee2e6',
+                  color: isDarkMode ? colors.text : '#3b82f6'
+                }}
+              >
+                <FaUsers className="me-2" /> View Candidates
+              </button>
               <button
                 className="btn btn-sm btn-outline-success text-start"
                 onClick={() => {

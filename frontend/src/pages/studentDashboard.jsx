@@ -229,16 +229,55 @@ function StudentDashboard({ user }) {
   }
 };
 
+  // Check if user is eligible for an election based on all criteria
+  const isUserEligibleForElection = (election) => {
+    if (!election || !user) return false;
+
+    // Check faculty eligibility
+    const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+    if (hasFacultyRestriction && user.faculty && !election.allowedFaculties.includes(user.faculty)) {
+      return false;
+    }
+
+    // Check specific eligibility criteria if they exist
+    if (election.eligibility) {
+      // Check faculty from eligibility object
+      if (election.eligibility.faculty && election.eligibility.faculty !== null && election.eligibility.faculty !== '') {
+        if (user.faculty !== election.eligibility.faculty) {
+          return false;
+        }
+      }
+
+      // Check year of study
+      if (election.eligibility.yearOfStudy && election.eligibility.yearOfStudy !== null && election.eligibility.yearOfStudy !== '') {
+        if (user.yearOfStudy !== election.eligibility.yearOfStudy) {
+          return false;
+        }
+      }
+
+      // Check course
+      if (election.eligibility.course && election.eligibility.course !== null && election.eligibility.course !== '') {
+        if (user.course !== election.eligibility.course) {
+          return false;
+        }
+      }
+
+      // Check minimum GPA if applicable
+      if (election.eligibility.minimunmGPA && election.eligibility.minimunmGPA > 0) {
+        if (user.gpa && user.gpa < election.eligibility.minimunmGPA) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const calculateElectionStats = (electionsData) => {
     const now = new Date();
     
     // Filter to only include elections user is eligible for
-    const eligibleElections = electionsData.filter(election => {
-      const hasRestrictions = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
-      return hasRestrictions 
-        ? (user?.faculty && election.allowedFaculties.includes(user.faculty))
-        : true;
-    });
+    const eligibleElections = electionsData.filter(election => isUserEligibleForElection(election));
     
     const stats = {
       total: eligibleElections.length,
@@ -3537,10 +3576,15 @@ function StudentDashboard({ user }) {
 
       {/* Quick Actions Widget */}
       <QuickActionsWidget 
-        activeElections={elections.filter(e => getElectionStatus(e).status === 'active')}
+        activeElections={elections.filter(e => {
+          const status = getElectionStatus(e);
+          return status.status === 'active' && isUserEligibleForElection(e);
+        })}
         onNavigate={(action) => {
           if (action === 'apply') {
             navigate('/candidate-application');
+          } else if (action === 'candidates') {
+            navigate('/candidates');
           } else if (action === 'elections') {
             setActiveView('elections');
           } else if (action === 'history') {

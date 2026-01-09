@@ -3,6 +3,16 @@ const router = express.Router();
 const Candidate = require('../models/Candidate');
 const Election = require('../models/Election');
 const CampaignMaterial = require('../models/CampaignMaterial');
+const { 
+  submitQuestion, 
+  getCandidateQuestions, 
+  getCandidateAnnouncements,
+  toggleQuestionLike,
+  toggleAnnouncementLike,
+  addAnnouncementComment,
+  trackAnnouncementView
+} = require('../controllers/engagementController');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 
 // @desc    Get all approved candidates (public)
 // @route   GET /api/public/candidates
@@ -145,5 +155,40 @@ router.get('/elections/:id/candidates', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch candidates' });
   }
 });
+
+// @desc    Submit a question to a candidate
+// @route   POST /api/public/candidates/:candidateId/questions
+// @access  Protected (Student)
+router.post('/candidates/:candidateId/questions', protect, submitQuestion);
+
+// @desc    Get Q&A for a candidate
+// @route   GET /api/public/candidates/:candidateId/questions
+// @access  Public (optionalAuth for like status)
+router.get('/candidates/:candidateId/questions', optionalAuth, getCandidateQuestions);
+
+// @desc    Get announcements for a candidate
+// @route   GET /api/public/candidates/:candidateId/announcements
+// @access  Public (optionalAuth for like status)
+router.get('/candidates/:candidateId/announcements', optionalAuth, getCandidateAnnouncements);
+
+// @desc    Toggle like on a question
+// @route   POST /api/public/questions/:questionId/like
+// @access  Protected
+router.post('/questions/:questionId/like', protect, toggleQuestionLike);
+
+// @desc    Toggle like on an announcement
+// @route   POST /api/public/announcements/:announcementId/like
+// @access  Protected
+router.post('/announcements/:announcementId/like', protect, toggleAnnouncementLike);
+
+// @desc    Add comment to announcement
+// @route   POST /api/public/announcements/:announcementId/comments
+// @access  Protected
+router.post('/announcements/:announcementId/comments', protect, addAnnouncementComment);
+
+// @desc    Track announcement view
+// @route   POST /api/public/announcements/:announcementId/view
+// @access  Protected
+router.post('/announcements/:announcementId/view', protect, trackAnnouncementView);
 
 module.exports = router;

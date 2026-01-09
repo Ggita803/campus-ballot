@@ -157,14 +157,27 @@ const updateCandidate = asyncHandler(async (req, res) => {
 
     const fields = [
       "name", "photo", "position", "symbol",
-      "party", "description", "manifesto", "status"
+      "party", "description", "manifesto", "status",
+      "email", "phone", "studentId", "department", "yearOfStudy", "bio"
     ];
+
+    const arrayFields = ["campaignPromises", "qualifications", "achievements"];
 
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
         candidate[field] = req.body[field];
       }
     });
+
+    arrayFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        candidate[field] = req.body[field];
+      }
+    });
+
+    if (req.body.socialMedia !== undefined) {
+      candidate.socialMedia = req.body.socialMedia;
+    }
 
     const updated = await candidate.save();
     try {

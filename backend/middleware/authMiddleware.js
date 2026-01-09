@@ -176,6 +176,42 @@ const studentOrAgent = hasRole('student', 'agent');
 const candidateOnly = hasRole('candidate');
 const agentOnly = hasRole('agent');
 
+// 👤 Optional authentication - sets req.user if token exists, but doesn't fail if missing
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  try {
+    let token;
+
+    // Check cookie
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    // Check Authorization header
+    if (!token && req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+      // No token, just continue without user
+      return next();
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (user) {
+      req.user = user;
+    }
+
+    next();
+  } catch (err) {
+    // Token invalid, but continue without user
+    console.log("[OPTIONAL AUTH] Token present but invalid, continuing without user");
+    next();
+  }
+});
+
 module.exports = {
   protect,
   authorize,
@@ -185,5 +221,6 @@ module.exports = {
   studentOrCandidate,
   studentOrAgent,
   candidateOnly,
-  agentOnly
+  agentOnly,
+  optionalAuth
 };

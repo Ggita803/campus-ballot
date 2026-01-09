@@ -99,7 +99,51 @@ export default function CandidateApplication({ user, users = [] }) {
         const { data } = await axios.get('/api/elections', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setElections(data.elections || []);
+        
+        // Filter elections based on user eligibility
+        const allElections = data.elections || [];
+        const eligibleElections = allElections.filter(election => {
+          // Check faculty eligibility
+          const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+          if (hasFacultyRestriction && user?.faculty && !election.allowedFaculties.includes(user.faculty)) {
+            return false;
+          }
+
+          // Check specific eligibility criteria if they exist
+          if (election.eligibility) {
+            // Check faculty from eligibility object
+            if (election.eligibility.faculty && election.eligibility.faculty !== null && election.eligibility.faculty !== '') {
+              if (user?.faculty !== election.eligibility.faculty) {
+                return false;
+              }
+            }
+
+            // Check year of study
+            if (election.eligibility.yearOfStudy && election.eligibility.yearOfStudy !== null && election.eligibility.yearOfStudy !== '') {
+              if (user?.yearOfStudy !== election.eligibility.yearOfStudy) {
+                return false;
+              }
+            }
+
+            // Check course
+            if (election.eligibility.course && election.eligibility.course !== null && election.eligibility.course !== '') {
+              if (user?.course !== election.eligibility.course) {
+                return false;
+              }
+            }
+
+            // Check minimum GPA if applicable
+            if (election.eligibility.minimunmGPA && election.eligibility.minimunmGPA > 0) {
+              if (user?.gpa && user.gpa < election.eligibility.minimunmGPA) {
+                return false;
+              }
+            }
+          }
+
+          return true;
+        });
+
+        setElections(eligibleElections);
       } catch (err) {
         setElections([]);
       } finally {
@@ -107,7 +151,7 @@ export default function CandidateApplication({ user, users = [] }) {
       }
     };
     fetchElections();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // Fetch positions for selected election
@@ -630,9 +674,10 @@ export default function CandidateApplication({ user, users = [] }) {
                   }
                 }}
                 required
+                disabled={elections.length === 0}
                 style={isDarkMode ? { backgroundColor: colors.cardBackground, color: colors.text, borderColor: validation.election ? '#dc3545' : '#555555' } : {}}
               >
-                <option value="">Select Election</option>
+                <option value="">{elections.length === 0 ? 'No eligible elections available' : 'Select Election'}</option>
                 {elections.map((e) => (
                   <option 
                     key={e._id} 
@@ -643,6 +688,12 @@ export default function CandidateApplication({ user, users = [] }) {
                   </option>
                 ))}
               </select>
+              {elections.length === 0 && (
+                <div className="text-info small mt-1">
+                  <i className="fa fa-info-circle me-1" />
+                  You don't meet the eligibility criteria for any active elections
+                </div>
+              )}
               {validation.election && <div className="invalid-feedback d-block small">{validation.election}</div>}
               {form.election && !validation.election && existingApplications.includes(form.election) && (
                 <div className="text-warning small mt-1">

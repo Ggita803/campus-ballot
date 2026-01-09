@@ -59,63 +59,18 @@ const VoterEngagement = () => {
       const response = await axios.get('/api/candidate/engagement', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setQuestions(response.data.questions);
-      setAnnouncements(response.data.announcements);
+      setQuestions(response.data.questions || []);
+      setAnnouncements(response.data.announcements || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching engagement data:', error);
-      // Fallback dummy data
-      setQuestions([
-        {
-          _id: '1',
-          voterName: 'John Doe',
-          question: 'What are your plans for improving campus infrastructure?',
-          answer: 'I plan to work with the administration to renovate the library and add more study spaces.',
-          status: 'answered',
-          likes: 23,
-          createdAt: '2025-01-10T10:30:00',
-          answeredAt: '2025-01-10T14:20:00'
-        },
-        {
-          _id: '2',
-          voterName: 'Jane Smith',
-          question: 'How will you address student mental health?',
-          answer: '',
-          status: 'pending',
-          likes: 15,
-          createdAt: '2025-01-12T09:15:00'
-        },
-        {
-          _id: '3',
-          voterName: 'Mike Johnson',
-          question: 'What is your stance on increasing student activities budget?',
-          answer: 'I strongly support increasing the budget to provide more diverse activities for all students.',
-          status: 'answered',
-          likes: 31,
-          createdAt: '2025-01-11T16:45:00',
-          answeredAt: '2025-01-11T18:30:00'
-        }
-      ]);
-      setAnnouncements([
-        {
-          _id: '1',
-          title: 'Town Hall Meeting - Jan 20th',
-          message: 'Join me for a town hall discussion where we can talk about campus issues. Refreshments will be provided!',
-          views: 156,
-          likes: 45,
-          comments: 12,
-          createdAt: '2025-01-08T10:00:00'
-        },
-        {
-          _id: '2',
-          title: 'Campaign Promise: Free WiFi',
-          message: 'I am committed to working with the university to provide free high-speed WiFi across all campus buildings.',
-          views: 234,
-          likes: 89,
-          comments: 23,
-          createdAt: '2025-01-10T14:30:00'
-        }
-      ]);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load engagement data. Please try again later.'
+      });
+      setQuestions([]);
+      setAnnouncements([]);
       setLoading(false);
     }
   };

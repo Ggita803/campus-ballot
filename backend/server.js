@@ -35,6 +35,7 @@ const superAdminRoutes = require('./routes/superAdminRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const engagementRoutes = require('./routes/engagementRoutes');
 const backupController = require('./controllers/backupController');
 const cron = require('node-cron');
 
@@ -96,6 +97,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/public", publicRoutes);
 // Agent routes must come BEFORE candidate routes to avoid route conflicts
 app.use('/api/candidates/agents', agentRoutes);
+app.use('/api/candidate/engagement', engagementRoutes);
 app.use('/api/candidate', candidateMaterialRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/elections", electionRoutes);

@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
+
+// Custom Swal configuration with reduced border radius
+const showAlert = (options) => {
+  return Swal.fire({
+    ...options,
+    customClass: {
+      popup: 'swal-rounded',
+      confirmButton: 'btn btn-primary',
+      cancelButton: 'btn btn-secondary'
+    },
+    buttonsStyling: false
+  });
+};
+
 import { 
   FaUsers, 
   FaSearch, 
@@ -25,7 +40,12 @@ import {
   FaSlidersH,
   FaUser,
   FaTrophy,
-  FaFlag
+  FaFlag,
+  FaHeart,
+  FaRegHeart,
+  FaComment,
+  FaQuestionCircle,
+  FaPaperPlane
 } from 'react-icons/fa';
 
 // Add CSS animations
@@ -69,6 +89,17 @@ const styles = `
       opacity: 0.5;
     }
   }
+
+  .swal-rounded {
+    border-radius: 8px !important;
+  }
+
+  .swal2-popup .btn {
+    border-radius: 6px !important;
+    padding: 0.5rem 1.5rem !important;
+    font-size: 0.875rem !important;
+    margin: 0 0.25rem !important;
+  }
 `;
 
 // Inject styles
@@ -105,10 +136,31 @@ const PublicCandidates = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [candidateMaterials, setCandidateMaterials] = useState([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  
+  // Engagement state
+  const [questions, setQuestions] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [activeAnnouncementId, setActiveAnnouncementId] = useState(null);
+  const [submittingQuestion, setSubmittingQuestion] = useState(false);
+  const [activeEngagementTab, setActiveEngagementTab] = useState('questions');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  const checkAuthentication = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  };
 
   useEffect(() => {
+    checkAuthentication();
     fetchData();
   }, []);
 
@@ -163,9 +215,218 @@ const PublicCandidates = () => {
     }
   };
 
+  const fetchCandidateEngagement = async (candidateId) => {
+    try {
+      const [questionsRes, announcementsRes] = await Promise.all([
+        axios.get(`/api/public/candidates/${candidateId}/questions`),
+        axios.get(`/api/public/candidates/${candidateId}/announcements`)
+      ]);
+      setQuestions(questionsRes.data || []);
+      setAnnouncements(announcementsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching engagement data:', error);
+      setQuestions([]);
+      setAnnouncements([]);
+    }
+  };
+
+  const handleLikeQuestion = async (questionId) => {
+    if (!isAuthenticated) {
+      showAlert({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Please login to like questions',
+        showCancelButton: true,
+        confirmButtonText: 'Go to Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3b82f6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`/api/public/questions/${questionId}/like`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setQuestions(questions.map(q => 
+        q._id === questionId 
+          ? { ...q, likes: response.data.likes, isLiked: response.data.isLiked } 
+          : q
+      ));
+    } catch (error) {
+      console.error('Error liking question:', error);
+      showAlert({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to like question'
+      });
+    }
+  };
+
+  const handleLikeAnnouncement = async (announcementId) => {
+    if (!isAuthenticated) {
+      showAlert({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Please login to like announcements',
+        showCancelButton: true,
+        confirmButtonText: 'Go to Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3b82f6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`/api/public/announcements/${announcementId}/like`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAnnouncements(announcements.map(a => 
+        a._id === announcementId 
+          ? { ...a, likes: response.data.likes, isLiked: response.data.isLiked } 
+          : a
+      ));
+    } catch (error) {
+      console.error('Error liking announcement:', error);
+      showAlert({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to like announcement'
+      });
+    }
+  };
+
+  const handleSubmitQuestion = async (e) => {
+    e.preventDefault();
+    if (!newQuestion.trim()) {
+      showAlert({
+        icon: 'warning',
+        title: 'Empty Question',
+        text: 'Please enter a question before submitting',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    if (!isAuthenticated) {
+      showAlert({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Please login to ask questions',
+        showCancelButton: true,
+        confirmButtonText: 'Go to Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3b82f6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }
+      });
+      return;
+    }
+
+    setSubmittingQuestion(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `/api/public/candidates/${selectedCandidate._id}/questions`,
+        { question: newQuestion },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setQuestions([response.data.question, ...questions]);
+      setNewQuestion('');
+      showAlert({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Your question has been submitted successfully',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error submitting question:', error);
+      showAlert({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to submit question'
+      });
+    } finally {
+      setSubmittingQuestion(false);
+    }
+  };
+
+  const handleAddComment = async (announcementId) => {
+    if (!newComment.trim()) {
+      showAlert({
+        icon: 'warning',
+        title: 'Empty Comment',
+        text: 'Please enter a comment before submitting',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    if (!isAuthenticated) {
+      showAlert({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Please login to comment',
+        showCancelButton: true,
+        confirmButtonText: 'Go to Login',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3b82f6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login', { state: { from: window.location.pathname } });
+        }
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `/api/public/announcements/${announcementId}/comments`,
+        { comment: newComment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAnnouncements(announcements.map(a => 
+        a._id === announcementId 
+          ? { ...a, comments: [...(a.comments || []), response.data.comment] } 
+          : a
+      ));
+      setNewComment('');
+      setActiveAnnouncementId(null);
+      showAlert({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Comment added successfully',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      showAlert({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to add comment'
+      });
+    }
+  };
+
   const handleViewCandidate = async (candidate) => {
     setSelectedCandidate(candidate);
     fetchCandidateMaterials(candidate._id);
+    fetchCandidateEngagement(candidate._id);
   };
 
   const handleShare = (candidate) => {
@@ -175,10 +436,16 @@ const PublicCandidates = () => {
         title: `${candidate.name} - ${candidate.position}`,
         text: `Check out ${candidate.name}'s campaign for ${candidate.position}`,
         url: url
-      });
+      }).catch(() => console.log('Share cancelled'));
     } else {
       navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      showAlert({
+        icon: 'success',
+        title: 'Link Copied!',
+        text: 'Profile link copied to clipboard',
+        timer: 2000,
+        showConfirmButton: false
+      });
     }
   };
 
@@ -349,7 +616,7 @@ const PublicCandidates = () => {
               border: `1px solid ${themeColors.border}`,
               color: themeColors.text,
               padding: '0.75rem 1rem',
-              borderRadius: '12px'
+              borderRadius: '8px'
             }}
           >
             <span className="d-flex align-items-center gap-2">
@@ -376,7 +643,7 @@ const PublicCandidates = () => {
             <div className="col-12 col-md-4">
               <div className="input-group" style={{ 
                 background: themeColors.inputBg,
-                borderRadius: '12px',
+                borderRadius: '8px',
                 border: `1px solid ${themeColors.inputBorder}`,
                 overflow: 'hidden',
                 transition: 'all 0.3s ease'
@@ -422,7 +689,7 @@ const PublicCandidates = () => {
                   background: themeColors.inputBg,
                   color: themeColors.text,
                   border: `1px solid ${themeColors.inputBorder}`,
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   padding: '0.625rem 1rem',
                   transition: 'all 0.3s ease'
                 }}
@@ -445,7 +712,7 @@ const PublicCandidates = () => {
                   background: themeColors.inputBg,
                   color: themeColors.text,
                   border: `1px solid ${themeColors.inputBorder}`,
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   padding: '0.625rem 1rem',
                   opacity: positions.length === 0 ? 0.6 : 1,
                   transition: 'all 0.3s ease'
@@ -481,7 +748,7 @@ const PublicCandidates = () => {
                       background: themeColors.cardBg,
                       backdropFilter: 'blur(10px)',
                       border: `1px solid ${themeColors.border}`,
-                      borderRadius: '16px',
+                      borderRadius: '8px',
                       overflow: 'hidden',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer',
@@ -569,7 +836,7 @@ const PublicCandidates = () => {
                             <img 
                               src={getImageUrl(candidate.symbol)} 
                               alt={candidate.party}
-                              style={{ width: '16px', height: '16px', objectFit: 'contain' }}
+                              style={{ width: '25px', height: '25px', objectFit: 'contain' }}
                               onError={(e) => e.target.style.display = 'none'}
                             />
                           )}
@@ -651,7 +918,7 @@ const PublicCandidates = () => {
                   ? 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)'
                   : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
                 border: `1px solid ${themeColors.border}`,
-                borderRadius: '20px',
+                borderRadius: '8px',
                 boxShadow: isDarkTheme 
                   ? '0 25px 50px rgba(0,0,0,0.5)' 
                   : '0 25px 50px rgba(0,0,0,0.15)',
@@ -662,7 +929,7 @@ const PublicCandidates = () => {
               <div style={{
                 background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                 padding: window.innerWidth < 768 ? '1rem' : '2rem',
-                borderRadius: '20px 20px 0 0',
+                borderRadius: '8px 8 0 0',
                 position: 'relative'
               }}>
                 <button
@@ -777,7 +1044,7 @@ const PublicCandidates = () => {
                     className="mb-4 p-3" 
                     style={{ 
                       background: isDarkTheme ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       border: `1px solid ${isDarkTheme ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)'}`
                     }}
                   >
@@ -807,6 +1074,64 @@ const PublicCandidates = () => {
                   </p>
                 </div>
 
+                {/* Academic Info */}
+                {(selectedCandidate.yearOfStudy || selectedCandidate.department || selectedCandidate.studentId) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaGraduationCap className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Academic Information
+                    </h5>
+                    <div 
+                      style={{ 
+                        background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
+                        borderRadius: '8px',
+                        padding: window.innerWidth < 768 ? '0.875rem' : '1.5rem',
+                        border: `1px solid ${themeColors.border}`
+                      }}
+                    >
+                      <div className="row g-3">
+                        {selectedCandidate.yearOfStudy && (
+                          <div className="col-6">
+                            <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>Year of Study</small>
+                            <p className="mb-0 fw-semibold" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                              {selectedCandidate.yearOfStudy}
+                            </p>
+                          </div>
+                        )}
+                        {selectedCandidate.department && (
+                          <div className="col-6">
+                            <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>Department</small>
+                            <p className="mb-0 fw-semibold" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                              {selectedCandidate.department}
+                            </p>
+                          </div>
+                        )}
+                        {selectedCandidate.studentId && (
+                          <div className="col-12">
+                            <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>Student ID</small>
+                            <p className="mb-0 fw-semibold" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                              {selectedCandidate.studentId}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bio */}
+                {selectedCandidate.bio && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaUser className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Biography
+                    </h5>
+                    <p style={{ color: themeColors.textSecondary, lineHeight: '1.6', fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                      {selectedCandidate.bio}
+                    </p>
+                  </div>
+                )}
+
                 {/* Manifesto */}
                 {selectedCandidate.manifesto && (
                   <div className="mb-3">
@@ -817,7 +1142,7 @@ const PublicCandidates = () => {
                     <div 
                       style={{ 
                         background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
-                        borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+                        borderRadius: '8px',
                         padding: window.innerWidth < 768 ? '0.875rem' : '1.5rem',
                         border: `1px solid ${themeColors.border}`
                       }}
@@ -831,6 +1156,235 @@ const PublicCandidates = () => {
                       }}>
                         {selectedCandidate.manifesto}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campaign Promises */}
+                {selectedCandidate.campaignPromises && selectedCandidate.campaignPromises.length > 0 && selectedCandidate.campaignPromises.some(p => p) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaFlag className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Campaign Promises
+                    </h5>
+                    <div className="d-flex flex-column gap-2">
+                      {selectedCandidate.campaignPromises.filter(p => p).map((promise, idx) => (
+                        <div 
+                          key={idx}
+                          style={{ 
+                            background: isDarkTheme ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.75rem' : '1rem',
+                            border: `1px solid ${isDarkTheme ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)'}`,
+                            display: 'flex',
+                            alignItems: 'start',
+                            gap: '0.75rem'
+                          }}
+                        >
+                          <div 
+                            style={{ 
+                              minWidth: window.innerWidth < 768 ? '24px' : '28px',
+                              height: window.innerWidth < 768 ? '24px' : '28px',
+                              borderRadius: '50%',
+                              background: '#3b82f6',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem',
+                              fontWeight: 'bold',
+                              flexShrink: 0
+                            }}
+                          >
+                            {idx + 1}
+                          </div>
+                          <p className="mb-0" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem', lineHeight: '1.5' }}>
+                            {promise}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Qualifications */}
+                {selectedCandidate.qualifications && selectedCandidate.qualifications.length > 0 && selectedCandidate.qualifications.some(q => q) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaGraduationCap className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Qualifications
+                    </h5>
+                    <ul style={{ color: themeColors.textSecondary, paddingLeft: '1.5rem', marginBottom: 0 }}>
+                      {selectedCandidate.qualifications.filter(q => q).map((qual, idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                          {qual}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Achievements */}
+                {selectedCandidate.achievements && selectedCandidate.achievements.length > 0 && selectedCandidate.achievements.some(a => a) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaTrophy className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Achievements
+                    </h5>
+                    <ul style={{ color: themeColors.textSecondary, paddingLeft: '1.5rem', marginBottom: 0 }}>
+                      {selectedCandidate.achievements.filter(a => a).map((achievement, idx) => (
+                        <li key={idx} style={{ marginBottom: '0.5rem', fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                          {achievement}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Social Media */}
+                {selectedCandidate.socialMedia && Object.values(selectedCandidate.socialMedia).some(link => link) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaGlobe className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Connect
+                    </h5>
+                    <div className="d-flex flex-wrap gap-2">
+                      {selectedCandidate.socialMedia.facebook && (
+                        <a 
+                          href={selectedCandidate.socialMedia.facebook.startsWith('http') ? selectedCandidate.socialMedia.facebook : `https://${selectedCandidate.socialMedia.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm d-flex align-items-center gap-2"
+                          style={{
+                            background: '#1877f2',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.4rem 0.8rem' : '0.5rem 1rem',
+                            fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                          }}
+                        >
+                          <FaFacebook />
+                          Facebook
+                        </a>
+                      )}
+                      {selectedCandidate.socialMedia.twitter && (
+                        <a 
+                          href={selectedCandidate.socialMedia.twitter.startsWith('http') ? selectedCandidate.socialMedia.twitter : `https://${selectedCandidate.socialMedia.twitter}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm d-flex align-items-center gap-2"
+                          style={{
+                            background: '#1da1f2',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.4rem 0.8rem' : '0.5rem 1rem',
+                            fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                          }}
+                        >
+                          <FaTwitter />
+                          Twitter
+                        </a>
+                      )}
+                      {selectedCandidate.socialMedia.instagram && (
+                        <a 
+                          href={selectedCandidate.socialMedia.instagram.startsWith('http') ? selectedCandidate.socialMedia.instagram : `https://${selectedCandidate.socialMedia.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm d-flex align-items-center gap-2"
+                          style={{
+                            background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.4rem 0.8rem' : '0.5rem 1rem',
+                            fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                          }}
+                        >
+                          <FaInstagram />
+                          Instagram
+                        </a>
+                      )}
+                      {selectedCandidate.socialMedia.linkedin && (
+                        <a 
+                          href={selectedCandidate.socialMedia.linkedin.startsWith('http') ? selectedCandidate.socialMedia.linkedin : `https://${selectedCandidate.socialMedia.linkedin}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm d-flex align-items-center gap-2"
+                          style={{
+                            background: '#0077b5',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.4rem 0.8rem' : '0.5rem 1rem',
+                            fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                          }}
+                        >
+                          <FaLinkedin />
+                          LinkedIn
+                        </a>
+                      )}
+                      {selectedCandidate.socialMedia.website && (
+                        <a 
+                          href={selectedCandidate.socialMedia.website.startsWith('http') ? selectedCandidate.socialMedia.website : `https://${selectedCandidate.socialMedia.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm d-flex align-items-center gap-2"
+                          style={{
+                            background: isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: themeColors.text,
+                            border: `1px solid ${themeColors.border}`,
+                            borderRadius: '8px',
+                            padding: window.innerWidth < 768 ? '0.4rem 0.8rem' : '0.5rem 1rem',
+                            fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                          }}
+                        >
+                          <FaGlobe />
+                          Website
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact */}
+                {(selectedCandidate.email || selectedCandidate.phone) && (
+                  <div className="mb-3">
+                    <h5 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaUser className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Contact Information
+                    </h5>
+                    <div 
+                      style={{ 
+                        background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
+                        borderRadius: '8px',
+                        padding: window.innerWidth < 768 ? '0.875rem' : '1.5rem',
+                        border: `1px solid ${themeColors.border}`
+                      }}
+                    >
+                      <div className="row g-3">
+                        {selectedCandidate.email && (
+                          <div className="col-12">
+                            <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>Email</small>
+                            <p className="mb-0" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                              <a href={`mailto:${selectedCandidate.email}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>
+                                {selectedCandidate.email}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+                        {selectedCandidate.phone && (
+                          <div className="col-12">
+                            <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>Phone</small>
+                            <p className="mb-0" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                              <a href={`tel:${selectedCandidate.phone}`} style={{ color: '#3b82f6', textDecoration: 'none' }}>
+                                {selectedCandidate.phone}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -854,7 +1408,7 @@ const PublicCandidates = () => {
                           <div
                             style={{
                               background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                              borderRadius: '12px',
+                              borderRadius: '8px',
                               overflow: 'hidden',
                               border: `1px solid ${themeColors.border}`,
                               transition: 'transform 0.2s ease',
@@ -905,12 +1459,318 @@ const PublicCandidates = () => {
                   )}
                 </div>
 
+                {/* Engagement Section - Q&A and Announcements */}
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h5 className="fw-bold mb-0" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
+                      <FaComment className="me-2" style={{ color: '#3b82f6' }} size={window.innerWidth < 768 ? 14 : 18} />
+                      Engage with Candidate
+                    </h5>
+                    {!isAuthenticated && (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => navigate('/login', { state: { from: window.location.pathname } })}
+                        style={{ borderRadius: '8px', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem' }}
+                      >
+                        Login to Interact
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="mb-3">
+                    <div className="btn-group w-100" role="group">
+                      <button
+                        className={`btn ${activeEngagementTab === 'questions' ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => setActiveEngagementTab('questions')}
+                        style={{ borderRadius: '8px 0 0 8px', fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}
+                      >
+                        <FaQuestionCircle className="me-2" />
+                        Q&A ({questions.length})
+                      </button>
+                      <button
+                        className={`btn ${activeEngagementTab === 'announcements' ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => setActiveEngagementTab('announcements')}
+                        style={{ borderRadius: '0 8px 8px 0', fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}
+                      >
+                        <FaBullhorn className="me-2" />
+                        Updates ({announcements.length})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Questions Tab */}
+                  {activeEngagementTab === 'questions' && (
+                    <div>
+                      {/* Ask Question Form */}
+                      {isAuthenticated ? (
+                        <form onSubmit={handleSubmitQuestion} className="mb-3">
+                          <div 
+                            style={{ 
+                              background: isDarkTheme ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
+                              borderRadius: '8px',
+                              padding: '1rem',
+                              border: `1px solid ${isDarkTheme ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)'}`
+                            }}
+                          >
+                            <textarea
+                              className="form-control mb-2"
+                              rows="3"
+                              placeholder="Ask a question to this candidate..."
+                              value={newQuestion}
+                              onChange={(e) => setNewQuestion(e.target.value)}
+                              style={{
+                                background: isDarkTheme ? 'rgba(0,0,0,0.2)' : '#fff',
+                                color: themeColors.text,
+                                border: `1px solid ${themeColors.border}`,
+                                borderRadius: '8px',
+                                fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem'
+                              }}
+                            />
+                            <button 
+                              type="submit" 
+                              className="btn btn-primary btn-sm"
+                              disabled={submittingQuestion || !newQuestion.trim()}
+                              style={{ borderRadius: '8px' }}
+                            >
+                              <FaPaperPlane className="me-2" />
+                              {submittingQuestion ? 'Submitting...' : 'Submit Question'}
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div 
+                          className="mb-3 text-center"
+                          style={{ 
+                            background: isDarkTheme ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)', 
+                            borderRadius: '8px',
+                            padding: '2rem 1rem',
+                            border: `1px dashed ${isDarkTheme ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.25)'}`
+                          }}
+                        >
+                          <FaQuestionCircle size={32} className="mb-2" style={{ color: '#3b82f6', opacity: 0.5 }} />
+                          <p className="mb-2" style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                            Want to ask this candidate a question?
+                          </p>
+                          <button 
+                            className="btn btn-primary btn-sm"
+                            onClick={() => navigate('/login', { state: { from: window.location.pathname } })}
+                            style={{ borderRadius: '8px' }}
+                          >
+                            Login to Ask Question
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Questions List */}
+                      {questions.length > 0 ? (
+                        <div className="d-flex flex-column gap-3">
+                          {questions.map(q => (
+                            <div 
+                              key={q._id}
+                              style={{ 
+                                background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
+                                borderRadius: '8px',
+                                padding: '1rem',
+                                border: `1px solid ${themeColors.border}`
+                              }}
+                            >
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <div style={{ flex: 1 }}>
+                                  <p className="mb-2 fw-semibold" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                                    Q: {q.question}
+                                  </p>
+                                  {q.answer && (
+                                    <p className="mb-2" style={{ 
+                                      color: themeColors.textSecondary, 
+                                      paddingLeft: '1rem', 
+                                      borderLeft: `3px solid #3b82f6`,
+                                      fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem'
+                                    }}>
+                                      A: {q.answer}
+                                    </p>
+                                  )}
+                                  {!q.answer && (
+                                    <p className="mb-2 text-muted fst-italic" style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem' }}>
+                                      Awaiting response...
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="d-flex align-items-center justify-content-between">
+                                <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem' }}>
+                                  Asked by {q.voterName} • {new Date(q.createdAt).toLocaleDateString()}
+                                </small>
+                                <button
+                                  className="btn btn-sm d-flex align-items-center gap-1"
+                                  onClick={() => handleLikeQuestion(q._id)}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: q.isLiked ? '#ef4444' : themeColors.textSecondary,
+                                    padding: '0.25rem 0.5rem'
+                                  }}
+                                >
+                                  {q.isLiked ? <FaHeart /> : <FaRegHeart />}
+                                  <span style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem' }}>{q.likes || 0}</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center py-4" style={{ color: themeColors.textSecondary }}>
+                          No questions yet. Be the first to ask!
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Announcements Tab */}
+                  {activeEngagementTab === 'announcements' && (
+                    <div>
+                      {announcements.length > 0 ? (
+                        <div className="d-flex flex-column gap-3">
+                          {announcements.map(announcement => (
+                            <div 
+                              key={announcement._id}
+                              style={{ 
+                                background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
+                                borderRadius: '8px',
+                                padding: '1rem',
+                                border: `1px solid ${themeColors.border}`
+                              }}
+                            >
+                              <h6 className="fw-bold mb-2" style={{ color: themeColors.text, fontSize: window.innerWidth < 768 ? '0.9rem' : '1.1rem' }}>
+                                {announcement.title}
+                              </h6>
+                              <p className="mb-3" style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem' }}>
+                                {announcement.message}
+                              </p>
+
+                              {/* Announcement Stats */}
+                              <div className="d-flex align-items-center gap-3 mb-3">
+                                <button
+                                  className="btn btn-sm d-flex align-items-center gap-1"
+                                  onClick={() => handleLikeAnnouncement(announcement._id)}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: announcement.isLiked ? '#ef4444' : themeColors.textSecondary,
+                                    padding: '0.25rem 0.5rem'
+                                  }}
+                                >
+                                  {announcement.isLiked ? <FaHeart /> : <FaRegHeart />}
+                                  <span style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem' }}>{announcement.likes || 0}</span>
+                                </button>
+                                <button
+                                  className="btn btn-sm d-flex align-items-center gap-1"
+                                  onClick={() => setActiveAnnouncementId(activeAnnouncementId === announcement._id ? null : announcement._id)}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: themeColors.textSecondary,
+                                    padding: '0.25rem 0.5rem'
+                                  }}
+                                >
+                                  <FaComment />
+                                  <span style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem' }}>
+                                    {announcement.comments?.length || 0}
+                                  </span>
+                                </button>
+                                <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem', marginLeft: 'auto' }}>
+                                  <FaEye className="me-1" />
+                                  {announcement.views || 0} views
+                                </small>
+                              </div>
+
+                              {/* Comments Section */}
+                              {activeAnnouncementId === announcement._id && (
+                                <div 
+                                  style={{ 
+                                    borderTop: `1px solid ${themeColors.border}`,
+                                    paddingTop: '1rem',
+                                    marginTop: '0.5rem'
+                                  }}
+                                >
+                                  {/* Comments List */}
+                                  {announcement.comments && announcement.comments.length > 0 && (
+                                    <div className="mb-3">
+                                      {announcement.comments.map((comment, idx) => (
+                                        <div 
+                                          key={idx}
+                                          className="mb-2 p-2"
+                                          style={{ 
+                                            background: isDarkTheme ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+                                            borderRadius: '8px'
+                                          }}
+                                        >
+                                          <div className="d-flex justify-content-between align-items-start">
+                                            <p className="mb-0" style={{ 
+                                              color: themeColors.text,
+                                              fontSize: window.innerWidth < 768 ? '0.8rem' : '0.9rem'
+                                            }}>
+                                              {comment.comment}
+                                            </p>
+                                          </div>
+                                          <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.65rem' : '0.7rem' }}>
+                                            {comment.userName} • {new Date(comment.createdAt).toLocaleDateString()}
+                                          </small>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Add Comment Form */}
+                                  <div className="d-flex gap-2">
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm"
+                                      placeholder="Add a comment..."
+                                      value={newComment}
+                                      onChange={(e) => setNewComment(e.target.value)}
+                                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment(announcement._id)}
+                                      style={{
+                                        background: isDarkTheme ? 'rgba(0,0,0,0.2)' : '#fff',
+                                        color: themeColors.text,
+                                        border: `1px solid ${themeColors.border}`,
+                                        borderRadius: '8px',
+                                        fontSize: window.innerWidth < 768 ? '0.8rem' : '0.9rem'
+                                      }}
+                                    />
+                                    <button
+                                      className="btn btn-primary btn-sm"
+                                      onClick={() => handleAddComment(announcement._id)}
+                                      disabled={!newComment.trim()}
+                                      style={{ borderRadius: '8px', padding: '0.375rem 0.75rem' }}
+                                    >
+                                      <FaPaperPlane size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              <small style={{ color: themeColors.textSecondary, fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem', display: 'block', marginTop: '0.5rem' }}>
+                                Posted {new Date(announcement.createdAt).toLocaleDateString()}
+                              </small>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center py-4" style={{ color: themeColors.textSecondary }}>
+                          No announcements yet.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* User Info */}
                 {selectedCandidate.user && (
                   <div 
                     style={{ 
                       background: isDarkTheme ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
-                      borderRadius: window.innerWidth < 768 ? '8px' : '12px',
+                      borderRadius: '8px',
                       border: `1px solid ${themeColors.border}`,
                       padding: window.innerWidth < 768 ? '0.75rem' : '1rem'
                     }}
