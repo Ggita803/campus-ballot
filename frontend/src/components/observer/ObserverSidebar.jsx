@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import axios from 'axios';
+import { confirmLogout } from '../../utils/sweetAlerts';
 
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/observer/dashboard' },
@@ -42,9 +43,13 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'OB';
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+  const handleLogout = async () => {
+    const result = await confirmLogout(isDarkMode);
+    if (result.isConfirmed) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
   };
 
   return (
@@ -99,6 +104,50 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
             : 'linear-gradient(180deg, rgba(16, 185, 129, 0.03) 0%, transparent 100%)'
         }}>
           
+          {/* Collapse Toggle Button */}
+          {!isMobile && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                position: 'absolute',
+                top: 'clamp(0.75rem, 2vw, 1rem)',
+                right: collapsed ? '50%' : 'clamp(0.75rem, 2vw, 1rem)',
+                transform: collapsed ? 'translateX(50%)' : 'none',
+                width: 'clamp(1.75rem, 3vw, 2rem)',
+                height: 'clamp(1.75rem, 3vw, 2rem)',
+                borderRadius: '50%',
+                border: `2px solid ${colors.border}`,
+                background: colors.surface,
+                color: '#10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)',
+                fontWeight: 'bold',
+                boxShadow: '0 0.125rem 0.5rem rgba(0,0,0,0.1)',
+                zIndex: 10
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#10b981';
+                e.currentTarget.style.color = '#fff';
+                e.currentTarget.style.transform = collapsed ? 'translateX(50%) scale(1.1)' : 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 0.25rem 0.75rem rgba(16, 185, 129, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = colors.surface;
+                e.currentTarget.style.color = '#10b981';
+                e.currentTarget.style.transform = collapsed ? 'translateX(50%) scale(1)' : 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 0.125rem 0.5rem rgba(0,0,0,0.1)';
+              }}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <i className={`fas fa-chevron-${collapsed ? 'right' : 'left'}`}></i>
+            </button>
+          )}
+
           {/* Profile Avatar */}
           <div
             className="avatar text-white mx-auto"

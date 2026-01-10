@@ -26,11 +26,17 @@ const ObserverLayout = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: { 
           Authorization: `Bearer ${localStorage.getItem('token')}` 
         }
       });
+      
+      if (!response.ok) {
+        console.error('Failed to fetch user data:', response.status);
+        return;
+      }
+      
       const data = await response.json();
       setUser(data);
     } catch (err) {

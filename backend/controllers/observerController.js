@@ -32,12 +32,88 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
 
   const elections = await Election.find(electionsQuery)
     .select('title description status startDate endDate positions')
-    .sort('-createdAt');
+    .sort('-createdAt')
+    .populate('positions.candidates', 'name status');
 
   // Get counts
   const activeElections = elections.filter(e => e.status === 'active').length;
   const upcomingElections = elections.filter(e => e.status === 'upcoming').length;
   const completedElections = elections.filter(e => e.status === 'completed').length;
+
+  // Get voting statistics for active elections
+  const activeElectionIds = elections
+    .filter(e => e.status === 'active')
+    .map(e => e._id);
+
+  // Get voting activity by hour for today (elections are typically one day)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const hourlyActivity = await Vote.aggregate([
+    { 
+      $match: { 
+        electionId: { $in: activeElectionIds },
+        timestamp: { $gte: today }
+      } 
+    },
+    {
+      $group: {
+        _id: { hour: { $hour: '$timestamp' } },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.hour': 1 } }
+  ]);
+
+  // Format hourly activity data (create array for all hours 0-23)
+  const formattedHourlyActivity = [];
+  for (let hour = 0; hour < 24; hour++) {
+    const hourData = hourlyActivity.find(item => item._id.hour === hour);
+    formattedHourlyActivity.push({
+      hour: hour,
+      time: `${hour.toString().padStart(2, '0')}:00`,
+      count: hourData ? hourData.count : 0
+    });
+  }
+
+  // Get position statistics (candidates per position)
+  const positionStatsMap = new Map();
+  
+  for (const election of elections) {
+    if (election.positions && election.positions.length > 0) {
+      for (const positionName of election.positions) {
+        // Count candidates for this position in this election
+        const candidateCount = await Candidate.countDocuments({
+          electionId: election._id,
+          position: positionName
+        });
+        
+        if (candidateCount > 0) {
+          // Aggregate by position name across elections
+          if (positionStatsMap.has(positionName)) {
+            positionStatsMap.get(positionName).candidateCount += candidateCount;
+          } else {
+            positionStatsMap.set(positionName, {
+              positionName: positionName,
+              candidateCount: candidateCount
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  const positionStats = Array.from(positionStatsMap.values());
+
+  // Calculate total votes cast
+  const totalVotes = await Vote.countDocuments({
+    electionId: { $in: elections.map(e => e._id) }
+  });
+
+  // Get unique voters across all elections
+  const uniqueVoters = await Vote.distinct('userId', {
+    electionId: { $in: elections.map(e => e._id) }
+  });
 
   res.json({
     success: true,
@@ -48,7 +124,9 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
         upcomingElections,
         completedElections,
         accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
-        assignedElectionsCount: observer.observerInfo?.assignedElections?.length || 0
+        assignedElectionsCount: observer.observerInfo?.assignedElections?.length || 0,
+        totalVotes: totalVotes,
+        totalUniqueVoters: uniqueVoters.length
       },
       elections: elections.map(e => ({
         id: e._id,
@@ -57,7 +135,16 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
         startDate: e.startDate,
         endDate: e.endDate,
         positionsCount: e.positions?.length || 0
-      }))
+      })),
+      votingStats: {
+        hourlyActivity: formattedHourlyActivity,
+        totalVotesToday: formattedHourlyActivity.reduce((sum, item) => sum + item.count, 0),
+        peakHour: formattedHourlyActivity.reduce((max, item) => 
+          item.count > max.count ? item : max, 
+          { hour: 0, time: '00:00', count: 0 }
+        )
+      },
+      positionStats: positionStats.slice(0, 10) // Limit to top 10 positions for chart
     }
   });
 });

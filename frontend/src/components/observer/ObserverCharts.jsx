@@ -32,6 +32,12 @@ ChartJS.register(
 const ObserverCharts = ({ dashboardData }) => {
   const { isDarkMode, colors } = useTheme();
 
+  // Extract real data from dashboardData
+  const overview = dashboardData?.overview || {};
+  const elections = dashboardData?.elections || [];
+  const votingStats = dashboardData?.votingStats || {};
+  const positionStats = dashboardData?.positionStats || [];
+
   // Chart colors optimized for both themes
   const chartColors = {
     primary: '#10b981',
@@ -51,9 +57,10 @@ const ObserverCharts = ({ dashboardData }) => {
         labels: {
           color: colors.text,
           font: {
-            size: 12,
+            size: window.innerWidth < 768 ? 10 : 12,
             weight: 600
-          }
+          },
+          padding: window.innerWidth < 768 ? 10 : 15
         }
       },
       tooltip: {
@@ -62,9 +69,16 @@ const ObserverCharts = ({ dashboardData }) => {
         bodyColor: colors.text,
         borderColor: colors.border,
         borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
+        padding: window.innerWidth < 768 ? 8 : 12,
+        boxPadding: window.innerWidth < 768 ? 4 : 6,
         usePointStyle: true,
+        titleFont: {
+          size: window.innerWidth < 768 ? 11 : 13,
+          weight: 600
+        },
+        bodyFont: {
+          size: window.innerWidth < 768 ? 10 : 12
+        }
       }
     },
     scales: {
@@ -72,7 +86,7 @@ const ObserverCharts = ({ dashboardData }) => {
         ticks: {
           color: colors.textMuted,
           font: {
-            size: 11
+            size: window.innerWidth < 768 ? 9 : 11
           }
         },
         grid: {
@@ -84,7 +98,7 @@ const ObserverCharts = ({ dashboardData }) => {
         ticks: {
           color: colors.textMuted,
           font: {
-            size: 11
+            size: window.innerWidth < 768 ? 9 : 11
           }
         },
         grid: {
@@ -123,9 +137,9 @@ const ObserverCharts = ({ dashboardData }) => {
         position: 'bottom',
         labels: {
           color: colors.text,
-          padding: 15,
+          padding: window.innerWidth < 768 ? 10 : 15,
           font: {
-            size: 12,
+            size: window.innerWidth < 768 ? 10 : 12,
             weight: 600
           },
           usePointStyle: true,
@@ -138,18 +152,32 @@ const ObserverCharts = ({ dashboardData }) => {
         bodyColor: colors.text,
         borderColor: colors.border,
         borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
+        padding: window.innerWidth < 768 ? 8 : 12,
+        boxPadding: window.innerWidth < 768 ? 4 : 6,
+        titleFont: {
+          size: window.innerWidth < 768 ? 11 : 13,
+          weight: 600
+        },
+        bodyFont: {
+          size: window.innerWidth < 768 ? 10 : 12
+        }
       }
     }
   };
 
-  // Voter Turnout Line Chart (Sample Data)
+  // Voter Turnout Line Chart - Use hourly voting activity (elections are typically one day)
+  const hourlyActivity = votingStats?.hourlyActivity || [];
+  const hasVotingData = hourlyActivity.length > 0 && hourlyActivity.some(d => d.count > 0);
+  
   const turnoutChartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: hasVotingData
+      ? hourlyActivity.map(d => d.time)
+      : Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`),
     datasets: [{
       label: 'Votes Cast',
-      data: [12, 19, 15, 25, 22, 30, 28],
+      data: hasVotingData
+        ? hourlyActivity.map(d => d.count)
+        : Array(24).fill(0),
       borderColor: chartColors.primary,
       backgroundColor: `${chartColors.primary}20`,
       fill: true,
@@ -162,19 +190,24 @@ const ObserverCharts = ({ dashboardData }) => {
     }]
   };
 
-  // Positions Bar Chart (Sample Data)
+  // Positions Bar Chart - Use real position data
+  const hasPositionData = positionStats.length > 0;
+  
   const positionsChartData = {
-    labels: ['President', 'Vice President', 'Secretary', 'Treasurer', 'Director'],
+    labels: hasPositionData
+      ? positionStats.map(p => p.positionName || 'Unknown')
+      : ['No Positions Available'],
     datasets: [{
       label: 'Candidates',
-      data: [4, 3, 5, 3, 6],
-      backgroundColor: [
-        chartColors.primary,
-        chartColors.secondary,
-        chartColors.warning,
-        chartColors.purple,
-        chartColors.cyan
-      ],
+      data: hasPositionData
+        ? positionStats.map(p => p.candidateCount || 0)
+        : [0],
+      backgroundColor: hasPositionData
+        ? positionStats.map((_, index) => {
+            const colorKeys = ['primary', 'secondary', 'warning', 'purple', 'cyan'];
+            return chartColors[colorKeys[index % colorKeys.length]];
+          })
+        : [chartColors.primary],
       borderRadius: 8,
       barThickness: 40
     }]
@@ -198,26 +231,27 @@ const ObserverCharts = ({ dashboardData }) => {
         <div className="card border-0 shadow-sm h-100" style={{ background: colors.surface }}>
           <div className="card-header border-0 py-3" style={{ 
             background: 'transparent', 
-            borderBottom: `1px solid ${colors.border}` 
+            borderBottom: `1px solid ${colors.border}`,
+            padding: 'clamp(0.75rem, 2vw, 1rem)'
           }}>
             <h6 className="mb-0 d-flex align-items-center" style={{ color: colors.text }}>
               <div style={{
-                width: 36,
-                height: 36,
-                borderRadius: '8px',
+                width: 'clamp(2rem, 4vw, 2.25rem)',
+                height: 'clamp(2rem, 4vw, 2.25rem)',
+                borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '0.75rem'
+                marginRight: 'clamp(0.5rem, 1.5vw, 0.75rem)'
               }}>
-                <i className="fas fa-chart-pie" style={{ color: '#fff', fontSize: '0.9rem' }}></i>
+                <i className="fas fa-chart-pie" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
               </div>
-              <span style={{ fontWeight: 600 }}>Election Status</span>
+              <span style={{ fontWeight: 600, fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)' }}>Election Status</span>
             </h6>
           </div>
-          <div className="card-body">
-            <div style={{ height: '280px' }}>
+          <div className="card-body" style={{ padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+            <div style={{ height: 'clamp(220px, 40vh, 280px)' }}>
               <Doughnut data={statusChartData} options={statusChartOptions} />
             </div>
           </div>
@@ -229,37 +263,47 @@ const ObserverCharts = ({ dashboardData }) => {
         <div className="card border-0 shadow-sm h-100" style={{ background: colors.surface }}>
           <div className="card-header border-0 py-3" style={{ 
             background: 'transparent', 
-            borderBottom: `1px solid ${colors.border}` 
+            borderBottom: `1px solid ${colors.border}`,
+            padding: 'clamp(0.75rem, 2vw, 1rem)'
           }}>
-            <h6 className="mb-0 d-flex align-items-center justify-content-between" style={{ color: colors.text }}>
+            <h6 className="mb-0 d-flex align-items-center justify-content-between flex-wrap" style={{ 
+              color: colors.text,
+              gap: 'clamp(0.5rem, 1vw, 0.75rem)'
+            }}>
               <div className="d-flex align-items-center">
                 <div style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '8px',
+                  width: 'clamp(2rem, 4vw, 2.25rem)',
+                  height: 'clamp(2rem, 4vw, 2.25rem)',
+                  borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                   background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginRight: '0.75rem'
+                  marginRight: 'clamp(0.5rem, 1.5vw, 0.75rem)'
                 }}>
-                  <i className="fas fa-chart-line" style={{ color: '#fff', fontSize: '0.9rem' }}></i>
+                  <i className="fas fa-chart-line" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
                 </div>
-                <span style={{ fontWeight: 600 }}>Weekly Voter Activity</span>
+                <span style={{ fontWeight: 600, fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)' }}>
+                  Hourly Voting Activity
+                </span>
               </div>
-              <span className="badge" style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: '#fff',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.75rem'
-              }}>
-                <i className="fas fa-arrow-up me-1"></i>
-                +24% vs last week
-              </span>
+              {votingStats?.totalVotesToday > 0 && (
+                <span className="badge" style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff',
+                  padding: 'clamp(0.3rem, 1vw, 0.4rem) clamp(0.6rem, 1.5vw, 0.75rem)',
+                  fontSize: 'clamp(0.7rem, 1.4vw, 0.75rem)',
+                  fontWeight: 600
+                }}>
+                  <i className="fas fa-vote-yea me-1"></i>
+                  {votingStats.totalVotesToday} votes today
+                  {votingStats.peakHour && ` • Peak: ${votingStats.peakHour.time}`}
+                </span>
+              )}
             </h6>
           </div>
-          <div className="card-body">
-            <div style={{ height: '280px' }}>
+          <div className="card-body" style={{ padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+            <div style={{ height: 'clamp(220px, 40vh, 280px)' }}>
               <Line data={turnoutChartData} options={commonOptions} />
             </div>
           </div>
@@ -271,26 +315,29 @@ const ObserverCharts = ({ dashboardData }) => {
         <div className="card border-0 shadow-sm" style={{ background: colors.surface }}>
           <div className="card-header border-0 py-3" style={{ 
             background: 'transparent', 
-            borderBottom: `1px solid ${colors.border}` 
+            borderBottom: `1px solid ${colors.border}`,
+            padding: 'clamp(0.75rem, 2vw, 1rem)'
           }}>
             <h6 className="mb-0 d-flex align-items-center" style={{ color: colors.text }}>
               <div style={{
-                width: 36,
-                height: 36,
-                borderRadius: '8px',
+                width: 'clamp(2rem, 4vw, 2.25rem)',
+                height: 'clamp(2rem, 4vw, 2.25rem)',
+                borderRadius: 'clamp(0.4rem, 1vw, 0.5rem)',
                 background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '0.75rem'
+                marginRight: 'clamp(0.5rem, 1.5vw, 0.75rem)'
               }}>
-                <i className="fas fa-chart-bar" style={{ color: '#fff', fontSize: '0.9rem' }}></i>
+                <i className="fas fa-chart-bar" style={{ color: '#fff', fontSize: 'clamp(0.8rem, 1.8vw, 0.9rem)' }}></i>
               </div>
-              <span style={{ fontWeight: 600 }}>Candidates Distribution</span>
+              <span style={{ fontWeight: 600, fontSize: 'clamp(0.875rem, 1.8vw, 0.95rem)' }}>
+                {positionStats.length > 0 ? 'Candidates by Position' : 'Candidates Distribution'}
+              </span>
             </h6>
           </div>
-          <div className="card-body">
-            <div style={{ height: '300px' }}>
+          <div className="card-body" style={{ padding: 'clamp(0.75rem, 2vw, 1rem)' }}>
+            <div style={{ height: 'clamp(250px, 45vh, 300px)' }}>
               <Bar data={positionsChartData} options={barChartOptions} />
             </div>
           </div>
