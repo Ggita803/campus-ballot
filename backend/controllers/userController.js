@@ -13,20 +13,32 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
+    const role = req.query.role || ''; // Add role filter
+    const searchField = req.query.searchField || ''; // Specific field to search
     
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
     
     // Build search query
     let query = {};
+    
+    // Add role filter if provided
+    if (role && role.trim()) {
+      query.role = role.trim();
+    }
+    
     if (search && search.trim()) {
-      query = {
-        $or: [
+      // If specific field is selected, search only that field
+      if (searchField && searchField !== 'all') {
+        query[searchField] = { $regex: search, $options: "i" };
+      } else {
+        // Search across all fields
+        query.$or = [
           { name: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
           { studentId: { $regex: search, $options: "i" } }
-        ]
-      };
+        ];
+      }
     }
     
     // Execute queries

@@ -26,9 +26,11 @@ const Toast = Swal.mixin({
 });
 
 const Users = ({ user }) => {
-    const [users, setUsers] = useState([]);
+    const [allUsers, setAllUsers] = useState([]); // Store all users
+    const [users, setUsers] = useState([]); // Filtered/paginated users for display
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchField, setSearchField] = useState('all'); // 'all', 'name', 'email', 'studentId'
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -48,9 +50,16 @@ const Users = ({ user }) => {
 
     useEffect(() => {
         if (user) {
-            fetchUsers(1, itemsPerPage, ''); // Initialize with default values
+            fetchUsers();
         }
     }, [user]);
+
+    // Instant search filtering
+    useEffect(() => {
+        if (allUsers.length > 0) {
+            filterUsers();
+        }
+    }, [searchTerm, searchField, allUsers, currentPage, itemsPerPage]);
 
     const getAuthHeaders = () => {
         const token = user?.token || localStorage.getItem('token');
@@ -60,17 +69,14 @@ const Users = ({ user }) => {
         };
     };
 
-    const fetchUsers = async (page = currentPage, limit = itemsPerPage, search = searchTerm) => {
+    const fetchUsers = async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString()
+                page: '1',
+                limit: '1000', // Load all users at once for client-side filtering
+                role: 'student' // Only show student users to admin
             });
-            
-            if (search && search.trim()) {
-                params.append('search', search.trim());
-            }
             
             const response = await axios.get(`https://studious-space-robot-674g6rw49gg3rxr5-5000.app.github.dev/api/users?${params}`, {
                 headers: getAuthHeaders()
@@ -79,27 +85,16 @@ const Users = ({ user }) => {
             console.log('Fetch users response:', response.data);
             
             // Handle different response structures
+            let loadedUsers = [];
             if (response.data.users) {
-                // Paginated response
-                setUsers(response.data.users);
-                setTotalUsers(response.data.totalUsers || response.data.total || 0);
-                setTotalPages(response.data.totalPages || Math.ceil((response.data.totalUsers || response.data.total || 0) / limit));
+                loadedUsers = response.data.users;
             } else if (Array.isArray(response.data)) {
-                // Non-paginated response - handle client-side pagination
-                const allUsers = response.data;
-                const startIndex = (page - 1) * limit;
-                const endIndex = startIndex + limit;
-                const paginatedUsers = allUsers.slice(startIndex, endIndex);
-                
-                setUsers(paginatedUsers);
-                setTotalUsers(allUsers.length);
-                setTotalPages(Math.ceil(allUsers.length / limit));
-            } else {
-                // Fallback
-                setUsers([]);
-                setTotalUsers(0);
-                setTotalPages(0);
+                loadedUsers = response.data;
             }
+            
+            setAllUsers(loadedUsers);
+            console.log('Loaded users count:', loadedUsers.length);
+            // filterUsers will be called by useEffect
         } catch (error) {
             console.error('Error fetching users:', error);
             if (error.response?.status === 401) {
@@ -114,15 +109,49 @@ const Users = ({ user }) => {
         }
     };
 
-    const handleSearch = async () => {
+    const filterUsers = () => {
+        let filtered = allUsers;
+        
+        console.log('Filtering users. AllUsers:', allUsers.length, 'SearchTerm:', searchTerm);
+
+        // Instant search filtering
+        if (searchTerm && searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase();
+            filtered = filtered.filter(u => {
+                if (searchField === 'all') {
+                    return (
+                        u.name?.toLowerCase().includes(searchLower) ||
+                        u.email?.toLowerCase().includes(searchLower) ||
+                        u.studentId?.toLowerCase().includes(searchLower)
+                    );
+                } else {
+                    return u[searchField]?.toLowerCase().includes(searchLower);
+                }
+            });
+        }
+
+        // Update total counts
+        const total = filtered.length;
+        setTotalUsers(total);
+        setTotalPages(Math.ceil(total / itemsPerPage));
+
+        // Client-side pagination
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedUsers = filtered.slice(startIndex, endIndex);
+        
+        console.log('Filtered users:', total, 'Paginated:', paginatedUsers.length);
+        setUsers(paginatedUsers);
+    };
+
+    const handleSearch = () => {
         setCurrentPage(1); // Reset to first page when searching
-        await fetchUsers(1, itemsPerPage, searchTerm);
     };
     
-    const clearSearch = async () => {
+    const clearSearch = () => {
         setSearchTerm('');
+        setSearchField('all');
         setCurrentPage(1);
-        await fetchUsers(1, itemsPerPage, '');
     };
 
     const handleSuspendUser = async (userId) => {
@@ -306,17 +335,15 @@ const Users = ({ user }) => {
     };
     
     // Pagination functions
-    const handlePageChange = async (newPage) => {
+    const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
-            await fetchUsers(newPage, itemsPerPage, searchTerm);
         }
     };
     
-    const handleItemsPerPageChange = async (newItemsPerPage) => {
+    const handleItemsPerPageChange = (newItemsPerPage) => {
         setItemsPerPage(newItemsPerPage);
         setCurrentPage(1);
-        await fetchUsers(1, newItemsPerPage, searchTerm);
     };
     
     const getPaginationRange = () => {
@@ -423,23 +450,28 @@ const Users = ({ user }) => {
                             <div className="row mb-3">
                                 <div className="col-md-6">
                                     <div className="input-group">
+                                        <select 
+                                            className="form-select" 
+                                            style={{maxWidth: '150px'}}
+                                            value={searchField}
+                                            onChange={(e) => setSearchField(e.target.value)}
+                                        >
+                                            <option value="all">All Fields</option>
+                                            <option value="name">Name</option>
+                                            <option value="email">Email</option>
+                                            <option value="studentId">Student ID</option>
+                                        </select>
                                         <input
                                             type="text"
                                             className="form-control"
-                                            placeholder="Search users by name, email, or student ID..."
+                                            placeholder={`Search ${searchField === 'all' ? 'users by name, email, or student ID' : 'by ' + searchField}...`}
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                         />
-                                        <button 
-                                            className="btn btn-outline-primary"
-                                            onClick={handleSearch}
-                                        >
-                                            <i className="fas fa-search"></i>
-                                        </button>
                                         <button 
                                             className="btn btn-outline-secondary"
                                             onClick={clearSearch}
+                                            title="Clear search"
                                         >
                                             <i className="fas fa-times"></i>
                                         </button>
@@ -560,6 +592,8 @@ const Users = ({ user }) => {
                                                                 </button>
 
                                                                 {/* Role dropdown - last */}
+                                                                {/* COMMENTED OUT - Role change functionality disabled */}
+                                                                {/*
                                                                 <div className="btn-group">
                                                                     <button type="button" className="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                                                         <FontAwesomeIcon icon={faUserCog} />
@@ -616,6 +650,7 @@ const Users = ({ user }) => {
                                                                         ))}
                                                                     </ul>
                                                                 </div>
+                                                                */}
                                                             </div>
                                                         </td>
                                                     </tr>
