@@ -1675,28 +1675,53 @@ function StudentDashboard({ user }) {
                   </span>
                 )}
               </button>
-              <ul className="dropdown-menu dropdown-menu-end" style={{ background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', minWidth: '280px' }}>
-                <li className="dropdown-header" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Recent Notifications</li>
-                {notifications.slice(0, 3).map((notif, index) => (
-                  <li key={index}>
-                    <a className="dropdown-item small" href="#" 
-                       onClick={() => setActiveView('notifications')}
-                       style={{ color: isDarkMode ? colors.text : '#212529', background: 'transparent' }}
-                       onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
-                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                      {typeof notif.title === 'string' ? notif.title : 'Notification'}
-                    </a>
-                  </li>
-                ))}
-                <li><hr className="dropdown-divider" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
-                <li>
-                  <a className="dropdown-item text-center" href="#"
-                     onClick={() => setActiveView('notifications')}
-                     style={{ color: isDarkMode ? colors.primary : '#0d6efd', background: 'transparent' }}
-                     onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
-                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    View All
-                  </a>
+              <ul className="dropdown-menu dropdown-menu-end p-0" style={{ background: isDarkMode ? colors.surface : '#fff', borderColor: isDarkMode ? colors.border : '#dee2e6', minWidth: '280px', maxWidth: '320px', borderRadius: '5px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+                <li className="dropdown-header px-3 pt-2 pb-1" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d', fontWeight: 700, fontSize: '0.97rem', letterSpacing: '0.2px' }}>Recent Notifications</li>
+                {notifications.length === 0 && (
+                  <li className="text-center text-muted small py-3">No notifications</li>
+                )}
+                {notifications.slice(0, 3).map((notif, index) => {
+                  // Icon and color for type
+                  let icon = <FaInfoCircle className="text-info" size={16} />;
+                  let bg = notif.read ? (isDarkMode ? colors.surface : '#fff') : (isDarkMode ? 'rgba(16,185,129,0.08)' : '#e6f7f1');
+                  let border = notif.read ? 'none' : (isDarkMode ? '1px solid #10b981' : '1px solid #10b98122');
+                  if (notif.type === 'success') icon = <FaCheckCircle className="text-success" size={16} />;
+                  if (notif.type === 'alert' || notif.type === 'warning') icon = <FaExclamationTriangle className="text-warning" size={16} />;
+                  if (notif.type === 'error') icon = <FaTimes className="text-danger" size={16} />;
+                  return (
+                    <li key={index} className="px-2 py-1" style={{ background: bg, borderBottom: '1px solid ' + (isDarkMode ? colors.border : '#f1f3f5'), borderLeft: border, borderRight: border, borderTop: border, borderRadius: '8px', margin: '0.3rem 0.3rem 0 0.3rem', boxShadow: notif.read ? 'none' : '0 2px 8px rgba(16,185,129,0.06)' }}>
+                      <button
+                        className="d-flex align-items-center gap-3 w-100 border-0 bg-transparent p-0"
+                        style={{ cursor: 'pointer', textAlign: 'left' }}
+                        onClick={() => {
+                          setSelectedNotification(notif);
+                          setShowNotificationModal(true);
+                        }}
+                        onMouseEnter={e => e.currentTarget.parentNode.style.background = isDarkMode ? colors.surfaceHover : '#f8f9fa'}
+                        onMouseLeave={e => e.currentTarget.parentNode.style.background = bg}
+                      >
+                        <span style={{ flexShrink: 0 }}>{icon}</span>
+                        <span className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <span className="fw-semibold text-truncate d-block" style={{ maxWidth: 140, fontSize: '0.95rem', color: isDarkMode ? colors.text : '#222' }}>{typeof notif.title === 'string' ? notif.title : 'Notification'}</span>
+                            <span className="d-block text-muted small text-truncate" style={{ maxWidth: 140 }}>{typeof notif.message === 'string' ? notif.message : (notif.content || '')}</span>
+                        </span>
+                        <span className="d-flex flex-column align-items-end ms-2" style={{ minWidth: 48 }}>
+                          <span className="small text-muted" style={{ fontSize: '0.72rem' }}>{notif.createdAt ? new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                          {!notif.read && <span className="badge bg-primary mt-1" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>New</span>}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+                <li><hr className="dropdown-divider my-1" style={{ borderColor: isDarkMode ? colors.border : '#dee2e6' }} /></li>
+                <li className="px-2 pb-2 pt-1">
+                  <button
+                    className="btn btn-primary w-100 rounded-3 fw-semibold"
+                    style={{ fontSize: '0.93rem', boxShadow: '0 2px 8px rgba(59,130,246,0.06)', padding: '0.4rem 0' }}
+                    onClick={() => setActiveView('notifications')}
+                  >
+                    View All Notifications
+                  </button>
                 </li>
               </ul>
             </div>
@@ -1742,7 +1767,7 @@ function StudentDashboard({ user }) {
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     onClick={() => {
                       localStorage.removeItem("token");
-                      window.location.href = "/login";
+                      navigate("/login");
                     }}
                   >
                     <FaSignOutAlt className="me-2" /> Logout
@@ -2077,7 +2102,7 @@ function StudentDashboard({ user }) {
                   });
                   if (result.isConfirmed) {
                     localStorage.removeItem('token');
-                    window.location.href = '/login';
+                    navigate('/login');
                   }
                 }}
               >
@@ -2327,7 +2352,7 @@ function StudentDashboard({ user }) {
         });
         if (result.isConfirmed) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          navigate('/login');
         }
       }}
     >
@@ -3352,70 +3377,62 @@ function StudentDashboard({ user }) {
 
       {/* Notification Details Modal */}
       {selectedNotification && showNotificationModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog" style={{ margin: '1rem auto' }}>
-            <div className={`modal-content border border-1`} style={{ background: selectedNotification?.read ? '#ffffff' : '#f1f3f5' }}>
-              <div className="modal-header">
-                <h5 className="modal-title d-flex align-items-center gap-2">
+        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
+          <div className="modal-dialog" style={{ margin: '1rem auto', maxWidth: '95vw', width: '100%', minWidth: '0' }}>
+            <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', borderRadius: '16px', padding: window.innerWidth <= 600 ? '0.5rem' : '1.5rem', minWidth: 0 }}>
+              <div className="modal-header px-3 py-2" style={{ borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`, background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
+                <h5 className="modal-title d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 600 ? '1rem' : '1.15rem', fontWeight: 700 }}>
                   <FaBell className="text-info" />
                   Notification Details
                 </h5>
                 <button 
-                  className="btn-close" 
+                  className="btn-close btn-close-white" 
                   onClick={() => {
                     setShowNotificationModal(false);
                     setSelectedNotification(null);
                   }}
+                  style={{ marginLeft: 'auto' }}
                 ></button>
               </div>
-              <div className="modal-body">
-                <div className="d-flex align-items-start gap-3 mb-3">
-                  <div className={`bg-${selectedNotification.type === 'success' ? 'success' : 'info'} bg-opacity-10 rounded-circle p-3`}>
-                    <FaInfoCircle className={`text-${selectedNotification.type === 'success' ? 'success' : 'info'}`} size={24} />
+              <div className="modal-body px-3 py-3" style={{ minWidth: 0 }}>
+                <div className="d-flex flex-column flex-md-row align-items-center gap-3 mb-3" style={{ minWidth: 0 }}>
+                  <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 48, height: 48, background: selectedNotification.type === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(59,130,246,0.12)' }}>
+                    <FaInfoCircle className={selectedNotification.type === 'success' ? 'text-success' : 'text-info'} size={28} />
                   </div>
-                  <div className="flex-grow-1">
-                    <h5 className="fw-bold mb-2">{selectedNotification.title || 'Notification'}</h5>
-                    <div className="d-flex gap-2 mb-3">
-                      <span className={`badge bg-${selectedNotification.type === 'success' ? 'success' : 'info'}`}>
-                        {selectedNotification.type === 'success' ? 'Success' : 'Info'}
-                      </span>
+                  <div className="flex-grow-1 text-center text-md-start" style={{ minWidth: 0 }}>
+                    <h5 className="fw-bold mb-1" style={{ fontSize: window.innerWidth <= 600 ? '1.05rem' : '1.18rem', wordBreak: 'break-word' }}>{selectedNotification.title || 'Notification'}</h5>
+                    <div className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-2">
+                      <span className={`badge bg-${selectedNotification.type === 'success' ? 'success' : 'info'}`}>{selectedNotification.type === 'success' ? 'Success' : 'Info'}</span>
                       {!selectedNotification.read && (
                         <span className="badge bg-primary">New</span>
                       )}
                     </div>
                   </div>
                 </div>
-                
-                <div className="mb-4">
-                  <h6 className="fw-semibold">Message:</h6>
-                  <p className="text-muted">{selectedNotification.message || selectedNotification.content || 'No message content available.'}</p>
+                <div className="mb-3 text-center text-md-start">
+                  <h6 className="fw-semibold mb-1" style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem' }}>Message:</h6>
+                  <p className="text-muted mb-0" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem', wordBreak: 'break-word' }}>{selectedNotification.message || selectedNotification.content || 'No message content available.'}</p>
                 </div>
-                
-                <div className="row g-3">
-                  <div className="col-6">
+                <div className="d-flex flex-column flex-md-row gap-2 justify-content-center justify-content-md-start mb-2">
+                  <div className="text-center text-md-start" style={{ minWidth: 0 }}>
                     <small className="text-muted">Date:</small>
-                    <div className="fw-semibold">
-                      {selectedNotification.createdAt ? 
-                        new Date(selectedNotification.createdAt).toLocaleDateString() : 
-                        'Recently'
-                      }
+                    <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem' }}>
+                      {selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleDateString() : 'Recently'}
                     </div>
                   </div>
-                  <div className="col-6">
+                  <div className="text-center text-md-start" style={{ minWidth: 0 }}>
                     <small className="text-muted">Time:</small>
-                    <div className="fw-semibold">
-                      {selectedNotification.createdAt ? 
-                        new Date(selectedNotification.createdAt).toLocaleTimeString() : 
-                        'N/A'
-                      }
+                    <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem' }}>
+                      {selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleTimeString() : 'N/A'}
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-danger me-auto"
+              <div className="modal-footer d-flex flex-column flex-md-row gap-2 px-3 py-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`, background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
+                <button className="btn btn-danger flex-fill"
                   onClick={async () => { await deleteNotification(selectedNotification._id); }}
                   disabled={deletingNotificationIds.includes(selectedNotification._id)}
+                  style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
                 >
                   {deletingNotificationIds.includes(selectedNotification._id) ? (
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -3425,19 +3442,21 @@ function StudentDashboard({ user }) {
                   Delete
                 </button>
                 <button 
-                  className="btn btn-secondary"
+                  className="btn btn-secondary flex-fill"
                   onClick={() => {
                     setShowNotificationModal(false);
                     setSelectedNotification(null);
                   }}
+                  style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
                 >
                   Close
                 </button>
                 {!selectedNotification.read && (
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary flex-fill"
                     onClick={async () => { await markNotificationAsRead(selectedNotification._id); setShowNotificationModal(false); setSelectedNotification(null); }}
                     disabled={markingReadIds.includes(selectedNotification._id)}
+                    style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
                   >
                     {markingReadIds.includes(selectedNotification._id) ? (
                       <>

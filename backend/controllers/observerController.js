@@ -174,8 +174,7 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     throw new Error("Access denied: Not assigned to this election");
   }
 
-  const election = await Election.findById(electionId)
-    .populate('positions.candidates');
+  const election = await Election.findById(electionId);
 
   if (!election) {
     res.status(404);
@@ -184,23 +183,19 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
 
   // Get eligible voters count
   const eligibleVotersQuery = { role: 'student', isVerified: true };
-  
-  if (election.eligibilityCriteria) {
-    if (election.eligibilityCriteria.faculty) {
-      eligibleVotersQuery.faculty = { $in: election.eligibilityCriteria.faculty };
-    }
-    if (election.eligibilityCriteria.yearOfStudy) {
-      eligibleVotersQuery.yearOfStudy = { $in: election.eligibilityCriteria.yearOfStudy };
-    }
+  if (election.eligibility && election.eligibility.faculty) {
+    eligibleVotersQuery.faculty = election.eligibility.faculty;
   }
-
+  if (election.eligibility && election.eligibility.yearOfStudy) {
+    eligibleVotersQuery.yearOfStudy = election.eligibility.yearOfStudy;
+  }
   const eligibleVotersCount = await User.countDocuments(eligibleVotersQuery);
 
   // Get votes count (without revealing individual votes)
-  const votesCount = await Vote.countDocuments({ electionId });
+  const votesCount = await Vote.countDocuments({ election: election._id });
 
   // Get unique voters count
-  const uniqueVoters = await Vote.distinct('voterId', { electionId });
+  const uniqueVoters = await Vote.distinct('user', { election: election._id });
   const uniqueVotersCount = uniqueVoters.length;
 
   // Calculate turnout
@@ -210,9 +205,9 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
 
   // Get votes by position (aggregated, no individual data)
   const votesByPosition = await Vote.aggregate([
-    { $match: { electionId: election._id } },
+    { $match: { election: election._id } },
     { $group: { 
-      _id: '$positionId',
+      _id: '$position',
       totalVotes: { $sum: 1 }
     }}
   ]);
@@ -263,29 +258,23 @@ const getElectionAuditLogs = asyncHandler(async (req, res) => {
     throw new Error("Access denied: Not assigned to this election");
   }
 
+  // Find logs for this election (entityType: 'Election', entityId: electionId)
   const query = {
-    $or: [
-      { 'metadata.electionId': electionId },
-      { relatedEntity: electionId }
-    ]
+    entityType: 'Election',
+    entityId: electionId
   };
-
   if (action) {
     query.action = action;
   }
-
   if (userId) {
-    query.userId = userId;
+    query.user = userId;
   }
-
   const logs = await Log.find(query)
-    .populate('userId', 'name email role')
-    .sort('-timestamp')
+    .populate('user', 'name email role')
+    .sort('-createdAt')
     .limit(limit * 1)
     .skip((page - 1) * limit);
-
   const total = await Log.countDocuments(query);
-
   res.json({
     success: true,
     data: {
@@ -379,31 +368,36 @@ const getElectionCandidates = asyncHandler(async (req, res) => {
     throw new Error("Access denied: Not assigned to this election");
   }
 
-  const election = await Election.findById(electionId)
-    .populate({
-      path: 'positions.candidates',
-      populate: { path: 'userId', select: 'name email faculty course yearOfStudy' }
-    });
+  const election = await Election.findById(electionId);
 
   if (!election) {
     res.status(404);
     throw new Error("Election not found");
   }
 
-  const candidatesData = election.positions.map(position => ({
-    positionId: position._id,
-    positionTitle: position.title,
-    candidates: position.candidates.map(candidate => ({
-      id: candidate._id,
-      name: candidate.userId?.name,
-      email: candidate.userId?.email,
-      faculty: candidate.userId?.faculty,
-      course: candidate.userId?.course,
-      yearOfStudy: candidate.userId?.yearOfStudy,
-      status: candidate.status,
-      submittedAt: candidate.createdAt
-    }))
-  }));
+  // For each position, fetch candidates from Candidate model
+  const candidatesData = await Promise.all(
+    election.positions.map(async (positionName, idx) => {
+      const candidates = await Candidate.find({
+        election: election._id,
+        position: positionName
+      }).populate('user', 'name email faculty course yearOfStudy');
+      return {
+        positionId: idx, // index as ID
+        positionTitle: positionName,
+        candidates: candidates.map(candidate => ({
+          id: candidate._id,
+          name: candidate.user?.name,
+          email: candidate.user?.email,
+          faculty: candidate.user?.faculty,
+          course: candidate.user?.course,
+          yearOfStudy: candidate.user?.yearOfStudy,
+          status: candidate.status,
+          submittedAt: candidate.createdAt
+        }))
+      };
+    })
+  );
 
   res.json({
     success: true,
