@@ -40,32 +40,45 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
   const upcomingElections = elections.filter(e => e.status === 'upcoming').length;
   const completedElections = elections.filter(e => e.status === 'completed').length;
 
-  // Get voting statistics for active elections
-  const activeElectionIds = elections
-    .filter(e => e.status === 'active')
-    .map(e => e._id);
+  // Get voting statistics for all assigned elections
+  const assignedElectionIds = elections.map(e => e._id);
 
-  // Get voting activity by hour for today (elections are typically one day)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Get voting activity by hour for today (all assigned elections) in EAT (UTC+3)
+  const now = new Date();
+  // Calculate EAT offset
+  const eatOffsetMs = 3 * 60 * 60 * 1000;
+  const eatToday = new Date(now.getTime() + eatOffsetMs);
+  eatToday.setHours(0, 0, 0, 0);
+  // Get UTC start of EAT day
+  const utcStartOfEatDay = new Date(eatToday.getTime() - eatOffsetMs);
 
   const hourlyActivity = await Vote.aggregate([
-    { 
-      $match: { 
-        electionId: { $in: activeElectionIds },
-        timestamp: { $gte: today }
-      } 
+    {
+      $match: {
+        election: { $in: assignedElectionIds },
+        createdAt: { $gte: utcStartOfEatDay }
+      }
+    },
+    {
+      $addFields: {
+        eatHour: {
+          $mod: [
+            { $add: [ { $hour: '$createdAt' }, 3 ] },
+            24
+          ]
+        }
+      }
     },
     {
       $group: {
-        _id: { hour: { $hour: '$timestamp' } },
+        _id: { hour: '$eatHour' },
         count: { $sum: 1 }
       }
     },
     { $sort: { '_id.hour': 1 } }
   ]);
 
-  // Format hourly activity data (create array for all hours 0-23)
+  // Format hourly activity data (create array for all hours 0-23 in EAT)
   const formattedHourlyActivity = [];
   for (let hour = 0; hour < 24; hour++) {
     const hourData = hourlyActivity.find(item => item._id.hour === hour);
@@ -79,23 +92,22 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
   // Get position statistics (candidates per position)
   const positionStatsMap = new Map();
   
+  // Aggregate candidates per position using correct schema fields
   for (const election of elections) {
-    if (election.positions && election.positions.length > 0) {
+    if (Array.isArray(election.positions) && election.positions.length > 0) {
       for (const positionName of election.positions) {
         // Count candidates for this position in this election
         const candidateCount = await Candidate.countDocuments({
-          electionId: election._id,
+          election: election._id,
           position: positionName
         });
-        
         if (candidateCount > 0) {
-          // Aggregate by position name across elections
           if (positionStatsMap.has(positionName)) {
             positionStatsMap.get(positionName).candidateCount += candidateCount;
           } else {
             positionStatsMap.set(positionName, {
-              positionName: positionName,
-              candidateCount: candidateCount
+              positionName,
+              candidateCount
             });
           }
         }
