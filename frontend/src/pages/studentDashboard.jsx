@@ -3378,30 +3378,35 @@ function StudentDashboard({ user }) {
       {/* Notification Details Modal */}
       {selectedNotification && showNotificationModal && (
         <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1100 }}>
-          <div className="modal-dialog" style={{ margin: '1rem auto', maxWidth: '95vw', width: '100%', minWidth: '0' }}>
-            <div className={`modal-content border-0 shadow-lg`} style={{ background: isDarkMode ? colors.surface : '#fff', borderRadius: '16px', padding: window.innerWidth <= 600 ? '0.5rem' : '1.5rem', minWidth: 0 }}>
-              <div className="modal-header px-3 py-2" style={{ borderBottom: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`, background: isDarkMode ? colors.primary : '#0d6efd', color: '#fff', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
-                <h5 className="modal-title d-flex align-items-center gap-2" style={{ fontSize: window.innerWidth <= 600 ? '1rem' : '1.15rem', fontWeight: 700 }}>
-                  <FaBell className="text-info" />
+          <div className="modal-dialog" style={{ margin: '2rem auto', maxWidth: 400, width: '95vw' }}>
+            <div className={`modal-content border-0 shadow-sm`} style={{ background: isDarkMode ? colors.surface : '#fff', borderRadius: '6px', padding: '0.5rem 0.5rem 0.5rem 0.5rem', minWidth: 0, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+              <div className="modal-header px-2 py-2" style={{ borderBottom: '1px solid #e5e7eb', background: isDarkMode ? colors.surfaceHover : '#f6f8fa', color: isDarkMode ? colors.text : '#222', borderTopLeftRadius: '6px', borderTopRightRadius: '6px' }}>
+                <h6 className="modal-title d-flex align-items-center gap-2 mb-0" style={{ fontSize: '1rem', fontWeight: 600, color: isDarkMode ? colors.text : '#222' }}>
+                  <span className="d-flex align-items-center justify-content-center" style={{ background: '#f1f3f6', borderRadius: '50%', width: 28, height: 28 }}>
+                    <FaBell className="text-info" size={16} />
+                  </span>
                   Notification Details
-                </h5>
+                </h6>
                 <button 
-                  className="btn-close btn-close-white" 
+                  className="btn-close" 
+                  onMouseOver={e => e.currentTarget.style.opacity = 0.7}
+                  onMouseOut={e => e.currentTarget.style.opacity = 1}
                   onClick={() => {
                     setShowNotificationModal(false);
                     setSelectedNotification(null);
                   }}
-                  style={{ marginLeft: 'auto' }}
+                  style={{ marginLeft: 'auto', transition: 'opacity 0.2s' }}
+                  aria-label="Close"
                 ></button>
               </div>
-              <div className="modal-body px-3 py-3" style={{ minWidth: 0 }}>
-                <div className="d-flex flex-column flex-md-row align-items-center gap-3 mb-3" style={{ minWidth: 0 }}>
-                  <div className={`rounded-circle d-flex align-items-center justify-content-center`} style={{ width: 48, height: 48, background: selectedNotification.type === 'success' ? 'rgba(34,197,94,0.12)' : 'rgba(59,130,246,0.12)' }}>
-                    <FaInfoCircle className={selectedNotification.type === 'success' ? 'text-success' : 'text-info'} size={28} />
+              <div className="modal-body px-2 py-2" style={{ minWidth: 0 }}>
+                <div className="d-flex flex-row align-items-center gap-2 mb-2" style={{ minWidth: 0 }}>
+                  <div className="d-flex align-items-center justify-content-center" style={{ width: 32, height: 32, background: '#f1f3f6', borderRadius: '50%' }}>
+                    <FaInfoCircle className={selectedNotification.type === 'success' ? 'text-success' : 'text-info'} size={18} />
                   </div>
-                  <div className="flex-grow-1 text-center text-md-start" style={{ minWidth: 0 }}>
-                    <h5 className="fw-bold mb-1" style={{ fontSize: window.innerWidth <= 600 ? '1.05rem' : '1.18rem', wordBreak: 'break-word' }}>{selectedNotification.title || 'Notification'}</h5>
-                    <div className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-2">
+                  <div className="flex-grow-1 text-start" style={{ minWidth: 0 }}>
+                    <div className="fw-bold mb-0" style={{ fontSize: '1rem', wordBreak: 'break-word', color: isDarkMode ? colors.text : '#222' }}>{selectedNotification.title || 'Notification'}</div>
+                    <div className="d-flex flex-wrap gap-1 justify-content-start mb-1">
                       <span className={`badge bg-${selectedNotification.type === 'success' ? 'success' : 'info'}`}>{selectedNotification.type === 'success' ? 'Success' : 'Info'}</span>
                       {!selectedNotification.read && (
                         <span className="badge bg-primary">New</span>
@@ -3409,68 +3414,27 @@ function StudentDashboard({ user }) {
                     </div>
                   </div>
                 </div>
-                <div className="mb-3 text-center text-md-start">
-                  <h6 className="fw-semibold mb-1" style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem' }}>Message:</h6>
-                  <p className="text-muted mb-0" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem', wordBreak: 'break-word' }}>{selectedNotification.message || selectedNotification.content || 'No message content available.'}</p>
+                <hr className="my-2" style={{ borderColor: '#e5e7eb', opacity: 0.7 }} />
+                <div className="mb-2 text-start">
+                  <div className="fw-semibold mb-1" style={{ fontSize: '0.95rem', color: isDarkMode ? colors.text : '#444' }}>Message:</div>
+                  <div className="text-muted mb-0" style={{ fontSize: '0.95rem', wordBreak: 'break-word' }}>{selectedNotification.message || selectedNotification.content || 'No message content available.'}</div>
                 </div>
-                <div className="d-flex flex-column flex-md-row gap-2 justify-content-center justify-content-md-start mb-2">
-                  <div className="text-center text-md-start" style={{ minWidth: 0 }}>
+                <div className="d-flex flex-row gap-2 justify-content-start mb-1">
+                  <div className="text-start" style={{ minWidth: 0 }}>
                     <small className="text-muted">Date:</small>
-                    <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem' }}>
+                    <div className="fw-semibold"
+                      style={{ fontSize: window.innerWidth <= 600 ? '0.80rem' : '0.95rem', color: isDarkMode ? colors.text : '#444' }}>
                       {selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleDateString() : 'Recently'}
                     </div>
                   </div>
-                  <div className="text-center text-md-start" style={{ minWidth: 0 }}>
+                  <div className="text-start" style={{ minWidth: 0 }}>
                     <small className="text-muted">Time:</small>
-                    <div className="fw-semibold" style={{ fontSize: window.innerWidth <= 600 ? '0.92rem' : '1rem' }}>
+                    <div className="fw-semibold"
+                      style={{ fontSize: window.innerWidth <= 600 ? '0.80rem' : '0.95rem', color: isDarkMode ? colors.text : '#444' }}>
                       {selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleTimeString() : 'N/A'}
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex flex-column flex-md-row gap-2 px-3 py-2" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`, background: isDarkMode ? colors.surfaceHover : '#f8f9fa', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
-                <button className="btn btn-danger flex-fill"
-                  onClick={async () => { await deleteNotification(selectedNotification._id); }}
-                  disabled={deletingNotificationIds.includes(selectedNotification._id)}
-                  style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
-                >
-                  {deletingNotificationIds.includes(selectedNotification._id) ? (
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  ) : (
-                    <FaTrash className="me-2" />
-                  )}
-                  Delete
-                </button>
-                <button 
-                  className="btn btn-secondary flex-fill"
-                  onClick={() => {
-                    setShowNotificationModal(false);
-                    setSelectedNotification(null);
-                  }}
-                  style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
-                >
-                  Close
-                </button>
-                {!selectedNotification.read && (
-                  <button
-                    className="btn btn-primary flex-fill"
-                    onClick={async () => { await markNotificationAsRead(selectedNotification._id); setShowNotificationModal(false); setSelectedNotification(null); }}
-                    disabled={markingReadIds.includes(selectedNotification._id)}
-                    style={{ fontSize: window.innerWidth <= 600 ? '0.95rem' : '1rem', minWidth: 0 }}
-                  >
-                    {markingReadIds.includes(selectedNotification._id) ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Marking...
-                      </>
-                    ) : (
-                      <>
-                        <FaCheckCircle className="me-2" />
-                        Mark as Read
-                      </>
-                    )}
-                  </button>
-                )}
               </div>
             </div>
           </div>

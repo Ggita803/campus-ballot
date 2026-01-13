@@ -639,7 +639,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "Invalid or expired reset token" });
 
-    user.password = await bcrypt.hash(req.body.password, 10);
+    user.password = req.body.password;
     user.resetPasswordToken = null;
     user.resetPasswordTokenExpiry = null;
     await user.save();

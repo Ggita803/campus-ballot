@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,6 +10,8 @@ import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.
 function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { token } = useParams(); // expects route like /reset-password/:token
@@ -75,25 +78,39 @@ function ResetPassword() {
             <span className="input-group-text"><FontAwesomeIcon icon={faLock} /></span>
             <input
               className="form-control"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="New password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
             />
+            <span
+              className="input-group-text"
+              onClick={() => setShowPassword((v) => !v)}
+              style={{ cursor: "pointer" }}
+            >
+              <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+            </span>
           </div>
           <div className="input-group mb-3">
             <span className="input-group-text"><FontAwesomeIcon icon={faLock} /></span>
             <input
               className="form-control"
-              type="password"
+              type={showConfirm ? "text" : "password"}
               placeholder="Confirm new password"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               required
               minLength={6}
             />
+            <span
+              className="input-group-text"
+              onClick={() => setShowConfirm((v) => !v)}
+              style={{ cursor: "pointer" }}
+            >
+              <FontAwesomeIcon icon={showConfirm ? faEyeSlash : faEye} />
+            </span>
           </div>
           <button className="btn btn-primary w-100 fw-bold" type="submit" disabled={loading}>
             {loading ? "Resetting..." : "Reset Password"}
