@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { FaDownload } from 'react-icons/fa';
 
 // Custom Swal configuration with reduced border radius
 const showAlert = (options) => {
@@ -1412,7 +1413,8 @@ const PublicCandidates = () => {
                               overflow: 'hidden',
                               border: `1px solid ${themeColors.border}`,
                               transition: 'transform 0.2s ease',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              position: 'relative'
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -1436,17 +1438,27 @@ const PublicCandidates = () => {
                                 <FaImages size={32} style={{ color: themeColors.textSecondary, opacity: 0.5 }} />
                               </div>
                             )}
-                            <div style={{ padding: window.innerWidth < 768 ? '0.375rem' : '0.5rem' }}>
+                            <div style={{ padding: window.innerWidth < 768 ? '0.375rem' : '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <small style={{ 
                                 display: '-webkit-box',
                                 WebkitLineClamp: 1,
                                 WebkitBoxOrient: 'vertical',
                                 overflow: 'hidden',
                                 color: themeColors.text,
-                                fontSize: window.innerWidth < 768 ? '0.7rem' : '0.875rem'
+                                fontSize: window.innerWidth < 768 ? '0.7rem' : '0.875rem',
+                                flex: 1
                               }}>
                                 {material.title}
                               </small>
+                              <a
+                                href={getImageUrl(material.url)}
+                                download={material.originalName || material.title}
+                                title="Download"
+                                style={{ marginLeft: 8, color: themeColors.textPrimary, textDecoration: 'none', fontSize: '1.1em' }}
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <FaDownload />
+                              </a>
                             </div>
                           </div>
                         </div>
