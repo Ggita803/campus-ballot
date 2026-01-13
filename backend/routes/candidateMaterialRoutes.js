@@ -1,7 +1,5 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { upload } = require('../config/cloudinary');
 const { protect } = require('../middleware/authMiddleware');
 const {
   getMaterials,
@@ -12,23 +10,6 @@ const {
 
 const router = express.Router();
 
-const uploadDir = path.join(__dirname, '..', 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${unique}${ext}`);
-  }
-});
-
-const upload = multer({
-  storage
-});
 
 router.get('/materials', protect, getMaterials);
 router.post('/materials', protect, upload.array('files', 10), uploadMaterials);

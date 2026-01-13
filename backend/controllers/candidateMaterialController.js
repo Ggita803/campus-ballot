@@ -55,7 +55,7 @@ const uploadMaterials = asyncHandler(async (req, res) => {
         category,
         fileType: file.mimetype,
         fileSize: Number((file.size / (1024 * 1024)).toFixed(2)), // store as MB
-        url: `/uploads/${file.filename}`,
+        url: file.path, // Cloudinary URL
         originalName: file.originalname,
         uploadDate: new Date()
       });

@@ -23,15 +23,13 @@ const createApplication = asyncHandler(async (req, res) => {
     } = req.body;
     let photo = null;
     let symbol = null;
-    
+    // Use Cloudinary URLs if available
     if (req.files && req.files.photo && req.files.photo[0]) {
-      const fname = req.files.photo[0].filename || req.files.photo[0].path.split(/[\\/]/).pop();
-      photo = `/uploads/${fname}`;
+      // Multer-Cloudinary puts the URL in file.path
+      photo = req.files.photo[0].path;
     }
-    
     if (req.files && req.files.symbol && req.files.symbol[0]) {
-      const fname = req.files.symbol[0].filename || req.files.symbol[0].path.split(/[\\/]/).pop();
-      symbol = `/uploads/${fname}`;
+      symbol = req.files.symbol[0].path;
     }
     
     if (!user || !election || !name || !position || !description) {

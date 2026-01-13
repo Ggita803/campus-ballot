@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const { upload } = require('../config/cloudinary');
 const { createApplication } = require('../controllers/applicationController');
 const { protect } = require('../middleware/authMiddleware');
 
