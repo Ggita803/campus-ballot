@@ -145,6 +145,12 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    // For single-device login enforcement
+    currentSessionToken: {
+        type: String,
+        default: null,
+        select: false // Do not return by default
+    },
     votingStatus: [{
         electionId: {
             type: mongoose.Schema.Types.ObjectId,

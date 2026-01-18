@@ -470,10 +470,18 @@ const login = asyncHandler(async (req, res) => {
     }
 
     user.lastLogin = new Date();
+
+    // Generate JWT
+    const token = generateToken(user._id);
+
+    // For students, enforce single-device login by saving the token
+    if (user.role === 'student') {
+      user.currentSessionToken = token;
+    }
     await user.save();
 
     console.log("[LOGIN]:", user.email, "Role:", user.role);
-    
+
     // Log activity for all users (admin, super_admin, and students)
     await logActivity({
       userId: user._id,
@@ -484,7 +492,7 @@ const login = asyncHandler(async (req, res) => {
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
     });
-    
+
     // Prepare user response
     const userResponse = {
       _id: user._id,
@@ -513,7 +521,7 @@ const login = asyncHandler(async (req, res) => {
 
     res.json({
       message: "Login successful",
-      token: generateToken(user._id),
+      token,
       user: userResponse,
     });
   } catch (error) {

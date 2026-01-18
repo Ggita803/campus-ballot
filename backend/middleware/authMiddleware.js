@@ -86,11 +86,20 @@ const protect = asyncHandler(async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
+    // For students, select currentSessionToken for single-device enforcement
+    const user = await User.findById(decoded.id).select("-password +currentSessionToken");
 
     if (!user) {
       console.log("[AUTH] 🚫 User not found with decoded ID");
       return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+
+    // Enforce single-device login for students
+    if (user.role === 'student') {
+      if (!user.currentSessionToken || user.currentSessionToken !== token) {
+        console.log("[AUTH] 🚫 Student token does not match current session token");
+        return res.status(401).json({ message: "Session invalidated: You have logged in on another device." });
+      }
     }
 
     req.user = user;
