@@ -7,6 +7,15 @@ import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Swal from 'sweetalert2';
 
+// At the top of your AdminDashboard.jsx file
+import BalibasekaImage from '../devTeam/Balibaseka_Deo.jpeg';
+import GittaImage from '../devTeam/Gitta_Ibrahim.jpeg';
+import KijjambuImage from '../devTeam/Kijjambu_Joseph.jpeg';
+import MugerwaImage from '../devTeam/Mugerwa_Dickson.jpeg';
+import MulwanyiImage from '../devTeam/Mulwanyi_Akram.jpeg';
+import OmoloImage from '../devTeam/Omolo_Pasikali.jpeg';
+import WambogoImage from '../devTeam/Wambogo_Hassan_Sadat.jpg';
+
 const LandingPage = () => {
   useEffect(() => {
     // mark body so css can add padding for the fixed-top navbar
@@ -788,23 +797,23 @@ const LandingPage = () => {
             <div className="developers-scroll-track">
               {/* First set of developers */}
               {[
-                { name: 'Alex Johnson', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '3+ years', skills: ['React', 'Node.js', 'MongoDB'] },
-                { name: 'Maria Garcia', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '4+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
-                { name: 'James Chen', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
-                { name: 'Sarah Williams', role: 'Security Engineer', expertise: 'Authentication', bio: 'Ensuring system security', years: '5+ years', skills: ['JWT', 'OAuth', 'Encryption'] },
-                { name: 'Michael Brown', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Streamlining deployment pipelines', years: '3+ years', skills: ['Docker', 'CI/CD', 'AWS'] },
-                { name: 'Emily Davis', role: 'Full Stack Engineer', expertise: 'MongoDB Expert', bio: 'Database optimization specialist', years: '4+ years', skills: ['MongoDB', 'Redis', 'SQL'] },
-                { name: 'David Miller', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '3+ years', skills: ['Jest', 'Cypress', 'Testing'] },
+                { img: BalibasekaImage, name: 'Balibaseka Deo', role: 'Full Stack Engineer', expertise: 'React & Python', bio: 'Building scalable web applications', years: '2+ years', skills: ['HTML', 'CSS', 'Django', 'Python', 'PostgreSQL'] },
+                { img: WambogoImage, name: 'Wambogo Hassan Sadat', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '3+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
+                { img: GittaImage, name: 'Gitta Ibrahim', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
+                { img: KijjambuImage, name: 'Kijjambu Joseph', role: 'System Analyst & Researcher', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
+                { img: OmoloImage, name: 'Omolo Pasikali', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Database optimization specialist', years: '4+ years', skills: ['SQL', 'Redis', 'MongoDB'] },
+                { img: MulwanyiImage, name: 'Mulwanyi Akram', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '2+ years', skills: ['Jest', 'Cypress', 'Testing'] },
+                { img: MugerwaImage, name: 'Mugerwa Dickson', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '2+ years', skills: ['React', 'Node.js', 'MongoDB'] },
                 { name: 'Lisa Anderson', role: 'Project Manager', expertise: 'Coordination', bio: 'Leading agile teams', years: '6+ years', skills: ['Scrum', 'Jira', 'Leadership'] },
                 { name: 'Robert Taylor', role: 'Frontend Developer', expertise: 'Responsive Design', bio: 'Mobile-first development', years: '2+ years', skills: ['Bootstrap', 'Sass', 'Mobile'] },
                 { name: 'Jennifer Martinez', role: 'Backend Developer', expertise: 'REST APIs', bio: 'API architecture expert', years: '4+ years', skills: ['REST', 'GraphQL', 'APIs'] },
-                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '3+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
+                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '2+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
                 { name: 'Amanda Moore', role: 'Documentation Lead', expertise: 'Technical Writing', bio: 'Making tech understandable', years: '2+ years', skills: ['Writing', 'Docs', 'Guides'] },
               ].map((dev, i) => (
                 <Card key={`dev-1-${i}`} className="developer-card-new shadow-sm border-0 p-4 text-center">
                   <div className="position-relative d-inline-block mx-auto mb-3">
                     <Card.Img
-                      src={`https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
+                      src={dev.img || `https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
                       className="rounded-circle"
                       style={{ width: "100px", height: "100px", objectFit: "cover", border: '4px solid #003366' }}
                     />
@@ -856,23 +865,23 @@ const LandingPage = () => {
               
               {/* Duplicate set for seamless loop */}
               {[
-                { name: 'Alex Johnson', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '3+ years', skills: ['React', 'Node.js', 'MongoDB'] },
-                { name: 'Maria Garcia', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '4+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
-                { name: 'James Chen', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
-                { name: 'Sarah Williams', role: 'Security Engineer', expertise: 'Authentication', bio: 'Ensuring system security', years: '5+ years', skills: ['JWT', 'OAuth', 'Encryption'] },
-                { name: 'Michael Brown', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Streamlining deployment pipelines', years: '3+ years', skills: ['Docker', 'CI/CD', 'AWS'] },
-                { name: 'Emily Davis', role: 'Full Stack Engineer', expertise: 'MongoDB Expert', bio: 'Database optimization specialist', years: '4+ years', skills: ['MongoDB', 'Redis', 'SQL'] },
-                { name: 'David Miller', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '3+ years', skills: ['Jest', 'Cypress', 'Testing'] },
+                { img: BalibasekaImage, name: 'Balibaseka Deo', role: 'Full Stack Engineer', expertise: 'React & Node.js', bio: 'Building scalable web applications', years: '2+ years', skills: ['React', 'Node.js', 'MongoDB'] },
+                { img: WambogoImage, name: 'Wambogo Hassan Sadat', role: 'Backend Specialist', expertise: 'API & Database', bio: 'Crafting robust backend systems', years: '3+ years', skills: ['Express', 'PostgreSQL', 'Redis'] },
+                { img: GittaImage, name: 'Gitta Ibrahim', role: 'Frontend Developer', expertise: 'UI/UX Design', bio: 'Creating beautiful user experiences', years: '2+ years', skills: ['React', 'CSS', 'Figma'] },
+                { img: KijjambuImage, name: 'Kijjambu Joseph', role: 'Security Engineer', expertise: 'Authentication', bio: 'Ensuring system security', years: '5+ years', skills: ['JWT', 'OAuth', 'Encryption'] },
+                { img: OmoloImage, name: 'Omolo Pasikali', role: 'DevOps Engineer', expertise: 'Deployment', bio: 'Streamlining deployment pipelines', years: '2+ years', skills: ['Docker', 'CI/CD', 'AWS'] },
+                { img: MulwanyiImage, name: 'Mulwanyi Akram', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Database optimization specialist', years: '4+ years', skills: ['SQL', 'Redis', 'MongoDB'] },
+                { img: MugerwaImage, name: 'Mugerwa Dickson', role: 'QA Engineer', expertise: 'Testing & Quality', bio: 'Ensuring code quality', years: '2+ years', skills: ['Jest', 'Cypress', 'Testing'] },
                 { name: 'Lisa Anderson', role: 'Project Manager', expertise: 'Coordination', bio: 'Leading agile teams', years: '6+ years', skills: ['Scrum', 'Jira', 'Leadership'] },
                 { name: 'Robert Taylor', role: 'Frontend Developer', expertise: 'Responsive Design', bio: 'Mobile-first development', years: '2+ years', skills: ['Bootstrap', 'Sass', 'Mobile'] },
                 { name: 'Jennifer Martinez', role: 'Backend Developer', expertise: 'REST APIs', bio: 'API architecture expert', years: '4+ years', skills: ['REST', 'GraphQL', 'APIs'] },
-                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '3+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
+                { name: 'Kevin Wilson', role: 'Full Stack Engineer', expertise: 'Integration', bio: 'Connecting systems seamlessly', years: '2+ years', skills: ['Webhooks', 'APIs', 'Integration'] },
                 { name: 'Amanda Moore', role: 'Documentation Lead', expertise: 'Technical Writing', bio: 'Making tech understandable', years: '2+ years', skills: ['Writing', 'Docs', 'Guides'] },
               ].map((dev, i) => (
                 <Card key={`dev-2-${i}`} className="developer-card-new shadow-sm border-0 p-4 text-center">
                   <div className="position-relative d-inline-block mx-auto mb-3">
                     <Card.Img
-                      src={`https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
+                      src={dev.img || `https://via.placeholder.com/120?text=${dev.name.split(' ')[0]}`}
                       className="rounded-circle"
                       style={{ width: "100px", height: "100px", objectFit: "cover", border: '4px solid #003366' }}
                     />
