@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
@@ -42,6 +42,7 @@ const CampaignProfile = () => {
       website: ''
     }
   });
+  const [candidateId, setCandidateId] = useState(null);
 
   useEffect(() => {
     fetchProfile();
@@ -64,7 +65,10 @@ const CampaignProfile = () => {
         const candidateResponse = await axios.get('/api/candidates/me/candidacy', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        candidateData = candidateResponse.data || {};
+        // Handle array response from backend
+        const data = candidateResponse.data;
+        candidateData = Array.isArray(data) ? data[0] || {} : data;
+        if (candidateData._id) setCandidateId(candidateData._id);
       } catch (err) {
         // Candidate profile might not exist yet, that's okay
         console.log('No candidate profile found, using user data');
@@ -172,7 +176,12 @@ const CampaignProfile = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put('/api/candidate/profile', formData, {
+      if (!candidateId) {
+        Swal.fire('Error', 'Candidate profile not found. Cannot update.', 'error');
+        setLoading(false);
+        return;
+      }
+      await axios.put(`/api/candidates/${candidateId}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -199,6 +208,11 @@ const CampaignProfile = () => {
             Campaign Profile
           </h4>
           <p className="text-muted mb-0">Manage your campaign profile and information</p>
+          {!candidateId && (
+            <div className="alert alert-warning mt-3" role="alert">
+              <strong>No candidate profile found.</strong> You must apply as a candidate or be registered by an admin before you can edit your campaign profile.
+            </div>
+          )}
         </div>
         <button
           className={`btn ${editing ? 'btn-secondary' : 'btn-primary'}`}
@@ -209,6 +223,7 @@ const CampaignProfile = () => {
             color: editing ? colors.text : '#fff',
             fontWeight: '500'
           }}
+          disabled={!candidateId}
         >
           <FaEdit className="me-2" />
           {editing ? 'Cancel' : 'Edit Profile'}

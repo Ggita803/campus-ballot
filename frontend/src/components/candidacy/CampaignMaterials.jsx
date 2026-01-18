@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axiosInstance';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FaImages, FaPlus } from 'react-icons/fa';
