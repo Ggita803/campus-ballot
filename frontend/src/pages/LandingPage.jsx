@@ -23,6 +23,9 @@ import MugerwaImage from "../devTeam/Mugerwa_Dickson.jpeg";
 import MulwanyiImage from "../devTeam/Mulwanyi_Akram.jpeg";
 import OmoloImage from "../devTeam/Omolo_Pasikali.jpeg";
 import WambogoImage from "../devTeam/Wambogo_Hassan_Sadat.jpg";
+import NsubugaImage from "../devTeam/Nsubuga_Ediger.jpeg";
+import SsentongoImage from "../devTeam/Ssentongo_Edrine.jpeg";
+import MuchweziImage from "../devTeam/Muchwezi_Onesmus.jpeg";
 
 const LandingPage = () => {
   useEffect(() => {
@@ -1183,7 +1186,8 @@ const LandingPage = () => {
                   ],
                 },
                 {
-                  name: "Robert Taylor",
+                  img: SsentongoImage,
+                  name: "Ssentongo Edrine",
                   role: "Frontend Developer",
                   expertise: "Responsive Design",
                   bio: "Mobile-first development",
@@ -1191,15 +1195,23 @@ const LandingPage = () => {
                   skills: ["Bootstrap", "Sass", "Mobile"],
                 },
                 {
-                  name: "Jennifer Martinez",
-                  role: "Backend Developer",
-                  expertise: "REST APIs",
-                  bio: "API architecture expert",
-                  years: "4+ years",
-                  skills: ["REST", "GraphQL", "APIs"],
+                  img: NsubugaImage,
+                  name: "Nsubuga Ediger",
+                  role: "Full Stack Engineer",
+                  expertise: "Scalable Architecture",
+                  bio: "Specializes in architecting robust end-to-end solutions and high-performance backends.",
+                  years: "2+ years",
+                  skills: [
+                    "Python",
+                    "Django",
+                    "OracleDB",
+                    "HTML5",
+                    "REST APIs",
+                  ],
                 },
                 {
-                  name: "Kevin Wilson",
+                  img: MuchweziImage,
+                  name: "Muchwezi Onesmus",
                   role: "Full Stack Engineer",
                   expertise: "Integration",
                   bio: "Connecting systems seamlessly",
@@ -1428,14 +1440,20 @@ const LandingPage = () => {
                 },
                 {
                   name: "Lisa Anderson",
-                  role: "Project Manager",
-                  expertise: "Coordination",
-                  bio: "Leading agile teams",
+                  role: "Senior Project Manager",
+                  expertise: "Strategic Leadership",
+                  bio: "Driving long-term product roadmaps and mentoring agile teams for peak performance.",
                   years: "6+ years",
-                  skills: ["Scrum", "Jira", "Leadership"],
+                  skills: [
+                    "Kanban",
+                    "Stakeholder Management",
+                    "Strategic Planning",
+                    "Leadership",
+                  ],
                 },
                 {
-                  name: "Robert Taylor",
+                  img: SsentongoImage,
+                  name: "Ssentongo Edrine",
                   role: "Frontend Developer",
                   expertise: "Responsive Design",
                   bio: "Mobile-first development",
@@ -1443,15 +1461,23 @@ const LandingPage = () => {
                   skills: ["Bootstrap", "Sass", "Mobile"],
                 },
                 {
-                  name: "Jennifer Martinez",
-                  role: "Backend Developer",
-                  expertise: "REST APIs",
-                  bio: "API architecture expert",
-                  years: "4+ years",
-                  skills: ["REST", "GraphQL", "APIs"],
+                  img: NsubugaImage,
+                  name: "Nsubuga Ediger",
+                  role: "Full Stack Engineer",
+                  expertise: "Scalable Architecture",
+                  bio: "Specializes in architecting robust end-to-end solutions and high-performance backends.",
+                  years: "2+ years",
+                  skills: [
+                    "Python",
+                    "Django",
+                    "OracleDB",
+                    "HTML5",
+                    "REST APIs",
+                  ],
                 },
                 {
-                  name: "Kevin Wilson",
+                  img: MuchweziImage,
+                  name: "Muchwezi Onesmus",
                   role: "Full Stack Engineer",
                   expertise: "Integration",
                   bio: "Connecting systems seamlessly",
@@ -1797,7 +1823,7 @@ const LandingPage = () => {
                         Email
                       </div>
                       <a
-                        href="mailto:info@campusballot.com"
+                        href="mailto:conceptcrashers256@gmail.com"
                         className="fw-semibold contact-value"
                         style={{
                           fontWeight: 600,
@@ -1838,7 +1864,7 @@ const LandingPage = () => {
                         Phone
                       </div>
                       <a
-                        href="tel:+256700000000"
+                        href="tel:+256775299688"
                         className="fw-semibold contact-value"
                         style={{
                           fontWeight: 600,
@@ -1846,7 +1872,7 @@ const LandingPage = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        +256 700 000 000
+                        +256 775299688
                       </a>
                     </div>
                   </div>
@@ -1882,8 +1908,7 @@ const LandingPage = () => {
                         className="fw-semibold"
                         style={{ fontWeight: 600, color: "#111" }}
                       >
-                        School of Computing and Information Science, Kyambogo
-                        University
+                        SCIS, Kyambogo University
                       </div>
                     </div>
                   </div>
@@ -1949,7 +1974,7 @@ const LandingPage = () => {
                         Support
                       </div>
                       <a
-                        href="mailto:support@campusballot.com"
+                        href="mailto:conceptcrashers256@gmail.com"
                         className="fw-semibold contact-value"
                         style={{
                           fontWeight: 600,
