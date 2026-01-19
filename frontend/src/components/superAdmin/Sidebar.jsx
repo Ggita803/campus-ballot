@@ -1,5 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef();
+
+  const handleAvatarClick = () => {
+    if (!collapsed) fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    setUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post('/api/super-admin/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Optionally update user state/context here
+      window.location.reload();
+    } catch (err) {
+      alert('Failed to upload image.');
+    } finally {
+      setUploading(false);
+    }
+  };
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -13,368 +42,359 @@ const navItems = [
   { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
   { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
   { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
-  { label: 'Global Settings', icon: 'fa-solid fa-cogs', to: '/super-admin/global-settings' },
-  { label: 'Audit Logs', icon: 'fa-solid fa-clipboard-list', to: '/super-admin/audit-logs' },
   { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
-  { label: 'Data Maintenance', icon: 'fa-solid fa-database', to: '/super-admin/data-maintenance' },
-  { label: 'Reporting', icon: 'fa-solid fa-chart-line', to: '/super-admin/reporting' },
   { label: 'Help', icon: 'fa-solid fa-circle-question', to: '/super-admin/help' },
 ];
 
+
 export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMobile }) {
   const location = useLocation();
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [logCount, setLogCount] = useState(0);
+  const navigate = useNavigate();
   const { isDarkMode, colors } = useTheme();
-
-  useEffect(() => {
-    const fetchLogCount = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/logs/count', { headers: { Authorization: `Bearer ${token}` } });
-        setLogCount(res.data.count || 0);
-      } catch (err) {
-        console.error('Error fetching log count', err);
-      }
-    };
-    fetchLogCount();
-  }, []);
+  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_COLLAPSED_WIDTH = 64;
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'SA';
 
-  return (
-    <>
-      {/* Overlay for mobile drawer */}
-      {isMobile && !collapsed && (
-        <div
-          className="superadmin-sidebar-overlay"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.08)',
-            zIndex: 99,
-          }}
-          onClick={() => setCollapsed(true)}
-          aria-label="Close sidebar"
-        />
-      )}
-      <aside
-        className={`superadmin-sidebar shadow-sm${collapsed ? ' collapsed' : ''}`}
+  // Profile image logic (admin Slidebar style)
+  const getProfileImageSrc = () => {
+    if (user?.profilePicture) return user.profilePicture;
+    if (user?.avatarUrl) return user.avatarUrl;
+    return null;
+  };
+  const profileImgSrc = getProfileImageSrc();
+
+  // Sidebar style (admin Slidebar style)
+  const sidebarStyle = {
+    width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+    minWidth: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
+    height: '100vh',
+    position: 'fixed',
+    left: 0,
+    top: 0,
+    background: isDarkMode
+      ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)'
+      : '#fff',
+    borderRight: `1px solid ${colors.border}`,
+    zIndex: 1000,
+    transition: 'width 0.2s ease-in-out, background-color 0.2s ease',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: isDarkMode
+      ? '4px 0 15px rgba(0,0,0,0.3)'
+      : '0 1px 3px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden',
+  };
+
+  // Overlay for mobile
+  if (isMobile && !collapsed) {
+    return (
+      <div
         style={{
-          minWidth: collapsed ? 64 : 280,
-          width: collapsed ? 64 : 280,
-          height: '100vh',
           position: 'fixed',
-          left: isMobile && collapsed ? -280 : 0,
           top: 0,
-          zIndex: 100,
-          transition: 'left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s',
-          boxShadow: isDarkMode ? '0 0 12px rgba(0,0,0,0.3)' : '0 0 12px rgba(37,99,235,0.07)',
-          background: isDarkMode ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)' : '#fff',
-          color: colors.text,
-          borderRight: `1px solid ${colors.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'scroll'
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.08)',
+          zIndex: 99,
         }}
-        aria-label="Super Admin Sidebar"
+        onClick={() => setCollapsed(true)}
+        aria-label="Close sidebar"
       >
-        <div className="sidebar-header text-center" style={{ padding: collapsed ? '0.5rem 0' : '1rem 0', position: 'relative', flexShrink: 0 }}>
-          {/* Avatar/Profile Dropdown */}
-          <div
-            className="avatar bg-primary text-white mx-auto mb-2 avatar-upload-wrapper"
-            style={{
-              width: 55,
-              height: 55,
-              borderRadius: '50%',
-              fontSize: '1.5rem',
+        <aside style={sidebarStyle} aria-label="Super Admin Sidebar">
+          {/* ...sidebar content below... */}
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <aside style={sidebarStyle} aria-label="Super Admin Sidebar">
+      {/* Header/Profile */}
+      <div
+        className="sidebar-header text-center"
+        style={{
+          padding: collapsed ? '0.25rem 0' : '1.2rem 0 0.7rem 0',
+          position: 'relative',
+          flexShrink: 0,
+        }}
+      >
+        {/* Super Admin Panel text */}
+        {!collapsed && (
+          <>
+            <div
+              style={{
+                fontWeight: 700,
+                fontSize: '1.15rem',
+                color: '#2563eb',
+                marginBottom: '0.5rem',
+                letterSpacing: '0.5px',
+                marginTop: '2.2rem', // Increased extra space above header
+              }}
+            >
+              Super Admin Panel
+            </div>
+            <hr
+              style={{
+                border: 'none',
+                borderTop: `1.5px solid ${colors.border}`,
+                margin: '0.5rem 1.2rem 1.2rem 1.2rem',
+                opacity: isDarkMode ? 0.18 : 0.35,
+              }}
+            />
+            
+          </>
+        )}
+        <div
+          className="avatar bg-primary text-white mx-auto avatar-upload-wrapper"
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            fontSize: '1.3rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: collapsed ? 0 : 8,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            cursor: !collapsed ? 'pointer' : 'default',
+            position: 'relative',
+            overflow: 'hidden',
+            backgroundImage: profileImgSrc ? `url(${profileImgSrc})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: uploading ? 0.5 : 1,
+          }}
+          tabIndex={0}
+          aria-label="Profile photo"
+          onClick={handleAvatarClick}
+          title={!collapsed ? 'Change profile picture' : undefined}
+        >
+          {!profileImgSrc && initials}
+          {uploading && (
+            <span style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '100%',
+              height: '100%',
+              background: 'rgba(255,255,255,0.6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: collapsed ? 0 : 8,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              cursor: 'pointer',
-              position: 'relative',
-              overflow: 'hidden',
-              backgroundImage: user?.profilePicture ? `url(${user.profilePicture})` : (user?.avatarUrl ? `url(${user.avatarUrl})` : 'none'),
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-            tabIndex={0}
-            aria-label="Profile photo"
-          >
-            {!(user?.profilePicture || user?.avatarUrl) && initials}
-            {/* Camera overlay on hover */}
+              zIndex: 2,
+              fontSize: 18
+            }}>
+              <i className="fa fa-spinner fa-spin" />
+            </span>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </div>
+        {!collapsed && (
+          <>
             <div
-              className="camera-overlay"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                background: 'rgba(0, 0, 0, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0,
-                transition: 'opacity 0.3s',
-                borderRadius: '50%'
-              }}
+              className="text-muted mb-1"
+              style={{ fontWeight: 500, fontSize: '0.95rem', marginTop: 8 }}
             >
-              <i className="fa-solid fa-camera" style={{ fontSize: '1.2rem' }}></i>
+              Welcome, {user?.name || 'Super Admin'}
             </div>
-            {/* Dropdown */}
-            {!collapsed && showDropdown && (
-              <div
-                className="profile-dropdown"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={(e) => e.stopPropagation()}
+            <div className="mb-1">
+              <span
+                className="badge"
                 style={{
-                  position: 'absolute',
-                  top: 60,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: colors.surface,
-                  color: colors.text,
-                  borderRadius: 8,
-                  boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.12)',
-                  minWidth: 160,
-                  zIndex: 200,
-                  padding: '0.5rem 0',
-                  border: `1px solid ${colors.border}`
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  borderRadius: '9999px',
+                  background: colors.success,
+                  color: '#fff',
+                  padding: '0.25rem 0.75rem',
+                  letterSpacing: '0.5px',
                 }}
               >
-                <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
-                  <i className="fa-solid fa-user me-2"></i> Profile
-                </div>
-                <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
-                  <i className="fa-solid fa-gear me-2"></i> Settings
-                </div>
-                <div className="dropdown-item px-3 py-2" style={{ cursor: 'pointer' }}>
-                  <i className="fa-solid fa-right-from-bracket me-2"></i> Logout
-                </div>
-              </div>
-            )}
-          </div>
-          {!collapsed && (
-            <>
-              <div className="text-muted  mb-2" style={{ fontWeight: 500, fontSize: '1.0rem' }}>
-                Welcome, {user?.name || 'Super Admin'}
-              </div>
-              <div className="mt-2 mb-1">
-                <span className="badge bg-danger" style={{ fontSize: '0.8rem', fontWeight: 600, borderRadius: '50px' }}>super_admin</span>
-              </div>
-            </>
-          )}
-          {/* Collapse/Expand Button */}
-          <button
-            className="btn btn-sm btn-outline-secondary"
+                super admin
+              </span>
+            </div>
+            {/* Add New Admin Button - styled and spaced like Add Election button in admin Slidebar */}
+            <div style={{ marginTop: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 1.5rem' }}>
+              <button
+                style={{
+                  // background: colors.primary,
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: '0.375rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  boxShadow: '0 1px 2px rgba(37,99,235,0.08)',
+                }}
+                onMouseEnter={e => e.target.style.background = colors.primaryHover}
+                onMouseLeave={e => e.target.style.background = colors.primary}
+                onClick={() => navigate('/super-admin/manage-admins?add=new')}
+              >
+                <i className="fa-solid fa-user-plus" style={{ marginRight: '0.5rem', fontSize: '1rem' }}></i>
+                <span style={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}>Add New Admin</span>
+              </button>
+            </div>
+          </>
+        )}
+        {/* Collapse/Expand Button */}
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: collapsed ? 8 : 16,
+            width: collapsed ? 32 : 40,
+            zIndex: 101,
+            transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+          }}
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <i
+            className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
             style={{
-              position: 'absolute',
-              top: 12,
-              right: collapsed ? 8 : 16,
-              width: collapsed ? 32 : 40,
-              zIndex: 101,
-              transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)'
+              transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+              transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
             }}
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <i className={`fa-solid ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}
-              style={{
-                transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
-                transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)'
-              }}
-            ></i>
-          </button>
-        </div>
-        <nav className="nav flex-column px-2 sidebar-nav-scroll" role="navigation" aria-label="Sidebar navigation" style={{ 
-          overflowY: 'auto', 
-          overflowX: 'hidden', 
+          ></i>
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav
+        className="nav flex-column px-2 sidebar-nav-scroll"
+        role="navigation"
+        aria-label="Sidebar navigation"
+        style={{
           flex: '1 1 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'stretch',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           minHeight: 0,
           paddingBottom: '0.5rem',
           paddingTop: '0.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          flexWrap: 'nowrap',
-          width: '100%'
-        }}>
-          {navItems.map((item, idx) => {
-            const isActive = location.pathname === item.to;
-            return (
-              <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
-                {/* Active indicator */}
-                {isActive && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 6,
-                      height: 32,
-                      borderRadius: 4,
-                      background: '#2563eb',
-                      boxShadow: '0 2px 8px rgba(37,99,235,0.12)'
-                    }}
-                    aria-hidden="true"
-                  />
-                )}
-                <Link
-                  to={item.to}
-                  className={`sidebar-nav-link nav-link d-flex align-items-center mb-1 ${isActive ? 'active fw-bold' : ''}`}
+          width: '100%',
+        }}
+      >
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.to;
+          return (
+            <div key={item.to} style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
+              {isActive && (
+                <span
                   style={{
-                    fontSize: '0.6em',
-                    gap: '0.75rem',
-                    padding: collapsed ? '0.45rem 0.45rem' : '0.5rem 0.9rem',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    borderRadius: 4,
-                    fontWeight: isActive ? 700 : 500,
-                    background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
-                    boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
-                    minWidth: collapsed ? 0 : 220,
-                    width: '100%',
-                    outline: 'none',
-                    color: colors.text,
-                    borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
-                    flexShrink: 0
+                    position: 'absolute',
+                    left: 0,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 6,
+                    height: 32,
+                    borderRadius: 2,
+                    background: '#2563eb',
+                    boxShadow: '0 2px 8px rgba(37,99,235,0.12)',
                   }}
-                  aria-current={isActive ? 'page' : undefined}
-                  tabIndex={0}
-                  onClick={() => isMobile && setCollapsed(true)}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <i className={item.icon} style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: colors.primary }}></i>
-                  {!collapsed && <span style={{ whiteSpace: 'nowrap', color: colors.text }}>{item.label}</span>}
-                  {/* Badge for Audit Logs */}
-                  {item.label === 'Audit Logs' && logCount > 0 && !collapsed && (
-                    <span className="badge bg-danger ms-auto" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                      {logCount}
-                    </span>
-                  )}
-                </Link>
-              </div>
-            );
-          })}
-        </nav>
-        {/* Footer */}
-        {!collapsed && (
-          <div
+                  aria-hidden="true"
+                />
+              )}
+              <Link
+                to={item.to}
+                className={`sidebar-nav-link nav-link d-flex align-items-center mb-1 ${isActive ? 'active fw-bold' : ''}`}
+                style={{
+                  fontSize: '1em',
+                  gap: '0.75rem',
+                  padding: collapsed ? '0.45rem 0.45rem' : '0.85rem 1.5rem',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  borderRadius: 12,
+                  fontWeight: isActive ? 700 : 500,
+                  background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
+                  boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
+                  minWidth: collapsed ? 0 : 220,
+                  width: '100%',
+                  outline: 'none',
+                  color: colors.text,
+                  borderLeft: isActive ? `3px solid ${colors.primary}` : 'none',
+                  flexShrink: 0,
+                  transition: 'background 0.18s, border-left 0.18s',
+                }}
+                aria-current={isActive ? 'page' : undefined}
+                tabIndex={0}
+                onClick={() => isMobile && setCollapsed(true)}
+                title={collapsed ? item.label : undefined}
+              >
+                <i
+                  className={item.icon}
+                  style={{ fontSize: collapsed ? '1.5rem' : '1rem', color: colors.primary }}
+                ></i>
+                {!collapsed && (
+                  <span style={{ whiteSpace: 'nowrap', color: colors.text }}>{item.label}</span>
+                )}
+              </Link>
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div
+          style={{
+            padding: '0.75rem 1rem',
+            borderTop: `1px solid ${colors.border}`,
+            background: colors.surface,
+            color: colors.textMuted,
+            fontSize: '0.7rem',
+            textAlign: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ marginBottom: '0.5rem' }}>
+            <i className="fa fa-book-open" style={{ marginRight: '0.25rem' }}></i>
+            v1.0.0 © 2025 VoteSys
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('currentUser');
+              window.location.href = '/login';
+            }}
             style={{
-              padding: '0.75rem 1rem',
-              borderTop: `1px solid ${colors.border}`,
-              background: colors.surface,
-              color: colors.textMuted,
-              fontSize: '0.7rem',
-              textAlign: 'center',
-              flexShrink: 0
+              background: 'transparent',
+              border: 'none',
+              color: '#dc2626',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              padding: '0.25rem',
             }}
           >
-            <div style={{ marginBottom: '0.5rem' }}>
-              <i className="fa fa-book-open" style={{ marginRight: '0.25rem' }}></i>
-              v1.0.0 © 2025 VoteSys
-            </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
-                window.location.href = '/login';
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#dc2626',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                padding: '0.25rem',
-              }}
-            >
-              <i className="fa fa-sign-out-alt" style={{ marginRight: '0.25rem' }}></i>
-              Logout
-            </button>
-          </div>
-        )}
-        <style>{`
-          .superadmin-sidebar { background: #fff; border-right: 1px solid #eee; }
-          
-          /* Custom Scrollbar Styles */
-          .sidebar-nav-scroll::-webkit-scrollbar {
-            width: 8px;
-          }
-          .sidebar-nav-scroll::-webkit-scrollbar-track {
-            background: ${isDarkMode ? '#1e293b' : '#f8f9fa'};
-            border-radius: 10px;
-            margin: 4px 0;
-          }
-          .sidebar-nav-scroll::-webkit-scrollbar-thumb {
-            background: ${isDarkMode ? '#475569' : '#cbd5e1'};
-            border-radius: 10px;
-            transition: background 0.3s ease;
-          }
-          .sidebar-nav-scroll::-webkit-scrollbar-thumb:hover {
-            background: ${isDarkMode ? '#64748b' : '#94a3b8'};
-          }
-          .sidebar-nav-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: ${isDarkMode ? '#475569 #1e293b' : '#cbd5e1 #f8f9fa'};
-            scroll-behavior: smooth;
-          }
-          
-          .avatar-upload-wrapper:hover .camera-overlay {
-            opacity: 1 !important;
-          }
-          .superadmin-sidebar .nav-link.active { background: #e7f1ff; border-radius: 12px; }
-          .superadmin-sidebar .nav-link,
-          .superadmin-sidebar .nav-link.active {
-            color: #2563eb !important;
-            font-size: 1em !important; /* <-- changed from 1.08rem to 1em */
-            padding: 0.85rem 1.5rem;
-            border-radius: 12px;
-            transition: background 0.18s, border-left 0.18s;
-            outline: none;
-          }
-          .superadmin-sidebar .nav-link:hover { background: #f8f9fa; border-radius: 12px; color: #2563eb !important; }
-          .superadmin-sidebar.collapsed .sidebar-header .fw-bold,
-          .superadmin-sidebar.collapsed .sidebar-header .badge,
-          .superadmin-sidebar.collapsed .sidebar-header .mb-2,
-          .superadmin-sidebar.collapsed .sidebar-header .small,
-          .superadmin-sidebar.collapsed .sidebar-footer {
-            display: none !important;
-          }
-          .profile-dropdown .dropdown-item:hover {
-            background: #f0f4ff;
-            color: #2563eb;
-          }
-          .superadmin-sidebar-overlay {
-            display: none;
-          }
-          .superadmin-sidebar-overlay.show {
-            display: block;
-          }
-          @media (max-width: 992px) {
-            .superadmin-sidebar {
-              left: ${collapsed ? '-280px' : '0'} !important;
-              min-width: ${collapsed ? '64px' : '280px'} !important;
-              width: ${collapsed ? '64px' : '280px'} !important;
-              transition: left 0.3s cubic-bezier(.4,0,.2,1), min-width 0.3s, width 0.3s;
-            }
-            .superadmin-sidebar-overlay {
-              display: ${collapsed ? 'none' : 'block'};
-            }
-          }
-        `}</style>
-      </aside>
-    </>
+            <i className="fa fa-sign-out-alt" style={{ marginRight: '0.25rem' }}></i>
+            Logout
+          </button>
+        </div>
+      )}
+    </aside>
   );
 }

@@ -3,6 +3,21 @@ const User = require("../models/User");
 const Election = require("../models/Election");
 const Vote = require("../models/Vote");
 const Candidate = require("../models/Candidate");
+// @desc    Update super admin profile picture
+// @route   POST /api/super-admin/profile-picture
+// @access  Super Admin only
+const updateProfilePicture = asyncHandler(async (req, res) => {
+  if (!req.file || !req.file.path) {
+    return res.status(400).json({ message: 'No image uploaded' });
+  }
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  user.profilePicture = req.file.path; // Cloudinary URL
+  await user.save();
+
+  res.json({ success: true, profilePicture: user.profilePicture });
+});
 const Log = require("../models/Log");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
@@ -548,5 +563,6 @@ module.exports = {
   getAllObservers,
   updateObserver,
   deleteObserver,
-  getObserverActivity
+  getObserverActivity,
+  updateProfilePicture
 };

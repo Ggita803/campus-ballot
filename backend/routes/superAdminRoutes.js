@@ -13,11 +13,16 @@ const {
   getAllObservers,
   updateObserver,
   deleteObserver,
-  getObserverActivity
+  getObserverActivity,
+  updateProfilePicture
 } = require('../controllers/superAdminController');
-const backup = require('../controllers/backupController');
 
+const { upload } = require('../config/cloudinary');
 const { protect, superAdminOnly, hasRole } = require('../middleware/authMiddleware');
+
+// Super Admin: Update profile picture
+router.post('/profile-picture', protect, superAdminOnly, upload.single('image'), updateProfilePicture);
+const backup = require('../controllers/backupController');
 
 // Super Admin: Get system summary (dashboard stats)
 router.get('/reports/system-summary', protect, superAdminOnly, getSystemSummary);
