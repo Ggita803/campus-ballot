@@ -26,6 +26,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     lastLogin: '',
     createdAt: '',
   });
+  const [creating, setCreating] = useState(false);
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
@@ -64,16 +65,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       Swal.fire('Error', 'Name, email, and password are required', 'error');
       return;
     }
-    
     // Validate password strength
     if (newAdmin.password.length < 6) {
       Swal.fire('Error', 'Password must be at least 6 characters long', 'error');
       return;
     }
-    
+    setCreating(true);
     try {
       const token = localStorage.getItem('token');
-      
       // Send the admin data including the base64 image
       const adminData = {
         name: newAdmin.name,
@@ -83,14 +82,12 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         phone: newAdmin.phone,
         image: newAdmin.image // This will be the base64 string
       };
-      
       await axios.post('/api/super-admin/admins', adminData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
       });
-      
       Swal.fire('Success', 'Admin created successfully. Password has been hashed securely and account is automatically verified.', 'success');
       setShowAddModal(false);
       setNewAdmin({
@@ -103,7 +100,6 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
         lastLogin: '',
         createdAt: '',
       });
-      
       // Refresh list
       const res = await axios.get('/api/super-admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
@@ -112,6 +108,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to add admin';
       Swal.fire('Error', errorMessage, 'error');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -667,8 +665,17 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                 </form>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" type="button" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button className="btn btn-primary" type="button" onClick={handleAddAdmin}>Add Admin</button>
+                <button className="btn btn-secondary" type="button" onClick={() => setShowAddModal(false)} disabled={creating}>Cancel</button>
+                <button className="btn btn-primary" type="button" onClick={handleAddAdmin} disabled={creating}>
+                  {creating ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Creating...
+                    </>
+                  ) : (
+                    'Add Admin'
+                  )}
+                </button>
               </div>
             </div>
           </div>

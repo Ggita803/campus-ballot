@@ -13,12 +13,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://legendary-space-journey-74p9qrwrq99hpppj-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       }
