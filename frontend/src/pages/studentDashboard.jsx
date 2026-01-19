@@ -2248,7 +2248,7 @@ function StudentDashboard({ user }) {
                 return (
                   <button
                     key={item.id}
-                    className={`nav-link btn btn-link text-start border-0 rounded mb-1 d-flex align-items-center justify-content-between`}
+                    className={`nav-link btn btn-link text-start border-0 rounded d-flex align-items-center justify-content-between`}
                     onClick={() => {
                       setActiveView(item.id);
                       setSidebarOpen(false);
@@ -2258,9 +2258,10 @@ function StudentDashboard({ user }) {
                       background: activeView === item.id ? colors.primary : 'transparent',
                       color: activeView === item.id ? '#fff' : isDarkMode ? colors.text : '#212529',
                       transition: 'all 0.2s ease',
-                      padding: '0.6rem 0.75rem',
+                      padding: '0.45rem 0.6rem',
                       fontSize: '0.85rem',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      marginBottom: '0.35rem'
                     }}
                     onMouseEnter={(e) => {
                       if (activeView !== item.id) {
