@@ -1,4 +1,24 @@
 import React, { useState, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useTheme } from '../../contexts/ThemeContext';
+
+
+const navItems = [
+  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
+  { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
+  { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
+  { label: 'Manage Observers', icon: 'fa-solid fa-eye', to: '/super-admin/manage-observers' },
+  { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
+  { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
+  { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
+  { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
+  { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
+  { label: 'Help', icon: 'fa-solid fa-circle-question', to: '/super-admin/help' },
+];
+
+
+export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMobile }) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef();
 
@@ -20,6 +40,12 @@ import React, { useState, useRef } from 'react';
           Authorization: `Bearer ${token}`,
         },
       });
+      // Reset file input so the same file can be reselected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      // Bust cache by appending a timestamp to the image URL
+      if (user && user.profilePicture) {
+        user.profilePicture = user.profilePicture.split('?')[0] + '?t=' + Date.now();
+      }
       // Optionally update user state/context here
       window.location.reload();
     } catch (err) {
@@ -28,26 +54,7 @@ import React, { useState, useRef } from 'react';
       setUploading(false);
     }
   };
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useTheme } from '../../contexts/ThemeContext';
-
-
-const navItems = [
-  { label: 'System Health', icon: 'fa-solid fa-heartbeat', to: '/super-admin/system-health' },
-  { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/super-admin/dashboard' },
-  { label: 'Manage Admins', icon: 'fa-solid fa-user-shield', to: '/super-admin/manage-admins' },
-  { label: 'Manage Observers', icon: 'fa-solid fa-eye', to: '/super-admin/manage-observers' },
-  { label: 'Admin Activity', icon: 'fa-solid fa-video', to: '/super-admin/admin-activity' },
-  { label: 'Security Audit', icon: 'fa-solid fa-lock', to: '/super-admin/security-audit' },
-  { label: 'Backup & Recovery', icon: 'fa-solid fa-shield', to: '/super-admin/backup-recovery' },
-  { label: 'System Config', icon: 'fa-solid fa-sliders', to: '/super-admin/system-config' },
-  { label: 'Election Oversight', icon: 'fa-solid fa-check-to-slot', to: '/super-admin/election-oversight' },
-  { label: 'Help', icon: 'fa-solid fa-circle-question', to: '/super-admin/help' },
-];
-
-
-export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMobile }) {
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { isDarkMode, colors } = useTheme();
@@ -151,8 +158,8 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
         <div
           className="avatar bg-primary text-white mx-auto avatar-upload-wrapper"
           style={{
-            width: 48,
-            height: 48,
+            width: 60,
+            height: 60,
             borderRadius: '50%',
             fontSize: '1.3rem',
             display: 'flex',
@@ -221,14 +228,14 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   letterSpacing: '0.5px',
                 }}
               >
-                super admin
+                admin
               </span>
             </div>
             {/* Add New Admin Button - styled and spaced like Add Election button in admin Slidebar */}
             <div style={{ marginTop: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center', padding: '0 1.5rem' }}>
               <button
                 style={{
-                  // background: colors.primary,
+                  background: colors.primary,
                   border: 'none',
                   color: '#fff',
                   borderRadius: '0.375rem',
@@ -324,7 +331,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
                   gap: '0.75rem',
                   padding: collapsed ? '0.45rem 0.45rem' : '0.85rem 1.5rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
-                  borderRadius: 12,
+                  borderRadius: 4,
                   fontWeight: isActive ? 700 : 500,
                   background: isActive ? (isDarkMode ? colors.sidebarHover : '#e7f1ff') : 'transparent',
                   boxShadow: isActive ? (isDarkMode ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(37,99,235,0.07)') : 'none',
