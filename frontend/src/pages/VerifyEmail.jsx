@@ -52,6 +52,8 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope, faCheck, faSyncAlt, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 function VerifyEmail() {
   const { token } = useParams();
@@ -131,37 +133,239 @@ function VerifyEmail() {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center"
-      style={{ minHeight: "100vh", width:"100vw", background: "#f3f4f6" }}
+      style={{
+        minHeight: "100vh",
+        width: "100vw",
+        background: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+      }}
     >
-      <div className="container p-4 bg-white rounded-4 shadow" style={{ maxWidth: 400 }}>
-        <h2 className="text-center mb-3">Email Verification</h2>
-        <p className="text-center">Click the button below to verify your email.</p>
-        <div className="d-flex flex-column gap-2 align-items-center">
-          <button
-            className="btn btn-primary fw-bold"
-            onClick={handleVerify}
-            disabled={verifying || resending}
+      <div
+        style={{
+          maxWidth: "450px",
+          width: "100%",
+          background: "white",
+          borderRadius: "16px",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
+          overflow: "hidden",
+          animation: "slideUp 0.5s ease-out"
+        }}
+      >
+        {/* Header Section */}
+        <div
+          style={{
+            background: "#667eea",
+            padding: "40px 30px",
+            textAlign: "center",
+            color: "white"
+          }}
+        >
+          <div style={{ fontSize: "48px", marginBottom: "15px" }}>
+            <FontAwesomeIcon icon={faEnvelope} />
+          </div>
+          <h2 style={{ margin: "0 0 8px 0", fontSize: "28px", fontWeight: "700" }}>
+            Verify Your Email
+          </h2>
+          <p style={{ margin: "0", fontSize: "14px", opacity: "0.9" }}>
+            Confirm your email address to continue
+          </p>
+        </div>
+
+        {/* Content Section */}
+        <div style={{ padding: "40px 30px" }}>
+          <p
+            style={{
+              textAlign: "center",
+              color: "#555",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              marginBottom: "30px"
+            }}
           >
-            {verifying ? "Verifying..." : "Verify Email"}
-          </button>
-          
-          {showResend && (
-            <div className="text-center mt-3">
-              <p className="text-muted small mb-2">
-                Link expired or invalid?
-              </p>
-              <button
-                className="btn btn-outline-secondary btn-sm fw-bold"
-                onClick={handleResendVerification}
-                disabled={verifying || resending}
+            Click the button below to verify your email address and activate your account.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <button
+              onClick={handleVerify}
+              disabled={verifying || resending}
+              style={{
+                width: "100%",
+                padding: "14px 24px",
+                background: "#667eea",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: verifying || resending ? "not-allowed" : "pointer",
+                transition: "all 0.3s ease",
+                opacity: verifying || resending ? "0.6" : "1",
+                transform: verifying || resending ? "scale(1)" : "scale(1)",
+                boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)"
+              }}
+              onMouseOver={(e) => {
+                if (!verifying && !resending) {
+                  e.target.style.background = "#5568d3";
+                  e.target.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.4)";
+                }
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = "#667eea";
+                e.target.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.3)";
+              }}
+            >
+              {verifying ? (
+                <>
+                  <FontAwesomeIcon 
+                    icon={faSyncAlt}
+                    style={{
+                      marginRight: "8px",
+                      animation: "spin 0.8s linear infinite"
+                    }}
+                  />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faCheck} style={{ marginRight: "8px" }} />
+                  Verify Email Address
+                </>
+              )}
+            </button>
+
+            {showResend && (
+              <div
+                style={{
+                  marginTop: "20px",
+                  paddingTop: "20px",
+                  borderTop: "1px solid #e0e0e0",
+                  animation: "fadeIn 0.4s ease-out"
+                }}
               >
-                {resending ? "Sending..." : "Resend Verification Email"}
-              </button>
-            </div>
-          )}
+                <p
+                  style={{
+                    textAlign: "center",
+                    fontSize: "14px",
+                    color: "#999",
+                    marginBottom: "15px"
+                  }}
+                >
+                  Link expired or invalid?
+                </p>
+                <button
+                  onClick={handleResendVerification}
+                  disabled={verifying || resending}
+                  style={{
+                    width: "100%",
+                    padding: "12px 20px",
+                    background: "transparent",
+                    color: "#667eea",
+                    border: "2px solid #667eea",
+                    borderRadius: "8px",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    cursor: verifying || resending ? "not-allowed" : "pointer",
+                    transition: "all 0.3s ease",
+                    opacity: verifying || resending ? "0.6" : "1"
+                  }}
+                  onMouseOver={(e) => {
+                    if (!verifying && !resending) {
+                      e.target.style.background = "#667eea";
+                      e.target.style.color = "white";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.background = "transparent";
+                    e.target.style.color = "#667eea";
+                  }}
+                >
+                  {resending ? (
+                    <>
+                      <FontAwesomeIcon 
+                        icon={faSyncAlt}
+                        style={{
+                          marginRight: "6px",
+                          animation: "spin 0.8s linear infinite"
+                        }}
+                      />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faSyncAlt} style={{ marginRight: "6px" }} />
+                      Resend Verification Email
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Info Box */}
+          <div
+            style={{
+              marginTop: "25px",
+              padding: "15px",
+              background: "#f0f4ff",
+              border: "1px solid #d0deff",
+              borderRadius: "8px",
+              fontSize: "13px",
+              color: "#555",
+              lineHeight: "1.5",
+              textAlign: "center"
+            }}
+          >
+            <strong style={{ color: "#667eea" }}>
+              <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: "6px" }} />
+              Check your inbox
+            </strong>
+            <br />
+            If you don't see the verification link, please check your spam folder.
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @media (max-width: 600px) {
+          div[style*="padding: 40px 30px"] {
+            padding: 30px 20px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
