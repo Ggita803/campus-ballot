@@ -401,13 +401,13 @@ const register = asyncHandler(async (req, res) => {
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
             .header h1 { margin: 0; font-size: 28px; }
             .content { background: white; padding: 40px; }
             .greeting { font-size: 16px; margin-bottom: 20px; }
             .message { margin: 20px 0; line-height: 1.8; color: #555; }
             .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
             .button:hover { opacity: 0.9; }
             .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
             .footer-link { color: #667eea; text-decoration: none; }
@@ -659,13 +659,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
             .header h1 { margin: 0; font-size: 28px; }
             .content { background: white; padding: 40px; }
             .greeting { font-size: 16px; margin-bottom: 20px; }
             .message { margin: 20px 0; line-height: 1.8; color: #555; }
             .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
             .button:hover { opacity: 0.9; }
             .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
             .footer-link { color: #667eea; text-decoration: none; }
@@ -831,13 +831,13 @@ const resendPasswordReset = asyncHandler(async (req, res) => {
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
             .header h1 { margin: 0; font-size: 28px; }
             .content { background: white; padding: 40px; }
             .greeting { font-size: 16px; margin-bottom: 20px; }
             .message { margin: 20px 0; line-height: 1.8; color: #555; }
             .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
             .button:hover { opacity: 0.9; }
             .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
             .footer-link { color: #667eea; text-decoration: none; }
@@ -931,13 +931,13 @@ const resendVerification = asyncHandler(async (req, res) => {
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; background: #f9f9f9; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+            .header { background: #667eea; color: white; padding: 30px; text-align: center; }
             .header h1 { margin: 0; font-size: 28px; }
             .content { background: white; padding: 40px; }
             .greeting { font-size: 16px; margin-bottom: 20px; }
             .message { margin: 20px 0; line-height: 1.8; color: #555; }
             .button-container { text-align: center; margin: 30px 0; }
-            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+            .button { display: inline-block; padding: 14px 32px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
             .button:hover { opacity: 0.9; }
             .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; }
             .footer-link { color: #667eea; text-decoration: none; }
