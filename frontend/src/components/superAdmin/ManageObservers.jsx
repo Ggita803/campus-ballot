@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import ThemedTable from '../common/ThemedTable';
 
 const ManageObservers = () => {
   const [observers, setObservers] = useState([]);
@@ -146,7 +147,7 @@ const ManageObservers = () => {
   return (
     <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h3 mb-0">Manage Observers</h1>
+        <h1 className="h3 mb-0 fw-bold text-primary">Manage Observers</h1>
         <button className="btn btn-primary" onClick={() => openModal()}>
           <i className="fas fa-plus me-2"></i>Add Observer
         </button>
@@ -173,70 +174,64 @@ const ManageObservers = () => {
           </div>
         </div>
       ) : (
-        <div className="card shadow-sm">
-          <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Organization</th>
-                    <th>Access Level</th>
-                    <th>Assigned Elections</th>
-                    <th>Assigned Date</th>
-                    <th className="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {observers.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="text-center py-4 text-muted">
-                        No observers found
-                      </td>
-                    </tr>
-                  ) : (
-                    observers.map((observer) => (
-                      <tr key={observer._id}>
-                        <td className="fw-medium">{observer.name}</td>
-                        <td>{observer.email}</td>
-                        <td>{observer.observerInfo?.organization || '-'}</td>
-                        <td>
-                          <span className={`badge ${observer.observerInfo?.accessLevel === 'full' ? 'bg-success' : 'bg-info'}`}>
-                            {observer.observerInfo?.accessLevel === 'full' ? 'Full Access' : 'Election-Specific'}
-                          </span>
-                        </td>
-                        <td>
-                          {observer.observerInfo?.accessLevel === 'full' 
-                            ? <span className="text-success fw-medium">All Elections</span>
-                            : observer.observerInfo?.assignedElections?.length || 0
-                          }
-                        </td>
-                        <td>
-                          {new Date(observer.observerInfo?.assignedDate).toLocaleDateString()}
-                        </td>
-                        <td className="text-end">
-                          <button 
-                            className="btn btn-sm btn-outline-primary me-2" 
-                            onClick={() => openModal(observer)}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-outline-danger" 
-                            onClick={() => handleDelete(observer._id)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <ThemedTable striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Organization</th>
+              <th>Access Level</th>
+              <th>Assigned Elections</th>
+              <th>Assigned Date</th>
+              <th className="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {observers.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="text-center py-4 text-muted">
+                  No observers found
+                </td>
+              </tr>
+            ) : (
+              observers.map((observer) => (
+                <tr key={observer._id}>
+                  <td className="fw-medium">{observer.name}</td>
+                  <td>{observer.email}</td>
+                  <td>{observer.observerInfo?.organization || '-'}</td>
+                  <td>
+                    <span className={`badge ${observer.observerInfo?.accessLevel === 'full' ? 'bg-success' : 'bg-info'}`}>
+                      {observer.observerInfo?.accessLevel === 'full' ? 'Full Access' : 'Election-Specific'}
+                    </span>
+                  </td>
+                  <td>
+                    {observer.observerInfo?.accessLevel === 'full' 
+                      ? <span className="text-success fw-medium">All Elections</span>
+                      : observer.observerInfo?.assignedElections?.length || 0
+                    }
+                  </td>
+                  <td>
+                    {new Date(observer.observerInfo?.assignedDate).toLocaleDateString()}
+                  </td>
+                  <td className="text-end">
+                    <button 
+                      className="btn btn-sm btn-outline-primary me-2" 
+                      onClick={() => openModal(observer)}
+                    >
+                      <i className="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      className="btn btn-sm btn-outline-danger" 
+                      onClick={() => handleDelete(observer._id)}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </ThemedTable>
       )}
 
       {/* Modal */}

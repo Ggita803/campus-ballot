@@ -60,7 +60,7 @@ const helpTopics = [
 
 function Help() {
   const { isDarkMode, colors } = useTheme();
-  const logoUrl = '/logo.png';
+  const logoUrl = '/src/assets/logo.jpg';
 
   // FAQ search/filter
   const [faqSearch, setFaqSearch] = useState('');
@@ -190,8 +190,8 @@ function Help() {
   return (
     <div className="container py-4" style={{ color: colors.text }}>
       <div className="d-flex align-items-center mb-3 gap-3">
-        <img src={logoUrl} alt="Concept Crashers Logo" style={{ width: 48, height: 48, borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} />
-        <span className="fw-bold fs-4" style={{ color: colors.primary }}>Concept Crashers</span>
+        <img src={logoUrl} alt="Concept Crashers Logo" style={{ width: 48, height: 48, borderRadius: '0px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }} />
+        <span className="fw-bold fs-5" style={{ color: colors.primary }}>Concept Crashers</span>
       </div>
       <h3 className="mb-4 fw-bold" style={{ color: colors.primary }}>Admin Help & Support</h3>
 
