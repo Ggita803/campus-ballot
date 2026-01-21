@@ -37,9 +37,8 @@ const SuperAdmin = ({ user, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture || user?.avatarUrl || '/logo.png');
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const fileInputRef = useRef(null);
-  const profileMenuRef = useRef(null);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Close profile menu on outside click
   useEffect(() => {
@@ -100,6 +99,14 @@ const SuperAdmin = ({ user, onLogout }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Calculate main content margin dynamically
   const mainMarginLeft = isMobile
     ? 0
@@ -142,108 +149,177 @@ const SuperAdmin = ({ user, onLogout }) => {
         }}
       >
         {/* Header Bar */}
-        <div
+        <header
+          className="super-admin-header"
           style={{
-            background: isDarkMode 
-              ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
-              : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            borderBottom: `1px solid ${colors.border}`,
-            padding: '1.2rem 2rem', // Increased from 1rem to 1.2rem
             display: 'flex',
-            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1.5rem',
-            minHeight: '72px', // Increased from default (if any) to 72px
-            boxShadow: isDarkMode ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(37,99,235,0.08)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 50
+            padding: '18px 32px 18px 0',
+            background: isDarkMode ? colors.bgDark : colors.bgLight,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+            borderBottom: isDarkMode ? '1px solid #222' : '1px solid #e5e7eb',
+            minHeight: 72,
           }}
         >
-          {/* LEFT - Logo & Title */}
-          <div className="d-flex align-items-center gap-1 flex-shrink-0" style={{ minWidth: 0 }}>
-            {/* Kyambogo University logo for branding, increased size, reduced gap */}
-            <img src="/logo.jpg" alt="Kyambogo University Logo" style={{ width: '48px', height: '48px', objectFit: 'cover', marginRight: '6px' }} />
-            <span className="fw-bold" style={{ fontSize: '1.15rem', color: colors.text }}>
-              Super Admin
-            </span>
-          </div>
-          {/* CENTER - Search & Greeting */}
-          <div className="d-flex align-items-center gap-2 flex-grow-1 justify-content-center" style={{ minWidth: '280px', padding: '0 8px' }}>
-            <input
-              type="text"
-              className="form-control search-input search-animate"
-              placeholder="Search users, logs..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+          {/* Left: Back button and dashboard title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            {/* <button
+              aria-label="Back"
               style={{
-                paddingLeft: '14px',
-                borderRadius: '14px',
-                border: `1.5px solid ${colors.border}`,
-                boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
-                background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
-                color: colors.text,
-                height: '42px',
-                fontSize: '1rem',
-                width: '700px', // Reduced width
-                transition: 'box-shadow 0.2s, transform 0.2s',
+                background: 'rgba(0,0,0,0.04)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 8,
+                cursor: 'pointer',
               }}
-              aria-label="Search input"
-              onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
-              onBlur={e => e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)'}
-            />
-            {/* Customizable greeting with waving hand or sun/moon icon */}
-            <span className="ms-2 text-muted d-flex align-items-center" style={{ fontWeight: 600, fontSize: '1.05rem', gap: '0.4rem', whiteSpace: 'nowrap' }}>
-              {isDarkMode ? (
-                <i className="fa-solid fa-moon" style={{ color: '#2563eb', fontSize: '1.1rem' }}></i>
-              ) : (
-                <span role="img" aria-label="wave" style={{ fontSize: '1.1rem' }}>👋</span>
-              )}
-              Welcome, {user?.name?.split(' ')[0] || 'Super Admin'}!
-            </span>
-          </div>
-          {/* RIGHT - Notifications, Theme, Avatar */}
-          <div className="d-flex align-items-center gap-2 flex-shrink-0" style={{ whiteSpace: 'nowrap', paddingRight: '8px' }}>
-            {/* Notifications - compact, animated hover */}
-            <button 
-              className="btn btn-sm d-flex align-items-center justify-content-center position-relative notif-animate"
-              style={{ background: 'transparent', border: 'none', color: colors.text, width: '32px', height: '32px', fontSize: '1.1rem', padding: 0, transition: 'transform 0.18s, box-shadow 0.18s', marginRight: '16px' }}
-              onClick={() => setShowNotifications(!showNotifications)}
-              aria-label="Show notifications"
-              title="Notifications"
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(37,99,235,0.12)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+              onClick={() => window.history.back()}
             >
-              <i className="fa-solid fa-bell"></i>
+              <span className="fa fa-chevron-left" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+            </button> */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: '50px'  }}>
+              <span
+                style={{
+                  // background: '#22c55e',
+                  background: '#2563eb',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  width: 45,
+                  height: 45,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                  fontSize: 18,
+                  boxShadow: '0 2px 8px rgba(34,197,94,0.08)',
+                }}
+              >
+                <i className="fa fa-chart-line" style={{ fontSize: 18, color: '#fff' }}></i>
+              </span>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 20, color: isDarkMode ? '#fff' : '#222' }}>Super Admin Dashboard</div>
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manage system administration and oversight</div>
+              </div>
+            </div>
+          </div>
+          {/* Right: Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Time */}
+            <div style={{
+              background: '#f3f4f6',
+              color: '#222',
+              borderRadius: 8,
+              padding: '4px 16px',
+              fontWeight: 500,
+              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 80,
+              justifyContent: 'center',
+            }}>
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+            </div>
+            {/* Search */}
+            {isSearchExpanded ? (
+              <input
+                type="text"
+                className="form-control search-input search-animate"
+                placeholder="Search users, logs..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  paddingLeft: '14px',
+                  borderRadius: '14px',
+                  border: `1.5px solid ${colors.border}`,
+                  boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+                  background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#fff',
+                  color: colors.text,
+                  height: '36px',
+                  fontSize: '1rem',
+                  width: '250px',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                }}
+                aria-label="Search input"
+                onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
+                onBlur={e => {
+                  e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)';
+                  setIsSearchExpanded(false);
+                }}
+                autoFocus
+              />
+            ) : (
+              <button
+                aria-label="Search"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 36,
+                  height: 36,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setIsSearchExpanded(true)}
+              >
+                <span className="fa fa-search" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+              </button>
+            )}
+            {/* Notification icon with border */}
+            <button
+              aria-label="Notifications"
+              style={{
+                background: 'none',
+                border: isDarkMode ? '2px solid #334155' : '2px solid #e5e7eb',
+                borderRadius: '10px',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <span className="fa fa-bell" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+              {/* Notification dot */}
               {notifications.some(n => !n.read) && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem', padding: '2px 4px' }}>
-                  {notifications.filter(n => !n.read).length}
-                </span>
+                <span style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  width: 8,
+                  height: 8,
+                  background: '#22c55e',
+                  borderRadius: '8px',
+                  border: '2px solid #fff',
+                  boxShadow: '0 0 0 2px #22c55e44',
+                }} />
               )}
             </button>
-            {/* Theme Toggle - with tooltip and animated hover */}
-            <div title="Switch to light/dark mode" style={{ transition: 'transform 0.18s' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}>
-              <ThemeToggle showLabel={true} />
-            </div>
-            {/* User Profile - compact, with dropdown menu - moved to last, animated hover */}
-            <div className="d-flex align-items-center gap-1 position-relative" style={{ paddingLeft: '0.5rem', transition: 'transform 0.18s' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}>
+            {/* Toggle button (moon/sun icon only, no text) */}
+            <ThemeToggle showLabel={false} />
+            {/* Profile dropdown */}
+            <div style={{ position: 'relative' }}>
               <div
                 style={{
                   width: '45px',
                   height: '45px',
                   cursor: 'pointer',
                   borderRadius: '50%',
-                  background: '#2563eb',
+                  background: '#22c55e',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontSize: '1.3rem',
+                  fontSize: '1.1rem',
                   fontWeight: 'bold',
                   overflow: 'hidden',
                   transition: 'box-shadow 0.18s, transform 0.18s',
@@ -255,7 +331,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                 onKeyDown={e => { if (e.key === 'Enter') setShowProfileMenu(!showProfileMenu); }}
               >
                 {user?.profilePicture ? (
-                  <img src={user.profilePicture} alt="Super Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  <img src={user.profilePicture} alt="Super Admin Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
                 ) : (
                   user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'SA'
                 )}
@@ -264,7 +340,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                 <div
                   className="position-absolute shadow-lg rounded"
                   style={{
-                    top: '66px',
+                    top: '50px',
                     right: 0,
                     minWidth: '180px',
                     zIndex: 100,
@@ -286,6 +362,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                     <i className="fa-solid fa-gear" style={{ color: isDarkMode ? '#fbbf24' : '#2563eb', fontSize: '1rem', transition: 'color 0.25s' }}></i>
                     Settings
                   </button>
+                  <hr style={{ margin: '0.5rem 0', borderColor: colors.border }} />
                   <button className="dropdown-item w-100 text-start px-3 py-2 d-flex align-items-center gap-2 profile-menu-item"
                     style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '0.95rem', cursor: 'pointer' }} onClick={handleLogout}>
                     <i className="fa-solid fa-right-from-bracket" style={{ color: '#dc2626', fontSize: '1rem', transition: 'color 0.25s' }}></i>
@@ -295,7 +372,7 @@ const SuperAdmin = ({ user, onLogout }) => {
               )}
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Keyboard Shortcuts Modal */}
         {showShortcuts && (
