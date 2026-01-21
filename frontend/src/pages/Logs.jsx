@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Form, Button } from "react-bootstrap";
+import ThemedTable from "../components/common/ThemedTable";
 import {
   faHistory,
   faSearch,
@@ -755,107 +756,105 @@ function Logs({ user }) {
                 <>
                   {/* Desktop Table View */}
                   <div className="d-none d-lg-block">
-                    <div className="table-responsive">
-                      <table className="table table-hover table-bordered mb-0">
-                        <thead className="bg-light">
-                          <tr>
-                            <th className="fw-bold border-end" 
-                                style={{ cursor: 'pointer', minWidth: '180px' }}
-                                onClick={() => handleSort('createdAt')}>
-                              <FontAwesomeIcon icon={getSortIcon('createdAt')} className="me-2" />
-                              Timestamp
-                            </th>
-                            <th className="fw-bold border-end"
-                                style={{ cursor: 'pointer', minWidth: '100px' }}
-                                onClick={() => handleSort('status')}>
-                              <FontAwesomeIcon icon={getSortIcon('status')} className="me-2" />
-                              Status
-                            </th>
-                            <th className="fw-bold border-end"
-                                style={{ cursor: 'pointer', minWidth: '120px' }}
-                                onClick={() => handleSort('action')}>
-                              <FontAwesomeIcon icon={getSortIcon('action')} className="me-2" />
-                              Action
-                            </th>
-                            <th className="fw-bold border-end" style={{ minWidth: '100px' }}>Entity Type</th>
-                            <th className="fw-bold border-end" style={{ minWidth: '200px' }}>Details</th>
-                            <th className="fw-bold border-end" style={{ minWidth: '100px' }}>User</th>
-                            <th className="fw-bold border-end" style={{ minWidth: '120px' }}>IP Address</th>
-                            <th className="fw-bold text-center" style={{ minWidth: '100px' }}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {currentLogs.map((log) => (
-                            <tr key={log._id}>
-                              <td className="border-end">
-                                <div>
-                                  <small className="fw-bold">{formatDateTime(log.createdAt || log.timestamp)}</small>
-                                  <br />
-                                  <small className="text-muted">
-                                    <FontAwesomeIcon icon={faClock} className="me-1" />
-                                    {formatTimeAgo(log.createdAt || log.timestamp)}
-                                  </small>
-                                </div>
-                              </td>
-                              <td className="border-end">{getLevelBadge(log)}</td>
-                              <td className="border-end">
-                                <div className="d-flex align-items-center">
-                                  <FontAwesomeIcon 
-                                    icon={getActionIcon(log.action)} 
-                                    className="me-2 text-muted" 
-                                  />
-                                  <span className="fw-bold">{log.action}</span>
-                                </div>
-                              </td>
-                              <td className="border-end">
-                                <span className="badge bg-secondary">
-                                  {log.entityType}
-                                </span>
-                              </td>
-                              <td className="border-end">
-                                <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.93rem' }}>
-                                  {log.details || 'No details'}
-                                </span>
-                              </td>
-                              <td className="border-end">
-                                {log.user ? (
-                                  <span className="badge bg-info">
-                                    <FontAwesomeIcon icon={faUserTie} className="me-1" />
-                                    {log.user.name}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted">System</span>
-                                )}
-                              </td>
-                              <td className="border-end">
-                                <small className="text-muted font-monospace">
-                                  {log.ipAddress || 'N/A'}
+                    <ThemedTable striped bordered hover responsive>
+                      <thead>
+                        <tr>
+                          <th className="fw-bold" 
+                              style={{ cursor: 'pointer', minWidth: '180px' }}
+                              onClick={() => handleSort('createdAt')}>
+                            <FontAwesomeIcon icon={getSortIcon('createdAt')} className="me-2" />
+                            Timestamp
+                          </th>
+                          <th className="fw-bold"
+                              style={{ cursor: 'pointer', minWidth: '100px' }}
+                              onClick={() => handleSort('status')}>
+                            <FontAwesomeIcon icon={getSortIcon('status')} className="me-2" />
+                            Status
+                          </th>
+                          <th className="fw-bold"
+                              style={{ cursor: 'pointer', minWidth: '120px' }}
+                              onClick={() => handleSort('action')}>
+                            <FontAwesomeIcon icon={getSortIcon('action')} className="me-2" />
+                            Action
+                          </th>
+                          <th className="fw-bold" style={{ minWidth: '100px' }}>Entity Type</th>
+                          <th className="fw-bold" style={{ minWidth: '200px' }}>Details</th>
+                          <th className="fw-bold" style={{ minWidth: '100px' }}>User</th>
+                          <th className="fw-bold" style={{ minWidth: '120px' }}>IP Address</th>
+                          <th className="fw-bold text-center" style={{ minWidth: '100px' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentLogs.map((log) => (
+                          <tr key={log._id}>
+                            <td>
+                              <div>
+                                <small className="fw-bold">{formatDateTime(log.createdAt || log.timestamp)}</small>
+                                <br />
+                                <small className="text-muted">
+                                  <FontAwesomeIcon icon={faClock} className="me-1" />
+                                  {formatTimeAgo(log.createdAt || log.timestamp)}
                                 </small>
-                              </td>
-                              <td>
-                                <div className="d-flex justify-content-center gap-1">
-                                  <button
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() => openDetailsModal(log)}
-                                    title="View Details"
-                                  >
-                                    <FontAwesomeIcon icon={faEye} />
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => handleDelete(log._id)}
-                                    title={user?.role === 'super_admin' ? 'Delete Log' : 'Only Super Admin can delete'}
-                                    disabled={user?.role !== 'super_admin'}
-                                  >
-                                    <FontAwesomeIcon icon={faTrash} />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                              </div>
+                            </td>
+                            <td>{getLevelBadge(log)}</td>
+                            <td>
+                              <div className="d-flex align-items-center">
+                                <FontAwesomeIcon 
+                                  icon={getActionIcon(log.action)} 
+                                  className="me-2 text-muted" 
+                                />
+                                <span className="fw-bold">{log.action}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="badge bg-secondary">
+                                {log.entityType}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.93rem' }}>
+                                {log.action === 'vote' ? 'voted' : (log.details || 'No details')}
+                              </span>
+                            </td>
+                            <td>
+                              {log.user ? (
+                                <span className="badge bg-info">
+                                  <FontAwesomeIcon icon={faUserTie} className="me-1" />
+                                  {log.user.name}
+                                </span>
+                              ) : (
+                                <span className="text-muted">System</span>
+                              )}
+                            </td>
+                            <td>
+                              <small className="text-muted font-monospace">
+                                {log.ipAddress || 'N/A'}
+                              </small>
+                            </td>
+                            <td>
+                              <div className="d-flex justify-content-center gap-1">
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => openDetailsModal(log)}
+                                  title="View Details"
+                                >
+                                  <FontAwesomeIcon icon={faEye} />
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleDelete(log._id)}
+                                  title={user?.role === 'super_admin' ? 'Delete Log' : 'Only Super Admin can delete'}
+                                  disabled={user?.role !== 'super_admin'}
+                                >
+                                  <FontAwesomeIcon icon={faTrash} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </ThemedTable>
                   </div>
 
                   {/* Mobile Card View */}
@@ -906,9 +905,14 @@ function Logs({ user }) {
                               )}
                             </div>
                           </div>
-                          {log.details && (
+                          {log.details && log.action !== 'vote' && (
                             <div className="small text-muted" style={{ fontSize: '0.93rem' }}>
                               <strong style={{ fontWeight: 500, fontSize: '0.93rem' }}>Details:</strong> {log.details}
+                            </div>
+                          )}
+                          {log.action === 'vote' && (
+                            <div className="small text-muted" style={{ fontSize: '0.93rem' }}>
+                              <strong style={{ fontWeight: 500, fontSize: '0.93rem' }}>Details:</strong> voted
                             </div>
                           )}
                         </div>
@@ -1183,7 +1187,7 @@ function Logs({ user }) {
                     <div className="card bg-light">
                       <div className="card-body">
                         <h6 className="fw-bold">Details</h6>
-                        <p className="mb-0">{selectedLog.details || 'No additional details'}</p>
+                        <p className="mb-0">{selectedLog.action === 'vote' ? 'voted' : (selectedLog.details || 'No additional details')}</p>
                       </div>
                     </div>
                   </div>

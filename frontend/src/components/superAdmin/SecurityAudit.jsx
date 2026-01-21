@@ -3,6 +3,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
 import { io } from 'socket.io-client';
+import ThemedTable from '../common/ThemedTable';
 
 const SecurityAudit = () => {
   const { isDarkMode, colors } = useTheme();
@@ -400,7 +401,7 @@ const SecurityAudit = () => {
     <div className="container-fluid">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
+          <h3 className="fw-bold mb-1 text-primary" style={{ color: colors.text }}>
             <i className="fa-solid fa-shield-halved me-2 text-primary"></i>
             Security Audit & Monitoring
           </h3>
@@ -416,61 +417,70 @@ const SecurityAudit = () => {
         </div>
       </div>
 
-      {/* Security Metrics Dashboard (restyled) */}
-      <div className="row g-2 mb-3">
-        {[
-          { key: 'totalEvents', label: 'Total Events', icon: 'fa-clipboard-list', tone: '#3b82f6', value: securityMetrics.totalEvents },
-          { key: 'failedLogins', label: 'Failed Logins', icon: 'fa-shield-halved', tone: '#ef4444', value: securityMetrics.failedLogins },
-          { key: 'suspiciousActivities', label: 'Suspicious Activity', icon: 'fa-exclamation-triangle', tone: '#f59e0b', value: securityMetrics.suspiciousActivities },
-          { key: 'activeAdmins', label: 'Active Admins', icon: 'fa-users', tone: '#10b981', value: securityMetrics.activeAdmins },
-          { key: 'criticalAlerts', label: 'Critical (24h)', icon: 'fa-bell', tone: '#dc2626', value: securityMetrics.criticalAlerts },
-          { key: 'suspiciousIPs', label: 'Suspicious IPs', icon: 'fa-ban', tone: '#f43f5e', value: suspiciousIPs.length },
-        ].map((m) => (
-          <div key={m.key} className="col-12 col-sm-6 col-md-4 col-xl-2">
-            <div
-              className="h-100"
-              style={{
-                borderRadius: 16,
-                border: `1px solid ${colors.border}`,
-                background: isDarkMode
-                  ? `linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%)`
-                  : `linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)`,
-                boxShadow: isDarkMode
-                  ? '0 8px 24px rgba(0,0,0,0.35)'
-                  : '0 8px 24px rgba(37,99,235,0.08)',
-                overflow: 'hidden'
-              }}
-            >
-              <div className="p-3 d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center gap-3">
-                  <div
-                    aria-hidden
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                      background: `linear-gradient(135deg, ${m.tone}20 0%, ${m.tone}10 100%)`,
-                      color: m.tone,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: `0 6px 16px ${m.tone}33`
-                    }}
-                  >
-                    <i className={`fa-solid ${m.icon}`} style={{ fontSize: '1.25rem' }}></i>
-                  </div>
-                  <div>
-                    <div className="small fw-semibold" style={{ color: colors.textMuted }}>{m.label}</div>
-                    <div className="fw-bold" style={{ color: colors.text, fontSize: '1.5rem', lineHeight: 1 }}>
-                      {m.value}
+      {/* Security Metrics Dashboard */}
+      <div className="card mb-4" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
+        <div className="card-header" style={{ background: isDarkMode ? colors.cardBg : '#f8f9fa', borderBottom: `1px solid ${colors.border}` }}>
+          <h6 className="mb-0 fw-bold" style={{ color: colors.text }}>
+            <i className="fa-solid fa-chart-line me-2"></i>Security Metrics Overview
+          </h6>
+        </div>
+        <div className="card-body">
+          <div className="row g-3">
+            {[
+              { key: 'totalEvents', label: 'Total Events', icon: 'fa-clipboard-list', tone: '#3b82f6', value: securityMetrics.totalEvents },
+              { key: 'failedLogins', label: 'Failed Logins', icon: 'fa-shield-halved', tone: '#ef4444', value: securityMetrics.failedLogins },
+              { key: 'suspiciousActivities', label: 'Suspicious Activity', icon: 'fa-exclamation-triangle', tone: '#f59e0b', value: securityMetrics.suspiciousActivities },
+              { key: 'activeAdmins', label: 'Active Admins', icon: 'fa-users', tone: '#10b981', value: securityMetrics.activeAdmins },
+              { key: 'criticalAlerts', label: 'Critical (24h)', icon: 'fa-bell', tone: '#dc2626', value: securityMetrics.criticalAlerts },
+              { key: 'suspiciousIPs', label: 'Suspicious IPs', icon: 'fa-ban', tone: '#f43f5e', value: suspiciousIPs.length },
+            ].map((m) => (
+              <div key={m.key} className="col-12 col-sm-6 col-lg-4 col-xl-2">
+                <div
+                  className="h-100"
+                  style={{
+                    borderRadius: 7,
+                    border: `1px solid ${colors.border}`,
+                    background: isDarkMode
+                      ? `linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%)`
+                      : `linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)`,
+                    boxShadow: isDarkMode
+                      ? '0 4px 12px rgba(0,0,0,0.25)'
+                      : '0 4px 12px rgba(37,99,235,0.06)',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <div className="p-3 d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-3">
+                      <div
+                        aria-hidden
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: `linear-gradient(135deg, ${m.tone}20 0%, ${m.tone}10 100%)`,
+                          color: m.tone,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: `0 4px 12px ${m.tone}25`
+                        }}
+                      >
+                        <i className={`fa-solid ${m.icon}`} style={{ fontSize: '1.1rem' }}></i>
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="fw-bold" style={{ color: colors.text, fontSize: '1.4rem', lineHeight: 1 }}>
+                          {m.value}
+                        </div>
+                        <div className="small fw-semibold text-truncate" style={{ color: colors.textMuted }}>{m.label}</div>
+                      </div>
                     </div>
+                    <i className="fa-solid fa-chevron-right" style={{ color: colors.textMuted, opacity: 0.5 }}></i>
                   </div>
                 </div>
-                <i className="fa-solid fa-chevron-right" style={{ color: colors.textMuted, opacity: 0.6 }}></i>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Suspicious IPs Alert */}
@@ -505,7 +515,7 @@ const SecurityAudit = () => {
         </div>
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-md-3">
+            <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label small fw-bold" style={{ color: colors.text }}>Action Type</label>
               <select
                 className="form-select"
@@ -532,7 +542,7 @@ const SecurityAudit = () => {
               </select>
             </div>
 
-            <div className="col-md-3">
+            <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label small fw-bold" style={{ color: colors.text }}>Admin</label>
               <input
                 type="text"
@@ -548,7 +558,7 @@ const SecurityAudit = () => {
               />
             </div>
 
-            <div className="col-md-3">
+            <div className="col-12 col-md-6 col-lg-3">
               <label className="form-label small fw-bold" style={{ color: colors.text }}>Date Range</label>
               <select
                 className="form-select"
@@ -567,8 +577,7 @@ const SecurityAudit = () => {
               </select>
             </div>
 
-            <div className="col-md-3">
-              <label className="form-label">&nbsp;</label>
+            <div className="col-12 col-md-6 col-lg-3 d-flex align-items-end">
               <button 
                 className="btn btn-outline-secondary w-100"
                 onClick={() => {
@@ -579,7 +588,8 @@ const SecurityAudit = () => {
                 style={{
                   background: isDarkMode ? colors.inputBg : '#fff',
                   color: colors.text,
-                  border: `1px solid ${colors.border}`
+                  border: `1px solid ${colors.border}`,
+                  height: '38px'
                 }}
               >
                 <i className="fa-solid fa-rotate-right me-2"></i>Reset Filters
@@ -606,122 +616,103 @@ const SecurityAudit = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="card" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
-        <div className="table-responsive">
-          <table className="table mb-0">
-            <thead style={{ background: isDarkMode ? colors.cardBg : '#f8f9fa', borderBottom: `2px solid ${colors.border}` }}>
-              <tr>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Admin</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Action</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Target</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Type</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Timestamp</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>IP Address</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Status</th>
-                <th style={{ color: colors.text, padding: '1rem 0.75rem', fontWeight: 600 }}>Severity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedLogs.length > 0 ? (
-                paginatedLogs.map(log => {
-                  const badge = getActionBadge(log.type);
-                  return (
-                    <tr 
-                      key={log.id} 
-                      style={{ 
-                        borderBottom: `1px solid ${colors.border}`,
-                        background: isDarkMode ? colors.surface : '#fff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = isDarkMode ? colors.surface : '#fff';
-                      }}
-                    >
-                      <td style={{ padding: '0.75rem' }}>
-                        <div className="d-flex align-items-center gap-2">
-                          <div style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: '50%',
-                            background: colors.primary,
-                            color: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold'
-                          }}>
-                            {log.admin.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </div>
-                          <div>
-                            <strong style={{ color: colors.text }}>{log.admin}</strong>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{ color: colors.text, fontWeight: 500 }}>{log.action}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{ color: colors.text }}>{log.target}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span className={`badge bg-${badge.bg}`}>
-                          <i className={`fa-solid ${badge.icon} me-1`}></i>
-                          {badge.text}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <div style={{ color: colors.text, fontWeight: 500 }}>
-                          {new Date(log.timestamp).toLocaleDateString()}
-                        </div>
-                        <small style={{ color: colors.textMuted }}>
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </small>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <code style={{ 
-                          background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.85rem',
-                          color: colors.text
-                        }}>
-                          {log.ipAddress}
-                        </code>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
-                          <i className={`fa-solid fa-${log.status === 'success' ? 'check' : 'times'} me-1`}></i>
-                          {log.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span className={`badge ${
-                          log.severity === 'critical' ? 'bg-danger' :
-                          log.severity === 'warning' ? 'bg-warning' : 'bg-info'
-                        }`}>
-                          {log.severity}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr style={{ background: isDarkMode ? colors.surface : '#fff' }}>
-                  <td colSpan="8" className="text-center py-5" style={{ color: colors.textMuted }}>
-                    <i className="fa-solid fa-inbox fa-3x mb-3 d-block" style={{ opacity: 0.3 }}></i>
-                    <p className="mb-0">No audit logs found matching your filters</p>
+      <ThemedTable striped bordered hover responsive>
+        <thead>
+          <tr>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Type</th>
+            <th>Timestamp</th>
+            <th>IP Address</th>
+            <th>Status</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedLogs.length > 0 ? (
+            paginatedLogs.map(log => {
+              const badge = getActionBadge(log.type);
+              return (
+                <tr key={log.id}>
+                  <td>
+                    <div className="d-flex align-items-center gap-2">
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: colors.primary,
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold'
+                      }}>
+                        {log.admin.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div>
+                        <strong>{log.admin}</strong>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span style={{ fontWeight: 500 }}>{log.action}</span>
+                  </td>
+                  <td>
+                    <span>{log.target}</span>
+                  </td>
+                  <td>
+                    <span className={`badge bg-${badge.bg}`}>
+                      <i className={`fa-solid ${badge.icon} me-1`}></i>
+                      {badge.text}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 500 }}>
+                      {new Date(log.timestamp).toLocaleDateString()}
+                    </div>
+                    <small className="text-muted">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </small>
+                  </td>
+                  <td>
+                    <code style={{
+                      background: 'rgba(0,0,0,0.05)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem'
+                    }}>
+                      {log.ipAddress}
+                    </code>
+                  </td>
+                  <td>
+                    <span className={`badge bg-${log.status === 'success' ? 'success' : 'danger'}`}>
+                      <i className={`fa-solid fa-${log.status === 'success' ? 'check' : 'times'} me-1`}></i>
+                      {log.status}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${
+                      log.severity === 'critical' ? 'bg-danger' :
+                      log.severity === 'warning' ? 'bg-warning' : 'bg-info'
+                    }`}>
+                      {log.severity}
+                    </span>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan="8" className="text-center py-5 text-muted">
+                <i className="fa-solid fa-inbox fa-3x mb-3 d-block" style={{ opacity: 0.3 }}></i>
+                <p className="mb-0">No audit logs found matching your filters</p>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </ThemedTable>
 
       {/* Pagination */}
       {totalPages > 1 && (

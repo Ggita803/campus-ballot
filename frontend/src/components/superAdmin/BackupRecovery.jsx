@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
+import ThemedTable from '../common/ThemedTable';
 
 const BackupRecovery = () => {
   const { isDarkMode, colors } = useTheme();
@@ -284,74 +285,72 @@ const BackupRecovery = () => {
         <div className="card-header bg-light">
           <h5 className="mb-0">Backup History</h5>
         </div>
-        <div className="table-responsive">
-          <table className="table table-hover mb-0" style={{ color: colors.text }}>
-            <thead style={{ background: isDarkMode ? colors.surface : '#f8f9fa', color: colors.text }}>
-              <tr>
-                <th style={{ color: colors.text }}>Date & Time</th>
-                <th style={{ color: colors.text }}>Size</th>
-                <th style={{ color: colors.text }}>Type</th>
-                <th style={{ color: colors.text }}>Status</th>
-                <th style={{ color: colors.text }}>Duration</th>
-                <th style={{ color: colors.text }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody style={{ background: isDarkMode ? colors.surface : '#fff' }}>
-              {backups.length > 0 ? (
-                backups.map(backup => (
-                  <tr key={backup.id}>
-                    <td>
-                      <strong>{new Date(backup.timestamp).toLocaleString()}</strong>
-                    </td>
-                    <td>{backup.size}</td>
-                    <td>
-                      <span className={`badge bg-${backup.type === 'automatic' ? 'info' : 'primary'}`}>
-                        {backup.type}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge bg-${backup.status === 'completed' ? 'success' : 'warning'}`}>
-                        {backup.status}
-                      </span>
-                    </td>
-                    <td>{backup.duration}</td>
-                    <td>
-                      <div className="btn-group btn-group-sm" role="group">
-                        <button
-                          className="btn btn-outline-primary"
-                          onClick={() => restoreBackup(backup.id)}
-                          title="Restore"
-                        >
-                          <i className="fa-solid fa-undo"></i>
-                        </button>
-                        <button
-                          className="btn btn-outline-secondary"
-                          onClick={() => downloadBackup(backup.id)}
-                          title="Download"
-                        >
-                          <i className="fa-solid fa-download"></i>
-                        </button>
-                        <button
-                          className="btn btn-outline-danger"
-                          onClick={() => deleteBackup(backup.id)}
-                          title="Delete"
-                        >
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-4 text-muted">
-                    No backups found
+        <ThemedTable striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Size</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {backups.length > 0 ? (
+              backups.map(backup => (
+                <tr key={backup.id}>
+                  <td>
+                    <strong>{new Date(backup.timestamp).toLocaleString()}</strong>
+                  </td>
+                  <td>{backup.size}</td>
+                  <td>
+                    <span className={`badge bg-${backup.type === 'automatic' ? 'info' : 'primary'}`}>
+                      {backup.type}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge bg-${backup.status === 'completed' ? 'success' : 'warning'}`}>
+                      {backup.status}
+                    </span>
+                  </td>
+                  <td>{backup.duration}</td>
+                  <td>
+                    <div className="btn-group btn-group-sm" role="group">
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={() => restoreBackup(backup.id)}
+                        title="Restore"
+                      >
+                        <i className="fa-solid fa-undo"></i>
+                      </button>
+                      <button
+                        className="btn btn-outline-secondary"
+                        onClick={() => downloadBackup(backup.id)}
+                        title="Download"
+                      >
+                        <i className="fa-solid fa-download"></i>
+                      </button>
+                      <button
+                        className="btn btn-outline-danger"
+                        onClick={() => deleteBackup(backup.id)}
+                        title="Delete"
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-4 text-muted">
+                  No backups found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </ThemedTable>
       </div>
     </div>
   );
