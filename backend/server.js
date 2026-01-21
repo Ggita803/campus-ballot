@@ -1,7 +1,16 @@
 // backend/server.js
 
 // Loading environment variables
-require("dotenv").config();
+require('dotenv').config();
+
+// Initialize Datadog Tracing as the very first thing (agentless for Render)
+const tracer = require('dd-trace').init({
+  apiKey: process.env.DD_API_KEY,
+  site: process.env.DD_SITE || 'datadoghq.com',
+});
+console.log(`🟣 Datadog tracing enabled (agentless). Service: ${process.env.DD_SERVICE}, Env: ${process.env.DD_ENV}, Site: ${process.env.DD_SITE || 'datadoghq.com'}`);
+
+// require("dotenv").config();
 
 // Core Modules
 const express = require("express");
