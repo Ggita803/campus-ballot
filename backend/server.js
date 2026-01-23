@@ -118,6 +118,18 @@ app.use(cors({
   credentials: true
 }));
 
+// --- ADD THE HEALTH CHECK HERE ---
+app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  
+  res.status(200).json({ 
+    status: 'warm', 
+    database: dbStatus,
+    uptime: `${Math.floor(process.uptime())}s`,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // --- API Response Time Tracking Middleware ---
 if (!global.__apiResponseTimes) global.__apiResponseTimes = [];
 app.use((req, res, next) => {
