@@ -212,7 +212,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             {/* Time */}
             <div style={{
               background: colors.primary,
-              color: '#222',
+              color: '#fff',
               borderRadius: 3,
               padding: '4px 16px',
               fontWeight: 500,
