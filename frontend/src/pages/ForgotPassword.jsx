@@ -18,7 +18,7 @@ function ForgotPassword() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post("https://api.campusballot.tech/api/auth/forgot-password", { email });
+      const res = await axios.post("https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/api/auth/forgot-password", { email });
       Swal.fire({
         title: "Success",
         text: res.data.message + " Redirecting to login page...",

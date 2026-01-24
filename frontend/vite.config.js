@@ -13,12 +13,12 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://api.campusballot.tech',
+        target: 'https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       }

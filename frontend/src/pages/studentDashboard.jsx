@@ -21,7 +21,7 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+axios.defaults.baseURL = "https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev";
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -2292,84 +2292,56 @@ function StudentDashboard({ user }) {
                 );
               })}
             </nav>
-            {/* Mobile Sidebar Logout Button */}
-            <div className="mt-1 pt-1" style={{ borderTop: `1px solid ${isDarkMode ? colors.border : '#dee2e6'}` }}>
-              {/* Sidebar Footer */}
-<div style={{ 
-  // marginTop: '1rem', 
-  padding: '1rem 1.5rem 1.5rem', // Shorthand for top, sides, bottom
-  // borderTop: `1px solid ${colors.border}`,
-  // zIndex: 2000,
-  position: 'relative' // Essential for zIndex to function
-}}>
-  <div className="d-flex" style={{ gap: '0.5rem', marginBottom: '0.75rem' }}>
-    <button
-      className="btn btn-sm flex-fill d-flex align-items-center justify-content-center"
-      onClick={toggleTheme}
-      style={{
-        background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-        color: isDarkMode ? '#f59e0b' : '#3b82f6',
-        border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-        borderRadius: '6px',
-        padding: '0.5rem',
-        fontSize: '0.75rem',
-        fontWeight: '500'
-      }}
-    >
-      {isDarkMode ? <FaSun className="me-1" /> : <FaMoon className="me-1" />}
-      {isDarkMode ? 'Light' : 'Dark'}
-    </button>
-    <button
-      className="btn btn-sm flex-fill d-flex align-items-center justify-content-center"
-      style={{
-        background: 'rgba(220, 53, 69, 0.1)',
-        color: '#dc3545',
-        border: '1px solid rgba(220, 53, 69, 0.3)',
-        borderRadius: '6px',
-        padding: '0.5rem',
-        fontSize: '0.75rem',
-        fontWeight: '500'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#dc3545';
-        e.currentTarget.style.color = '#fff';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
-        e.currentTarget.style.color = '#dc3545';
-      }}
-      onClick={async () => {
-        const result = await Swal.fire({
-          title: 'Are you sure?',
-          text: 'You will be logged out of your account.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#dc3545',
-          cancelButtonColor: '#6c757d',
-          confirmButtonText: 'Yes, logout',
-          background: colors.surface,
-          color: colors.text,
-         
-        });
-        if (result.isConfirmed) {
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
-      }}
-    >
-      <FaSignOutAlt className="me-1" />
-      Logout
-    </button>
-  </div>
-  <div className="text-center" style={{ 
-    color: colors.textMuted, 
-    fontSize: '0.7rem',
-    lineHeight: '1.2'
-  }}>
-    Campus Ballot • Student Portal
-  </div>
-</div>
-
+            {/* Mobile Sidebar Footer */}
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                borderTop: `1px solid ${colors.border}`,
+                background: colors.surface,
+                color: colors.textMuted,
+                fontSize: '0.75rem',
+                textAlign: 'center',
+                marginTop: 'auto'
+              }}
+            >
+              <div style={{ marginBottom: '0.5rem' }}>
+                <FaFileAlt style={{ marginRight: '0.25rem' }} />
+                v1.0.0 © 2025 Campus Ballot
+              </div>
+              <button
+                onClick={async () => {
+                  const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You will be logged out of your account.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, logout',
+                    background: colors.surface,
+                    color: colors.text,
+                  });
+                  if (result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                  }
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#dc2626',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  padding: '0.25rem',
+                }}
+              >
+                <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+                Logout
+              </button>
             </div>
           </div>
         </div>

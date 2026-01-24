@@ -458,7 +458,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
               >
                 {user?.profilePicture ? (
                   <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://api.campusballot.tech/uploads/${user.profilePicture}`} 
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/uploads/${user.profilePicture}`} 
                     alt={user?.name} 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => {
