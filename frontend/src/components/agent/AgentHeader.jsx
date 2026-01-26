@@ -114,52 +114,54 @@ const AgentHeader = ({ user, onLogout }) => {
       zIndex: 100,
       boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.05)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'clamp(0.75rem, 2vw, 1.5rem)', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'clamp(0.5rem, 2vw, 1.5rem)', flexWrap: 'wrap' }}>
         
-        {/* Left Section - Breadcrumbs & Time */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, minWidth: '200px' }}>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {getBreadcrumbs().map((crumb, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <FaChevronRight size={12} style={{ color: colors.textSecondary }} />}
-                <button
-                  onClick={() => navigate(crumb.path)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: index === getBreadcrumbs().length - 1 ? colors.primary : colors.textSecondary,
-                    fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)',
-                    fontWeight: index === getBreadcrumbs().length - 1 ? 600 : 400,
-                    cursor: 'pointer',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '4px',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
-                  onMouseLeave={(e) => e.target.style.background = 'none'}
-                >
-                  {index === 0 && <FaHome style={{ marginRight: '0.25rem' }} />}
-                  {crumb.label}
-                </button>
-              </React.Fragment>
-            ))}
-          </nav>
-          
-          <div style={{ 
-            marginLeft: 'auto', 
-            display: window.innerWidth < 768 ? 'none' : 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: colors.textSecondary,
-            fontSize: 'clamp(0.75rem, 1.4vw, 0.85rem)'
-          }}>
-            <FaCircle size={8} style={{ color: '#10b981' }} />
-            <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+        {/* Left Section - Breadcrumbs & Time (Hidden on mobile) */}
+        {window.innerWidth >= 768 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, minWidth: '200px' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {getBreadcrumbs().map((crumb, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <FaChevronRight size={12} style={{ color: colors.textSecondary }} />}
+                  <button
+                    onClick={() => navigate(crumb.path)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: index === getBreadcrumbs().length - 1 ? colors.primary : colors.textSecondary,
+                      fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)',
+                      fontWeight: index === getBreadcrumbs().length - 1 ? 600 : 400,
+                      cursor: 'pointer',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}
+                    onMouseLeave={(e) => e.target.style.background = 'none'}
+                  >
+                    {index === 0 && <FaHome style={{ marginRight: '0.25rem' }} />}
+                    {crumb.label}
+                  </button>
+                </React.Fragment>
+              ))}
+            </nav>
+            
+            <div style={{ 
+              marginLeft: 'auto', 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: colors.textSecondary,
+              fontSize: 'clamp(0.75rem, 1.4vw, 0.85rem)'
+            }}>
+              <FaCircle size={8} style={{ color: '#10b981' }} />
+              <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Right Section - Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 1.5vw, 1rem)' }}>
+        {/* Right Section - Actions (Right Aligned) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 1.5vw, 1rem)', marginLeft: 'auto' }}>
           
           {/* Role Switcher */}
           <RoleSwitcher user={user} isDarkMode={isDarkMode} colors={colors} />

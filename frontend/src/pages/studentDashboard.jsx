@@ -120,6 +120,19 @@ function StudentDashboard({ user }) {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
+  // Profile edit form state
+  const [profileFormData, setProfileFormData] = useState({
+    name: user?.name || '',
+    phone: user?.phone || '',
+    department: user?.department || '',
+    yearOfStudy: user?.yearOfStudy || '',
+    bio: user?.bio || '',
+    profilePicture: user?.profilePicture || null
+  });
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
   const token = localStorage.getItem("token");
   const { socketRef } = useSocket();
 
@@ -446,6 +459,98 @@ function StudentDashboard({ user }) {
     setShowProfile(true);
   };
 
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      setProfileImageFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const saveProfileChanges = async () => {
+    if (!profileFormData.name.trim()) {
+      alert('Full name is required');
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      // Update profile information
+      await axios.put('/api/users/me/profile', {
+        name: profileFormData.name,
+        phone: profileFormData.phone,
+        department: profileFormData.department,
+        yearOfStudy: profileFormData.yearOfStudy,
+        bio: profileFormData.bio
+      });
+
+      // Upload new profile image if selected
+      let newProfilePicture = profileFormData.profilePicture;
+      if (profileImageFile) {
+        const formData = new FormData();
+        formData.append('profilePicture', profileImageFile);
+        
+        const photoResponse = await axios.put(`/api/users/${user._id}/photo`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        newProfilePicture = photoResponse.data.profilePicture;
+      }
+
+      // Update the user data with new profile picture
+      const updatedUser = {
+        ...user,
+        name: profileFormData.name,
+        phone: profileFormData.phone,
+        department: profileFormData.department,
+        yearOfStudy: profileFormData.yearOfStudy,
+        bio: profileFormData.bio,
+        profilePicture: newProfilePicture
+      };
+
+      // Update localStorage with the new user data
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      success('Profile updated successfully!');
+      setShowProfile(false);
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
+
+      // Update the component user prop by reloading (which will get updated user from localStorage/server)
+      // But first, short delay to ensure UI shows success toast
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      error('Failed to update profile: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const handleVote = async (electionId, candidateId, position, fallbackPosition, skipConfirmation = false, candidateData = null, electionData = null) => {
     // If this is called from the confirmation modal, skip the SweetAlert
     if (!skipConfirmation) {
@@ -661,7 +766,7 @@ function StudentDashboard({ user }) {
               className="d-none d-md-block"
             >
               <img 
-                src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                src={user.profilePicture || '/default-avatar.png'} 
                 alt={user?.name} 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
@@ -1930,7 +2035,7 @@ function StudentDashboard({ user }) {
               >
                 {user?.profilePicture ? (
                   <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                    src={user.profilePicture || '/default-avatar.png'} 
                     alt={user?.name} 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => {
@@ -2148,7 +2253,7 @@ function StudentDashboard({ user }) {
             >
               {user?.profilePicture ? (
                 <img 
-                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                  src={user.profilePicture || '/default-avatar.png'} 
                   alt={user?.name} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={(e) => {
@@ -3400,12 +3505,34 @@ function StudentDashboard({ user }) {
                 <div className="row g-4">
                   <div className="col-md-4 text-center">
                     <div className="position-relative d-inline-block mb-3">
-                      <FaUserCircle size={100} className="text-primary" />
-                      <button className="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0">
+                      {profileImagePreview || profileFormData.profilePicture ? (
+                        <img 
+                          src={profileImagePreview || profileFormData.profilePicture}
+                          alt={profileFormData.name}
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: '3px solid #0d6efd',
+                            display: 'block'
+                          }}
+                        />
+                      ) : (
+                        <FaUserCircle size={120} className="text-primary" />
+                      )}
+                      <label htmlFor="profileImageInput" className="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0" style={{ cursor: 'pointer' }}>
                         <FaEdit size={12} />
-                      </button>
+                      </label>
+                      <input 
+                        id="profileImageInput"
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleProfileImageChange}
+                        style={{ display: 'none' }}
+                      />
                     </div>
-                    <h5 className="fw-bold">{user?.name}</h5>
+                    <h5 className="fw-bold">{profileFormData.name}</h5>
                     <p className="text-muted">{user?.role}</p>
                   </div>
                   <div className="col-md-8">
@@ -3416,7 +3543,9 @@ function StudentDashboard({ user }) {
                           <input 
                             type="text" 
                             className="form-control" 
-                            defaultValue={user?.name}
+                            name="name"
+                            value={profileFormData.name}
+                            onChange={handleProfileInputChange}
                             required
                           />
                         </div>
@@ -3425,23 +3554,29 @@ function StudentDashboard({ user }) {
                           <input 
                             type="email" 
                             className="form-control" 
-                            defaultValue={user?.email}
-                            required
+                            value={profileFormData.email || user?.email}
+                            readOnly
                           />
+                          <small className="text-muted">Email cannot be changed</small>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Student ID</label>
                           <input 
                             type="text" 
                             className="form-control" 
-                            defaultValue={user?.studentId}
+                            value={user?.studentId}
                             readOnly
                           />
                           <small className="text-muted">Student ID cannot be changed</small>
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Department</label>
-                          <select className="form-select" defaultValue={user?.department}>
+                          <select 
+                            className="form-select" 
+                            name="department"
+                            value={profileFormData.department}
+                            onChange={handleProfileInputChange}
+                          >
                             <option value="">Select Department</option>
                             <option value="Computer Science">Computer Science</option>
                             <option value="Engineering">Engineering</option>
@@ -3455,13 +3590,20 @@ function StudentDashboard({ user }) {
                           <input 
                             type="tel" 
                             className="form-control" 
-                            defaultValue={user?.phone}
+                            name="phone"
+                            value={profileFormData.phone}
+                            onChange={handleProfileInputChange}
                             placeholder="+1 (555) 123-4567"
                           />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Year of Study</label>
-                          <select className="form-select" defaultValue={user?.yearOfStudy}>
+                          <select 
+                            className="form-select" 
+                            name="yearOfStudy"
+                            value={profileFormData.yearOfStudy}
+                            onChange={handleProfileInputChange}
+                          >
                             <option value="">Select Year</option>
                             <option value="1">First Year</option>
                             <option value="2">Second Year</option>
@@ -3475,7 +3617,9 @@ function StudentDashboard({ user }) {
                           <textarea 
                             className="form-control" 
                             rows="3"
-                            defaultValue={user?.bio}
+                            name="bio"
+                            value={profileFormData.bio}
+                            onChange={handleProfileInputChange}
                             placeholder="Tell us about yourself..."
                           ></textarea>
                         </div>
@@ -3488,8 +3632,21 @@ function StudentDashboard({ user }) {
                 <button className="btn btn-secondary" onClick={() => setShowProfile(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-primary">
-                  <FaSave className="me-2" /> Save Changes
+                <button 
+                  className="btn btn-primary"
+                  onClick={saveProfileChanges}
+                  disabled={savingProfile}
+                >
+                  {savingProfile ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FaSave className="me-2" /> Save Changes
+                    </>
+                  )}
                 </button>
               </div>
             </div>

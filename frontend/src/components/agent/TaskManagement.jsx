@@ -45,86 +45,15 @@ const TaskManagement = () => {
   const fetchTasks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/agent/tasks', {
+      const response = await axios.get('/api/candidates/agents', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // Agents are the tasks in this context - agents assigned to candidates
       setTasks(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      // Fallback dummy data
-      setTasks([
-        {
-          _id: '1',
-          title: 'Distribute campaign flyers',
-          description: 'Distribute 500 flyers across main campus',
-          assignedTo: { _id: '1', name: 'Alice Johnson' },
-          candidateName: 'John Kamau',
-          priority: 'high',
-          status: 'in-progress',
-          category: 'outreach',
-          dueDate: '2025-01-18',
-          createdDate: '2025-01-15',
-          completedDate: null,
-          notes: 'Focus on library and cafeteria areas'
-        },
-        {
-          _id: '2',
-          title: 'Update social media posts',
-          description: 'Post daily campaign updates on all platforms',
-          assignedTo: { _id: '2', name: 'Bob Smith' },
-          candidateName: 'John Kamau',
-          priority: 'medium',
-          status: 'pending',
-          category: 'social-media',
-          dueDate: '2025-01-16',
-          createdDate: '2025-01-14',
-          completedDate: null,
-          notes: ''
-        },
-        {
-          _id: '3',
-          title: 'Prepare debate materials',
-          description: 'Compile research and talking points for debate',
-          assignedTo: { _id: '1', name: 'Alice Johnson' },
-          candidateName: 'John Kamau',
-          priority: 'high',
-          status: 'completed',
-          category: 'research',
-          dueDate: '2025-01-15',
-          createdDate: '2025-01-13',
-          completedDate: '2025-01-15',
-          notes: 'Excellent work!'
-        },
-        {
-          _id: '4',
-          title: 'Door-to-door campaign',
-          description: 'Visit dormitories to engage with voters',
-          assignedTo: { _id: '3', name: 'Carol White' },
-          candidateName: 'John Kamau',
-          priority: 'medium',
-          status: 'pending',
-          category: 'outreach',
-          dueDate: '2025-01-19',
-          createdDate: '2025-01-15',
-          completedDate: null,
-          notes: ''
-        },
-        {
-          _id: '5',
-          title: 'Review campaign materials',
-          description: 'Proofread and approve new campaign posters',
-          assignedTo: { _id: '2', name: 'Bob Smith' },
-          candidateName: 'John Kamau',
-          priority: 'low',
-          status: 'pending',
-          category: 'materials',
-          dueDate: '2025-01-17',
-          createdDate: '2025-01-14',
-          completedDate: null,
-          notes: ''
-        }
-      ]);
+      setTasks([]);
       setLoading(false);
     }
   };
@@ -132,17 +61,13 @@ const TaskManagement = () => {
   const fetchAgents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidate/agents', {
+      const response = await axios.get('/api/candidates/agents', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAgents(response.data.filter(agent => agent.status === 'active'));
     } catch (error) {
       console.error('Error fetching agents:', error);
-      setAgents([
-        { _id: '1', name: 'Alice Johnson' },
-        { _id: '2', name: 'Bob Smith' },
-        { _id: '3', name: 'Carol White' }
-      ]);
+      setAgents([]);
     }
   };
 

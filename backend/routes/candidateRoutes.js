@@ -20,7 +20,12 @@ const {
   withdrawMyCandidacy
 } = require('../controllers/candidateController');
 
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+const {
+  getMyAgents,
+  getAgentStats
+} = require('../controllers/agentController');
+
+const { protect, adminOnly, hasRole } = require('../middleware/authMiddleware');
 
 // Only admin can create a new candidate (add multer here)
 router.post(
@@ -77,5 +82,8 @@ router.put('/:id', protect, updateCandidate);
 // Delete a candidate (admin only)
 router.delete('/:id', protect, adminOnly, deleteCandidate);
 
+// Agent routes - nested under candidates
+router.get('/agents', protect, hasRole('student', 'candidate', 'admin', 'super_admin'), getMyAgents);
+router.get('/agents/stats', protect, hasRole('student', 'candidate', 'admin', 'super_admin'), getAgentStats);
 
 module.exports = router;

@@ -9,7 +9,9 @@ const {
   updateAgent,
   updateAgentStatus,
   removeAgent,
-  getAgentStats
+  getAgentStats,
+  getAgentDashboard,
+  getAgentPersonalStats
 } = require("../controllers/agentController");
 
 // All routes require authentication and candidate role
@@ -17,10 +19,10 @@ const {
 router.use(protect);
 router.use(hasRole('student', 'candidate', 'admin', 'super_admin'));
 
-// Agent routes
-router.get("/", getMyAgents);
+// Agent routes - specific routes before generic ones
 router.get("/stats", getAgentStats);
 router.get("/search-students", searchStudentsForAgent);
+router.get("/", getMyAgents);
 router.post("/", addAgent);
 router.put("/:id", updateAgent);
 router.patch("/:id/status", updateAgentStatus);

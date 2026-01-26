@@ -4,6 +4,20 @@ import Swal from "sweetalert2";
 // Create an axios instance
 const instance = axios.create();
 
+// Add a request interceptor to include the Authorization header
+instance.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
+
 // Add a response interceptor
 instance.interceptors.response.use(
   response => response,

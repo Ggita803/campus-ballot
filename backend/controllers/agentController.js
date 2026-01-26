@@ -415,6 +415,129 @@ const getAgentStats = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get agent's own dashboard info
+// @route   GET /api/agent/dashboard
+// @access  Protected (Agent only)
+const getAgentDashboard = asyncHandler(async (req, res) => {
+  try {
+    console.log('[getAgentDashboard] Agent user ID:', req.user._id);
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Find the agent record for this user
+    const agent = await Agent.findOne({ 
+      user: req.user._id,
+      status: { $ne: 'removed' }
+    })
+      .populate('user', 'name email phone profilePicture studentId faculty course yearOfStudy')
+      .populate('candidate', 'name email')
+      .populate('election', 'title')
+      .sort({ createdAt: -1 });
+
+    console.log('[getAgentDashboard] Agent found:', agent ? 'Yes' : 'No');
+
+    if (!agent) {
+      return res.json({
+        agent: null,
+        stats: {
+          totalCandidates: 0,
+          activeTasks: 0,
+          completedTasks: 0,
+          tasksCompleted: 0,
+          tasksActive: 0
+        }
+      });
+    }
+
+    // Format agent info
+    const agentInfo = {
+      _id: agent._id,
+      name: agent.user?.name || 'Unknown',
+      email: agent.user?.email || '',
+      phone: agent.user?.phone || '',
+      profilePicture: agent.user?.profilePicture || null,
+      studentId: agent.user?.studentId || '',
+      faculty: agent.user?.faculty || '',
+      course: agent.user?.course || '',
+      yearOfStudy: agent.user?.yearOfStudy || '',
+      userId: agent.user?._id,
+      role: agent.agentRole,
+      status: agent.status,
+      permissions: agent.permissions,
+      tasksCompleted: agent.tasksCompleted,
+      tasksActive: agent.tasksActive,
+      candidateName: agent.candidate?.name || 'Unknown',
+      candidateEmail: agent.candidate?.email || '',
+      electionTitle: agent.election?.title || '',
+      joinedDate: agent.createdAt,
+      notes: agent.notes
+    };
+
+    res.json({
+      agent: agentInfo,
+      stats: {
+        totalCandidates: 1,
+        activeTasks: agent.tasksActive,
+        completedTasks: agent.tasksCompleted,
+        tasksCompleted: agent.tasksCompleted,
+        tasksActive: agent.tasksActive
+      }
+    });
+  } catch (error) {
+    console.error('[getAgentDashboard] Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Get agent's own stats
+// @route   GET /api/agent/stats
+// @access  Protected (Agent only)
+const getAgentPersonalStats = asyncHandler(async (req, res) => {
+  try {
+    console.log('[getAgentPersonalStats] Agent user ID:', req.user._id);
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // Find the agent record for this user
+    const agent = await Agent.findOne({ 
+      user: req.user._id,
+      status: { $ne: 'removed' }
+    });
+
+    console.log('[getAgentPersonalStats] Agent found:', agent ? 'Yes' : 'No');
+
+    if (!agent) {
+      return res.json({
+        totalCandidates: 0,
+        activeTasks: 0,
+        completedTasks: 0,
+        tasksActive: 0,
+        tasksCompleted: 0,
+        role: 'agent',
+        status: 'inactive'
+      });
+    }
+
+    res.json({
+      totalCandidates: 1,
+      activeTasks: agent.tasksActive || 0,
+      completedTasks: agent.tasksCompleted || 0,
+      tasksActive: agent.tasksActive || 0,
+      tasksCompleted: agent.tasksCompleted || 0,
+      role: agent.agentRole,
+      status: agent.status,
+      permissions: agent.permissions
+    });
+  } catch (error) {
+    console.error('[getAgentPersonalStats] Error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = {
   getMyAgents,
   searchStudentsForAgent,
@@ -422,5 +545,7 @@ module.exports = {
   updateAgent,
   updateAgentStatus,
   removeAgent,
-  getAgentStats
+  getAgentStats,
+  getAgentDashboard,
+  getAgentPersonalStats
 };

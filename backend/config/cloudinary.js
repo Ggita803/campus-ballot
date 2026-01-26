@@ -18,7 +18,7 @@ if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !pr
   console.log('✅ Cloudinary configured:', process.env.CLOUDINARY_CLOUD_NAME);
 }
 
-// Configure Cloudinary storage for Multer
+// Configure Cloudinary storage for Multer (for candidates)
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -37,6 +37,29 @@ const storage = new CloudinaryStorage({
       const filenameParts = file.originalname.split('.');
       const name = filenameParts[0].replace(/[^a-zA-Z0-9]/g, '-'); // Clean filename
       return `${file.fieldname}-${name}-${uniqueSuffix}`;
+    }
+  }
+});
+
+// Configure Cloudinary storage for profile pictures
+const profilePictureStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'campus-ballot/profiles', // Separate folder for profile pictures
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ 
+      width: 500, 
+      height: 500, 
+      crop: 'fill', // Fill the square to create a profile-friendly format
+      quality: 'auto',
+      fetch_format: 'auto'
+    }],
+    // Generate unique filename
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const filenameParts = file.originalname.split('.');
+      const name = filenameParts[0].replace(/[^a-zA-Z0-9]/g, '-');
+      return `profile-${name}-${uniqueSuffix}`;
     }
   }
 });
@@ -69,9 +92,18 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer upload instance
+// Create multer upload instance for candidates
 const upload = multer({
   storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max file size
+  }
+});
+
+// Create multer upload instance for profile pictures
+const profileUpload = multer({
+  storage: profilePictureStorage,
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max file size
@@ -99,4 +131,4 @@ upload.logUpload = (req, res, next) => {
   next();
 };
 
-module.exports = { cloudinary, upload };
+module.exports = { cloudinary, upload, profileUpload };

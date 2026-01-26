@@ -12,7 +12,8 @@ import {
   FaBars,
   FaSignOutAlt,
   FaMoon,
-  FaSun
+  FaSun,
+  FaBookOpen
 } from 'react-icons/fa';
 import { IoCloseOutline } from 'react-icons/io5';
 
@@ -172,7 +173,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
             >
               {user?.profilePicture ? (
                 <img 
-                  src={user.profilePicture.startsWith('http') ? user.profilePicture : `/uploads/${user.profilePicture}`} 
+                  src={user.profilePicture || '/default-avatar.png'} 
                   alt={user?.name} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onError={(e) => {
@@ -279,65 +280,102 @@ const CandidateDashboard = ({ user, onLogout }) => {
           </nav>
 
           {/* Sidebar Footer */}
-          <div style={{ 
-            marginTop: isMobile ? '0.75rem' : '1rem', 
-            paddingTop: isMobile ? '0.75rem' : '1rem', 
-            borderTop: `1px solid ${colors.border}` 
-          }}>
+          {!isMobile && (
             <div style={{ 
-              display: 'flex', 
-              gap: isMobile ? '0.25rem' : '0.5rem', 
-              marginBottom: isMobile ? '0.5rem' : '0.75rem' 
+              padding: '1rem 1.5rem',
+              marginTop: 'auto',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.75rem',
+              textAlign: 'center',
             }}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <FaBookOpen style={{ marginRight: '0.25rem' }} />
+                v1.0.0 © 2025 VoteSys
+              </div>
               <button
-                className="btn btn-sm flex-fill"
-                onClick={toggleTheme}
-                style={{
-                  background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                  color: isDarkMode ? '#f59e0b' : '#3b82f6',
-                  border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                  borderRadius: isMobile ? '4px' : '6px',
-                  padding: isMobile ? '0.4rem 0.25rem' : '0.5rem',
-                  fontSize: isMobile ? '0.7rem' : '0.75rem',
-                  fontWeight: '500'
-                }}
-              >
-                {isDarkMode ? <FaSun size={isMobile ? 12 : 14} className="me-1" /> : <FaMoon size={isMobile ? 12 : 14} className="me-1" />}
-                {isMobile ? (isDarkMode ? 'Light' : 'Dark') : (isDarkMode ? 'Light' : 'Dark')}
-              </button>
-              <button
-                className="btn btn-sm flex-fill"
                 onClick={handleLogout}
                 style={{
-                  background: 'rgba(220, 53, 69, 0.1)',
-                  color: '#dc3545',
-                  border: '1px solid rgba(220, 53, 69, 0.3)',
-                  borderRadius: isMobile ? '4px' : '6px',
-                  padding: isMobile ? '0.4rem 0.25rem' : '0.5rem',
-                  fontSize: isMobile ? '0.7rem' : '0.75rem',
-                  fontWeight: '500'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#dc3545';
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
-                  e.currentTarget.style.color = '#dc3545';
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#dc2626',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  padding: '0.25rem',
                 }}
               >
-                <FaSignOutAlt size={isMobile ? 10 : 12} className="me-1" />
+                <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
                 Logout
               </button>
             </div>
-            <div className="text-center" style={{ 
-              color: colors.textMuted, 
-              fontSize: isMobile ? '0.65rem' : '0.7rem',
-              lineHeight: '1.2'
+          )}
+          
+          {isMobile && (
+            <div style={{ 
+              marginTop: '0.75rem', 
+              paddingTop: '0.75rem', 
+              borderTop: `1px solid ${colors.border}` 
             }}>
-              Campus Ballot{isMobile ? '' : ' • Candidate Portal'}
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.25rem', 
+                marginBottom: '0.5rem' 
+              }}>
+                <button
+                  className="btn btn-sm flex-fill"
+                  onClick={toggleTheme}
+                  style={{
+                    background: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                    color: isDarkMode ? '#f59e0b' : '#3b82f6',
+                    border: `1px solid ${isDarkMode ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                    borderRadius: '4px',
+                    padding: '0.4rem 0.25rem',
+                    fontSize: '0.7rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  {isDarkMode ? <FaSun size={12} className="me-1" /> : <FaMoon size={12} className="me-1" />}
+                  {isDarkMode ? 'Light' : 'Dark'}
+                </button>
+                <button
+                  className="btn btn-sm flex-fill"
+                  onClick={handleLogout}
+                  style={{
+                    background: 'rgba(220, 53, 69, 0.1)',
+                    color: '#dc3545',
+                    border: '1px solid rgba(220, 53, 69, 0.3)',
+                    borderRadius: '4px',
+                    padding: '0.4rem 0.25rem',
+                    fontSize: '0.7rem',
+                    fontWeight: '500'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#dc3545';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(220, 53, 69, 0.1)';
+                    e.currentTarget.style.color = '#dc3545';
+                  }}
+                >
+                  <FaSignOutAlt size={10} className="me-1" />
+                  Logout
+                </button>
+              </div>
+              <div className="text-center" style={{ 
+                color: colors.textMuted, 
+                fontSize: '0.65rem',
+                lineHeight: '1.2'
+              }}>
+                Campus Ballot
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -458,7 +496,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
               >
                 {user?.profilePicture ? (
                   <img 
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/uploads/${user.profilePicture}`} 
+                    src={user.profilePicture || '/default-avatar.png'} 
                     alt={user?.name} 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => {

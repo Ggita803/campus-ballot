@@ -37,25 +37,26 @@ const OutreachStats = ({ stats }) => {
   ];
 
   return (
-    <div className="row g-3 mb-4">
+    <div className="row g-2 g-md-3 mb-4">
       {statsConfig.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="col-12 col-sm-6 col-lg-3">
+          <div key={index} className="col-6 col-md-6 col-lg-3">
             <div
               className="card"
               style={{
                 background: isDarkMode ? colors.surface : '#fff',
                 border: `1px solid ${isDarkMode ? colors.border : '#e9ecef'}`,
-                borderRadius: '12px'
+                borderRadius: '12px',
+                height: '100%'
               }}
             >
-              <div className="card-body p-3">
-                <div className="d-flex align-items-center gap-3">
+              <div className="card-body p-2 p-md-3">
+                <div className="d-flex flex-column align-items-center align-items-md-start gap-2">
                   <div
                     style={{
-                      width: '50px',
-                      height: '50px',
+                      width: window.innerWidth < 480 ? '45px' : '50px',
+                      height: window.innerWidth < 480 ? '45px' : '50px',
                       borderRadius: '12px',
                       background: stat.bgColor,
                       display: 'flex',
@@ -63,13 +64,26 @@ const OutreachStats = ({ stats }) => {
                       justifyContent: 'center'
                     }}
                   >
-                    <Icon size={24} color={stat.color} />
+                    <Icon size={window.innerWidth < 480 ? 20 : 24} color={stat.color} />
                   </div>
-                  <div>
-                    <h3 className="fw-bold mb-0" style={{ color: stat.color }}>
+                  <div style={{ textAlign: window.innerWidth < 480 ? 'center' : 'left', width: '100%' }}>
+                    <h3 
+                      className="fw-bold mb-0" 
+                      style={{ 
+                        color: stat.color,
+                        fontSize: window.innerWidth < 480 ? '1.25rem' : '1.5rem'
+                      }}
+                    >
                       {stat.value}
                     </h3>
-                    <p className="text-muted mb-0 small">{stat.label}</p>
+                    <p 
+                      className="text-muted mb-0" 
+                      style={{
+                        fontSize: window.innerWidth < 480 ? '0.75rem' : '0.875rem'
+                      }}
+                    >
+                      {stat.label}
+                    </p>
                   </div>
                 </div>
               </div>

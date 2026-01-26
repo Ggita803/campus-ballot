@@ -21,15 +21,29 @@ const VoterOutreach = () => {
   const fetchOutreachData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/agent/outreach', {
+      const response = await axios.get('/api/candidates/agents', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setActivities(response.data.activities);
-      setEvents(response.data.events);
+      // Transform agents data to show outreach activities
+      const transformedActivities = response.data.map((agent, index) => ({
+        _id: agent._id,
+        type: 'agent-assignment',
+        agentName: agent.name,
+        agentEmail: agent.email,
+        agentPhone: agent.phone,
+        agentRole: agent.role,
+        status: agent.status,
+        tasksActive: agent.tasksActive,
+        tasksCompleted: agent.tasksCompleted,
+        joinedDate: agent.joinedDate,
+        notes: agent.notes || 'Agent assigned to campaign'
+      }));
+      
+      setActivities(transformedActivities);
+      setEvents([]);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching outreach data:', error);
-      // Fallback dummy data
       setActivities([
         {
           _id: '1',
@@ -113,13 +127,64 @@ const VoterOutreach = () => {
 
   return (
     <div className="container-fluid p-4">
+      {/* Professional Banner */}
+      <div 
+        className="mb-4 rounded-3 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: '#fff',
+          padding: window.innerWidth < 768 ? '1.25rem 1rem' : '2rem',
+          boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)'
+        }}
+      >
+        <div className="row align-items-center">
+          <div className="col-12 col-md-7 mb-3 mb-md-0">
+            <h2 
+              className="fw-bold mb-2" 
+              style={{
+                fontSize: window.innerWidth < 480 ? '1.5rem' : window.innerWidth < 768 ? '1.75rem' : '2rem',
+                lineHeight: '1.3'
+              }}
+            >
+              <FaRoute className="me-2" />
+              Voter Outreach Campaign
+            </h2>
+            <p 
+              className="mb-0" 
+              style={{ 
+                opacity: 0.95,
+                fontSize: window.innerWidth < 480 ? '0.9rem' : window.innerWidth < 768 ? '0.95rem' : '1rem',
+                lineHeight: '1.5'
+              }}
+            >
+              Monitor your campaign activities, track agent performance, and manage outreach events all in one place.
+            </p>
+          </div>
+          <div className="col-12 col-md-5 text-center text-md-end mt-2 mt-md-0">
+            <div className="d-flex flex-column align-items-center align-items-md-end gap-2">
+              <span style={{ 
+                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
+                opacity: 0.9 
+              }}>
+                📊 Live Campaign Analytics
+              </span>
+              <span style={{ 
+                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
+                opacity: 0.9 
+              }}>
+                👥 {activities.length} Active Agent{activities.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-4">
-        <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
-          <FaRoute className="me-2" style={{ color: '#3b82f6' }} />
-          Voter Outreach
-        </h2>
-        <p className="text-muted mb-0">Track campaign activities and events</p>
+        <h4 className="fw-bold mb-1" style={{ color: colors.text }}>
+          Performance Overview
+        </h4>
+        <p className="text-muted mb-0 small">Real-time metrics from your campaign agents</p>
       </div>
 
       {/* Stats */}

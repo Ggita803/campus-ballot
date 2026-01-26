@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { confirmLogout } from '../utils/sweetAlerts';
@@ -12,7 +12,9 @@ import {
   FaSignOutAlt,
   FaMoon,
   FaSun,
-  FaUserTie
+  FaUserTie,
+  FaBars,
+  FaTimes
 } from 'react-icons/fa';
 
 // Import agent components
@@ -24,7 +26,24 @@ import VoterOutreach from '../components/agent/VoterOutreach';
 const AgentDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const menuItems = [
     { path: '/agent', icon: FaHome, label: 'Dashboard', exact: true },
@@ -51,29 +70,49 @@ const AgentDashboard = ({ user, onLogout }) => {
       display: 'flex', 
       minHeight: '100vh', 
       background: colors.background,
-      width: '100%'
+      width: '100%',
+      position: 'relative'
     }}>
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+          }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         style={{
-          width: sidebarCollapsed ? '70px' : 'clamp(220px, 20vw, 280px)',
+          width: isMobile ? '100%' : (sidebarCollapsed ? '70px' : '280px'),
+          maxWidth: isMobile ? '280px' : 'none',
+          minWidth: isMobile ? '280px' : (sidebarCollapsed ? '70px' : '280px'),
           background: isDarkMode ? colors.surface : '#fff',
           borderRight: `1px solid ${colors.border}`,
-          transition: 'width 0.3s ease',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          height: '100vh',
-          zIndex: 1000,
+          transition: isMobile ? 'left 0.3s ease' : 'width 0.3s ease',
+          position: isMobile ? 'fixed' : 'relative',
+          left: isMobile ? (sidebarOpen ? '0' : '-280px') : '0',
+          top: isMobile ? '0' : 'auto',
+          height: isMobile ? '100vh' : 'auto',
+          zIndex: isMobile ? 1000 : 'auto',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          flexShrink: 0
+          flexShrink: 0,
+          overflowY: 'auto'
         }}
       >
-        <div style={{ padding: 'clamp(1rem, 2vw, 1.5rem)', flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: isMobile ? '1rem' : '0.5rem', flex: 1, overflowY: 'auto', margin: 0 }}>
           {/* Header with collapse button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'clamp(1rem, 2vw, 1.5rem)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isMobile ? '1rem' : '0.5rem' }}>
             {!sidebarCollapsed && (
               <h4 className="fw-bold mb-0" style={{ 
                 color: colors.text,
@@ -83,25 +122,48 @@ const AgentDashboard = ({ user, onLogout }) => {
                 Agent Portal
               </h4>
             )}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              style={{
-                background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
-                border: 'none',
-                borderRadius: '6px',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: colors.text,
-                marginLeft: sidebarCollapsed ? 'auto' : '0',
-                marginRight: sidebarCollapsed ? 'auto' : '0'
-              }}
-            >
-              {sidebarCollapsed ? <FaChevronRight size={14} /> : <FaChevronLeft size={14} />}
-            </button>
+            {isMobile ? (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                  border: 'none',
+                  borderRadius: '6px',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: colors.text,
+                  marginLeft: 'auto'
+                }}
+                title="Close menu"
+              >
+                <FaTimes size={14} />
+              </button>
+            ) : (
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                style={{
+                  background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6',
+                  border: 'none',
+                  borderRadius: '6px',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: colors.text,
+                  marginLeft: sidebarCollapsed ? 'auto' : '0',
+                  marginRight: sidebarCollapsed ? 'auto' : '0'
+                }}
+                title="Toggle sidebar"
+              >
+                {sidebarCollapsed ? <FaChevronRight size={14} /> : <FaChevronLeft size={14} />}
+              </button>
+            )}
           </div>
 
           {/* User Info */}
@@ -280,14 +342,52 @@ const AgentDashboard = ({ user, onLogout }) => {
       {/* Main Content */}
       <div style={{ 
         flex: 1,
-        marginLeft: sidebarCollapsed ? '70px' : 'clamp(220px, 20vw, 280px)',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'margin-left 0.3s ease',
         minHeight: '100vh',
         minWidth: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        width: isMobile ? '100%' : 'auto',
+        margin: 0,
+        padding: 0
       }}>
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <div style={{
+            padding: '0.5rem 0.75rem',
+            background: isDarkMode ? colors.surface : '#fff',
+            borderBottom: `1px solid ${colors.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            margin: 0
+          }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: colors.text,
+                cursor: 'pointer',
+                padding: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem',
+                borderRadius: '6px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f3f4f6'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+            >
+              {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            </button>
+            <span style={{ fontSize: '0.9rem', color: colors.textSecondary }}>
+              {sidebarOpen ? 'Close Menu' : 'Open Menu'}
+            </span>
+          </div>
+        )}
+        
         <AgentHeader user={user} onLogout={onLogout} />
         
         <main style={{ 

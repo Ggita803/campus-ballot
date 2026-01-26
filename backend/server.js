@@ -194,6 +194,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/public", publicRoutes);
 // Agent routes must come BEFORE candidate routes to avoid route conflicts
 app.use('/api/candidates/agents', agentRoutes);
+// Agent dashboard routes (for agents viewing their own dashboard)
+app.use('/api/agent', require('./routes/agentDashboardRoutes'));
 app.use('/api/candidate/engagement', engagementRoutes);
 app.use('/api/candidate', candidateMaterialRoutes);
 app.use("/api/candidates", candidateRoutes);

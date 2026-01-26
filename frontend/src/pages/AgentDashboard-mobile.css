@@ -1,0 +1,91 @@
+/* Agent Dashboard Mobile Responsive Styles */
+
+/* Mobile Sidebar Animation */
+@media (max-width: 768px) {
+  .agent-page-root {
+    overflow: hidden;
+  }
+
+  /* Smooth sidebar slide animation */
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Mobile overlay fade */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.5;
+    }
+  }
+
+  /* Menu button hover effect */
+  .mobile-menu-btn:hover {
+    transform: scale(1.05);
+  }
+
+  /* Smooth transition for sidebar */
+  .agent-sidebar-mobile {
+    animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Mobile overlay animation */
+  .agent-sidebar-overlay {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  /* Full width content on mobile */
+  .agent-main-content-mobile {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  /* Prevent body scroll when sidebar is open */
+  body.sidebar-open {
+    overflow: hidden;
+  }
+}
+
+/* Tablet and above */
+@media (min-width: 769px) {
+  .agent-page-root {
+    overflow: auto;
+  }
+
+  /* Hide mobile menu button on desktop */
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
+  /* Desktop sidebar can coexist with content */
+  .agent-main-content-desktop {
+    flex: 1;
+    margin-left: auto;
+  }
+}
+
+/* Extra small phones (320px - 480px) */
+@media (max-width: 480px) {
+  .agent-page-root {
+    font-size: 14px;
+  }
+
+  /* Adjust sidebar width for very small screens */
+  .agent-sidebar {
+    max-width: 85vw !important;
+  }
+
+  /* Compact menu button text on very small screens */
+  .mobile-menu-label {
+    display: none;
+  }
+}

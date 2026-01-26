@@ -21,8 +21,7 @@ const {
 } = require('../controllers/userController');
 const { updateUserPhoto, deleteUserPhoto } = require('../controllers/userController');
 
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const { profileUpload } = require('../config/cloudinary');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -54,7 +53,7 @@ router.get('/me/profile', protect, getCurrentUserProfile);
 router.put('/me/profile', protect, updateCurrentUserProfile);
 
 // Upload/update profile photo (users can update their own, admins can update any)
-router.put('/:id/photo', protect, upload.single('profilePicture'), updateUserPhoto);
+router.put('/:id/photo', protect, profileUpload.single('profilePicture'), updateUserPhoto);
 
 // Delete profile photo (users can delete their own, admins can delete any)
 router.delete('/:id/photo', protect, deleteUserPhoto);

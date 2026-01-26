@@ -154,8 +154,8 @@ const updateUserPhoto = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const fname = req.file.filename || req.file.path.split(/[\\/]/).pop();
-    user.profilePicture = `/uploads/${fname}`;
+    // Store the Cloudinary URL directly from req.file.path
+    user.profilePicture = req.file.path;
     await user.save();
 
     try {
@@ -188,18 +188,19 @@ const deleteUserPhoto = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'No profile picture to delete' });
     }
 
-    // Expect profilePicture to be like /uploads/filename
-    const relPath = user.profilePicture.replace(/^\//, ''); // remove leading slash
-    const absolutePath = path.join(__dirname, '..', relPath);
-
-    // Remove file if it exists
+    // Extract public_id from Cloudinary URL to delete from Cloudinary
+    const cloudinary = require('../config/cloudinary').cloudinary;
     try {
-      if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
-      }
-    } catch (fsErr) {
-      console.error('Error deleting profile picture file:', fsErr.message);
-      // proceed to clear DB even if file deletion fails
+      // Cloudinary URL format: https://res.cloudinary.com/cloud_name/image/upload/v.../public_id
+      const urlParts = user.profilePicture.split('/');
+      const fileName = urlParts[urlParts.length - 1].split('.')[0]; // Get filename without extension
+      const publicId = `campus-ballot/profiles/${fileName}`;
+      
+      await cloudinary.uploader.destroy(publicId);
+      console.log('✅ Deleted from Cloudinary:', publicId);
+    } catch (cloudErr) {
+      console.error('Error deleting from Cloudinary:', cloudErr.message);
+      // Continue to clear DB even if Cloudinary deletion fails
     }
 
     user.profilePicture = null;

@@ -36,14 +36,49 @@ const AgentDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/agent/dashboard', {
+      
+      // Fetch agent's own dashboard info
+      const dashboardResponse = await axios.get('/api/agent/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDashboardData(response.data);
+      
+      console.log('[AgentDashboard] Dashboard response:', dashboardResponse.data);
+      
+      // Fetch agent's own stats
+      const statsResponse = await axios.get('/api/agent/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('[AgentDashboard] Stats response:', statsResponse.data);
+
+      const agent = dashboardResponse.data?.agent;
+      
+      // Transform agent to candidates format (single candidate - the candidate they work for)
+      const candidates = agent ? [{
+        _id: agent.userId,
+        name: agent.candidateName,
+        email: agent.candidateEmail,
+        role: agent.role,
+        status: agent.status,
+        tasks: agent.tasksActive,
+        tasksCompleted: agent.tasksCompleted,
+        joinedDate: agent.joinedDate
+      }] : [];
+
+      setDashboardData({
+        candidates,
+        tasks: [],
+        stats: {
+          totalCandidates: statsResponse.data?.totalCandidates || 0,
+          activeTasks: statsResponse.data?.tasksActive || 0,
+          completedTasks: statsResponse.data?.tasksCompleted || 0,
+          role: statsResponse.data?.role || 'agent',
+          status: statsResponse.data?.status || 'inactive'
+        }
+      });
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Fallback to dummy data
       setDashboardData({
         candidates: [
           {
@@ -110,7 +145,7 @@ const AgentDashboard = () => {
 
   const statCards = [
     {
-      title: 'Candidates',
+      title: 'Total Agents',
       value: dashboardData.stats.totalCandidates,
       icon: FaUserTie,
       color: '#3b82f6',
@@ -131,15 +166,15 @@ const AgentDashboard = () => {
       bgColor: 'rgba(16, 185, 129, 0.1)'
     },
     {
-      title: 'Pending Approvals',
-      value: dashboardData.stats.pendingApprovals,
+      title: 'Active Agents',
+      value: dashboardData.stats.activeAgents,
       icon: FaClock,
       color: '#8b5cf6',
       bgColor: 'rgba(139, 92, 246, 0.1)'
     },
     {
-      title: 'Deadlines',
-      value: dashboardData.stats.upcomingDeadlines,
+      title: 'Coordinators',
+      value: dashboardData.stats.coordinators,
       icon: FaExclamationTriangle,
       color: '#ef4444',
       bgColor: 'rgba(239, 68, 68, 0.1)'
@@ -209,17 +244,68 @@ const AgentDashboard = () => {
 
   return (
     <div className="container-fluid p-4">
+      {/* Professional Banner */}
+      <div 
+        className="mb-4 rounded-3 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: '#fff',
+          padding: window.innerWidth < 768 ? '1.25rem 1rem' : '2rem',
+          boxShadow: '0 10px 30px rgba(59, 130, 246, 0.2)'
+        }}
+      >
+        <div className="row align-items-center">
+          <div className="col-12 col-md-7 mb-3 mb-md-0">
+            <h2 
+              className="fw-bold mb-2" 
+              style={{
+                fontSize: window.innerWidth < 480 ? '1.5rem' : window.innerWidth < 768 ? '1.75rem' : '2rem',
+                lineHeight: '1.3'
+              }}
+            >
+              <FaUserTie className="me-2" />
+              Campaign Agent Dashboard
+            </h2>
+            <p 
+              className="mb-0" 
+              style={{ 
+                opacity: 0.95,
+                fontSize: window.innerWidth < 480 ? '0.9rem' : window.innerWidth < 768 ? '0.95rem' : '1rem',
+                lineHeight: '1.5'
+              }}
+            >
+              Support your candidates, manage campaign activities, and track progress across all elections.
+            </p>
+          </div>
+          <div className="col-12 col-md-5 text-center text-md-end mt-2 mt-md-0">
+            <div className="d-flex flex-column align-items-center align-items-md-end gap-2">
+              <span style={{ 
+                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
+                opacity: 0.9 
+              }}>
+                📋 Manage All Campaigns
+              </span>
+              <span style={{ 
+                fontSize: window.innerWidth < 480 ? '0.8rem' : window.innerWidth < 768 ? '0.85rem' : '0.9rem',
+                opacity: 0.9 
+              }}>
+                👥 {dashboardData.stats.totalCandidates} Candidate{dashboardData.stats.totalCandidates !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-4">
-        <h2 className="fw-bold mb-2" style={{ color: colors.text }}>
-          <FaUserTie className="me-2" style={{ color: '#3b82f6' }} />
-          Campaign Agent Dashboard
-        </h2>
-        <p className="text-muted mb-0">Support your candidates and manage campaign activities</p>
+        <h4 className="fw-bold mb-1" style={{ color: colors.text }}>
+          Campaign Overview
+        </h4>
+        <p className="text-muted mb-0 small">Track your candidates' performance and campaign metrics</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="row g-3 mb-4">
+      <div className="row g-2 g-md-3 mb-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -243,24 +329,37 @@ const AgentDashboard = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="card-body p-3">
-                  <div className="d-flex align-items-center justify-content-between mb-2">
+                <div className="card-body p-2 p-md-3">
+                  <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <div
                       className="d-flex align-items-center justify-content-center"
                       style={{
-                        width: '45px',
-                        height: '45px',
+                        width: window.innerWidth < 480 ? '40px' : '45px',
+                        height: window.innerWidth < 480 ? '40px' : '45px',
                         borderRadius: '12px',
                         backgroundColor: stat.bgColor
                       }}
                     >
-                      <Icon size={22} color={stat.color} />
+                      <Icon size={window.innerWidth < 480 ? 18 : 22} color={stat.color} />
                     </div>
                   </div>
-                  <h3 className="fw-bold mb-1" style={{ color: stat.color, fontSize: '1.8rem' }}>
+                  <h3 
+                    className="fw-bold mb-1" 
+                    style={{ 
+                      color: stat.color, 
+                      fontSize: window.innerWidth < 480 ? '1.3rem' : window.innerWidth < 768 ? '1.5rem' : '1.8rem'
+                    }}
+                  >
                     {stat.value}
                   </h3>
-                  <p className="text-muted mb-0 small">{stat.title}</p>
+                  <p 
+                    className="text-muted mb-0" 
+                    style={{
+                      fontSize: window.innerWidth < 480 ? '0.7rem' : window.innerWidth < 768 ? '0.75rem' : '0.875rem'
+                    }}
+                  >
+                    {stat.title}
+                  </p>
                 </div>
               </div>
             </div>
@@ -355,21 +454,25 @@ const AgentDashboard = () => {
                           </div>
                           <div>
                             <h6 className="mb-1 fw-bold" style={{ color: colors.text }}>{candidate.name}</h6>
-                            <p className="mb-0 small text-muted">{candidate.position} - {candidate.election}</p>
+                            <p className="mb-0 small text-muted">{candidate.studentId || candidate.email}</p>
                             <div className="mt-1">
-                              <span className="badge bg-info me-2">{candidate.tasks} tasks</span>
-                              {candidate.status === 'active' && (
-                                <span className="badge bg-success">{candidate.currentVotes} votes</span>
-                              )}
+                              <span className="badge bg-info me-2">{candidate.tasks} active tasks</span>
+                              <span className="badge bg-secondary">{candidate.tasksCompleted} completed</span>
                             </div>
                           </div>
                         </div>
-                        <Link
-                          to={`/agent/candidate/${candidate._id}`}
-                          className="btn btn-sm btn-outline-primary"
-                        >
-                          Manage
-                        </Link>
+                        <div>
+                          <span 
+                            className="badge"
+                            style={{
+                              backgroundColor: candidate.status === 'active' ? '#10b981' : '#6b7280',
+                              color: '#fff',
+                              padding: '0.5rem 0.75rem'
+                            }}
+                          >
+                            {candidate.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
