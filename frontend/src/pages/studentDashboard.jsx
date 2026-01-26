@@ -21,7 +21,7 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev";
+axios.defaults.baseURL = "https://api.campusballot.tech";
 import {
   FaSignOutAlt,
   FaUserCircle,

@@ -42,7 +42,7 @@ const AgentHeader = ({ user, onLogout }) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/api/notifications', {
+      const response = await axios.get('https://api.campusballot.tech/api/notifications', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -61,7 +61,7 @@ const AgentHeader = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/api/notifications/${notificationId}/read`,
+        `https://api.campusballot.tech/api/notifications/${notificationId}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

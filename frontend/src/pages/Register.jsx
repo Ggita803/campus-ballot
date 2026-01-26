@@ -241,7 +241,7 @@ function Register() {
   setLoading(true);
   try {
     const res = await axios.post(
-      "https://curly-bassoon-5g64q4wrgrvvc4w9q-5000.app.github.dev/api/auth/register",
+      "https://api.campusballot.tech/api/auth/register",
       form
     );
     Swal.fire({
