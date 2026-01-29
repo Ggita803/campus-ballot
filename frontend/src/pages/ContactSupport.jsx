@@ -2,6 +2,9 @@ import { Container, Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaHeadset, FaEnvelope, FaPhone, FaClock, FaMapMarkerAlt, FaCheckCircle } from 'react-icons/fa';
 import { useState } from 'react';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const ContactSupport = () => {
@@ -47,6 +50,9 @@ const ContactSupport = () => {
 
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Contact Support" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -67,6 +73,12 @@ const ContactSupport = () => {
             </div>
           </div>
         </div>
+
+        {/* Print Button */}
+        <PrintButton pageTitle="Contact & Support" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Contact & Support" />
 
         {/* Support Channels */}
         <div className="legal-section">

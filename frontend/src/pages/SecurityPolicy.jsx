@@ -1,11 +1,17 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaLock, FaShieldAlt, FaKey, FaDatabase, FaEye, FaCheckCircle, FaAlertTriangle, FaEnvelope } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const SecurityPolicy = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Security Policy" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -26,6 +32,12 @@ const SecurityPolicy = () => {
             </div>
           </div>
         </div>
+
+        {/* Print Button */}
+        <PrintButton pageTitle="Security Policy" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Security Policy" />
 
         {/* Content Sections */}
         <div className="legal-section">

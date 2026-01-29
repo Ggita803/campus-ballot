@@ -1,11 +1,17 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaScroll, FaCheckCircle, FaShield, FaLock, FaEnvelope } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const EULA = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="EULA" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -26,6 +32,12 @@ const EULA = () => {
             </div>
           </div>
         </div>
+
+        {/* Print Button */}
+        <PrintButton pageTitle="EULA" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="EULA" />
 
         {/* Content Sections */}
         <div className="legal-section">

@@ -1,11 +1,17 @@
 import { Container, Accordion, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaBook, FaUserPlus, FaSignInAlt, FaCheckCircle, FaTicketAlt, FaFileAlt, FaCog, FaHeadset, FaEnvelope } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const Documentation = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Documentation" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -26,6 +32,12 @@ const Documentation = () => {
             </div>
           </div>
         </div>
+
+        {/* Print Button */}
+        <PrintButton pageTitle="Documentation" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Documentation" />
 
         {/* Introduction */}
         <div className="legal-section">

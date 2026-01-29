@@ -1,11 +1,17 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaShieldAlt, FaDatabase, FaLock, FaUsers, FaCheckCircle, FaEnvelope, FaGavel } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const PrivacyPolicy = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Privacy Policy" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -27,9 +33,21 @@ const PrivacyPolicy = () => {
           </div>
         </div>
 
+        {/* Print Button */}
+        <PrintButton pageTitle="Privacy Policy" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Privacy Policy" />
         {/* Content Sections */}
         <div className="legal-section">
           <h2><FaShieldAlt /> Introduction</h2>
+          <div className="important-notice">
+            <FaShieldAlt />
+            <div className="notice-content">
+              <strong>Your Privacy Matters</strong>
+              <p>We are committed to protecting your information and being transparent about how we use it.</p>
+            </div>
+          </div>
           <p>
             Welcome to Campus Ballot ("the Platform", "we", "us", or "our"). We are committed to protecting your privacy and ensuring you have a positive experience on our platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information.
           </p>
@@ -60,9 +78,12 @@ const PrivacyPolicy = () => {
           </ul>
 
           <h3>Election-Related Data</h3>
-          <p>
-            Voting data is collected separately and processed with additional privacy protections. Your vote is immediately separated from your identity and encrypted.
-          </p>
+          <div className="info-card">
+            <h4><FaCheckCircle /> Vote Privacy</h4>
+            <p>
+              Voting data is collected separately and processed with additional privacy protections. Your vote is immediately separated from your identity and encrypted.
+            </p>
+          </div>
         </div>
 
         <div className="legal-section">
@@ -83,10 +104,12 @@ const PrivacyPolicy = () => {
 
         <div className="legal-section">
           <h2><FaLock /> Vote Privacy and Separation</h2>
-          <div className="legal-highlight">
-            <p>
-              <strong>Your Vote is Anonymous:</strong> Once your vote is submitted, it is immediately encrypted and separated from your personal identification information. No administrator can link your vote to your identity.
-            </p>
+          <div className="important-notice">
+            <FaLock />
+            <div className="notice-content">
+              <strong>Your Vote is Anonymous</strong>
+              <p>Once submitted, your vote is encrypted and separated from your identity. No one can link your vote to you.</p>
+            </div>
           </div>
           <p>
             However, we maintain an audit trail that confirms you voted (without recording how you voted) to prevent duplicate voting and ensure election integrity.
@@ -95,7 +118,14 @@ const PrivacyPolicy = () => {
 
         <div className="legal-section">
           <h2><FaUsers /> Information Sharing</h2>
-          <p>We do <strong>NOT</strong> sell your personal information. We share information only in these circumstances:</p>
+          <div className="info-notice">
+            <FaCheckCircle />
+            <div className="notice-content">
+              <strong>We Don't Sell Your Data</strong>
+              <p>We only share information when necessary for service operation, legal requirements, or with your consent.</p>
+            </div>
+          </div>
+          <p>We share information only in these circumstances:</p>
           <ul>
             <li><strong>University Administrators:</strong> Limited information for election administration</li>
             <li><strong>Service Providers:</strong> Third-party vendors who assist with platform operations</li>
@@ -155,7 +185,13 @@ const PrivacyPolicy = () => {
 
         <div className="legal-section">
           <h2><FaLock /> Security Measures</h2>
-          <p>We implement comprehensive security measures:</p>
+          <div className="info-card">
+            <h4><FaLock /> Enterprise-Grade Security</h4>
+            <p>
+              We implement comprehensive security measures to protect your data from unauthorized access and misuse.
+            </p>
+          </div>
+          <p>Our security includes:</p>
           <ul>
             <li>SSL/TLS encryption for all data in transit</li>
             <li>AES-256 encryption for sensitive data at rest</li>
@@ -178,9 +214,13 @@ const PrivacyPolicy = () => {
             <li><strong>Portability:</strong> Receive your data in machine-readable format</li>
             <li><strong>Opt-out:</strong> Unsubscribe from marketing communications</li>
           </ul>
-          <p className="mt-3">
-            To exercise these rights, contact us at <strong>privacy@campusballot.tech</strong>
-          </p>
+          <div className="info-notice" style={{ marginTop: '20px' }}>
+            <FaEnvelope />
+            <div className="notice-content">
+              <strong>Contact Us to Exercise Your Rights</strong>
+              <p>To submit a request, email <strong>privacy@campusballot.tech</strong> with your name and specific request.</p>
+            </div>
+          </div>
         </div>
 
         <div className="legal-section">

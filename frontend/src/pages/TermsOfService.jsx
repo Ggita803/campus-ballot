@@ -1,11 +1,17 @@
 import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaFileContract, FaCheckCircle, FaUserTie, FaVoteYea, FaShield, FaScaleBalanced, FaEnvelope } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const TermsOfService = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Terms of Service" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -27,7 +33,11 @@ const TermsOfService = () => {
           </div>
         </div>
 
-        {/* Content Sections */}
+        {/* Print Button */}
+        <PrintButton pageTitle="Terms of Service" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Terms of Service" />        {/* Content Sections */}
         <div className="legal-section">
           <h2><FaCheckCircle /> Agreement to Terms</h2>
           <p>

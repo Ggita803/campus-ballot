@@ -1,11 +1,17 @@
 import { Container, Accordion } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaTools, FaCheckCircle, FaLaptop, FaWifi, FaGlobe, FaHeadset, FaEnvelope } from 'react-icons/fa';
+import ProgressIndicator from '../components/ProgressIndicator';
+import TableOfContents from '../components/TableOfContents';
+import PrintButton from '../components/PrintButton';
 import './LegalPages.css';
 
 const TechnicalSupport = () => {
   return (
     <div className="legal-container">
+      {/* Progress Indicator */}
+      <ProgressIndicator pageTitle="Technical Support" />
+
       <div className="legal-content-wrapper">
         {/* Back Navigation */}
         <div className="legal-top-nav">
@@ -26,6 +32,12 @@ const TechnicalSupport = () => {
             </div>
           </div>
         </div>
+
+        {/* Print Button */}
+        <PrintButton pageTitle="Technical Support" />
+
+        {/* Table of Contents */}
+        <TableOfContents pageTitle="Technical Support" />
 
         {/* System Requirements Section */}
         <div className="legal-section">
