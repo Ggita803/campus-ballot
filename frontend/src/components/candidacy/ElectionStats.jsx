@@ -289,7 +289,9 @@ ${(stats.departmentBreakdown || []).map(d => `${d.department},${d.votes},${d.per
                 backgroundColor: '#0d6efd',
                 borderColor: '#0d6efd',
                 color: '#fff',
-                fontWeight: '500'
+                fontWeight: '500',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
               <FaDownload className="me-2" />
