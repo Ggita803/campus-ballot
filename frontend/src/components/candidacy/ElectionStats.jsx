@@ -31,6 +31,7 @@ import {
   FaArrowLeft
 } from 'react-icons/fa';
 import Loader from '../common/Loader';
+import ThemedTable from '../common/ThemedTable';
 
 const ElectionStats = () => {
   const { id: electionId } = useParams();
@@ -595,50 +596,48 @@ ${(stats.departmentBreakdown || []).map(d => `${d.department},${d.votes},${d.per
               </h5>
             </div>
             <div className="card-body">
-              <div className="table-responsive">
-                <table className={`table table-striped table-hover mb-0 ${isDarkMode ? 'table-dark' : ''}`}>
-                  <thead className={isDarkMode ? 'table-dark' : 'table-light'}>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Candidate</th>
-                      <th>Votes</th>
-                      <th>Percentage</th>
-                      <th>Progress</th>
+              <ThemedTable striped hover responsive>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Candidate</th>
+                    <th>Votes</th>
+                    <th>Percentage</th>
+                    <th>Progress</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(stats.competitionData || []).map((competitor, index) => (
+                    <tr key={index} style={{ background: index === (stats.candidate?.ranking - 1) ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}>
+                      <td style={{ color: colors.text }}>
+                        <span className={`badge ${index === 0 ? 'bg-warning' : index === 1 ? 'bg-secondary' : 'bg-info'}`}>
+                          #{index + 1}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: index === (stats.candidate?.ranking - 1) ? 'bold' : 'normal', color: colors.text }}>
+                        {competitor.name} {index === (stats.candidate?.ranking - 1) && <span className="badge bg-primary ms-1">You</span>}
+                      </td>
+                      <td style={{ color: colors.text }}>{competitor.votes}</td>
+                      <td style={{ color: colors.text }}>{competitor.percentage}%</td>
+                      <td>
+                        <div className="progress" style={{ height: '20px' }}>
+                          <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ 
+                              width: `${competitor.percentage}%`,
+                              background: index === (stats.candidate?.ranking - 1) ? '#3b82f6' : '#6b7280'
+                            }}
+                            aria-valuenow={competitor.percentage}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {(stats.competitionData || []).map((competitor, index) => (
-                      <tr key={index} style={{ background: index === (stats.candidate?.ranking - 1) ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }}>
-                        <td style={{ color: colors.text }}>
-                          <span className={`badge ${index === 0 ? 'bg-warning' : index === 1 ? 'bg-secondary' : 'bg-info'}`}>
-                            #{index + 1}
-                          </span>
-                        </td>
-                        <td style={{ fontWeight: index === (stats.candidate?.ranking - 1) ? 'bold' : 'normal', color: colors.text }}>
-                          {competitor.name} {index === (stats.candidate?.ranking - 1) && <span className="badge bg-primary ms-1">You</span>}
-                        </td>
-                        <td style={{ color: colors.text }}>{competitor.votes}</td>
-                        <td style={{ color: colors.text }}>{competitor.percentage}%</td>
-                        <td>
-                          <div className="progress" style={{ height: '20px' }}>
-                            <div
-                              className="progress-bar"
-                              role="progressbar"
-                              style={{ 
-                                width: `${competitor.percentage}%`,
-                                background: index === (stats.candidate?.ranking - 1) ? '#3b82f6' : '#6b7280'
-                              }}
-                              aria-valuenow={competitor.percentage}
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            ></div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </ThemedTable>
             </div>
           </div>
         </div>
