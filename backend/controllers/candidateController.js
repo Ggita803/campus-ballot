@@ -3,6 +3,8 @@ const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
 const User = require("../models/User");
 const Agent = require("../models/Agent");
+const sendEmail = require("../utils/sendEmail");
+const emailTemplates = require("../utils/emailTemplates");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
 // @desc    Create a candidate (Admin only)
@@ -246,14 +248,16 @@ const getCandidatesByElection = asyncHandler(async (req, res) => {
 // @access  Admin only
 const approveCandidate = asyncHandler(async (req, res) => {
   try {
-    const candidate = await Candidate.findById(req.params.id);
+    const candidate = await Candidate.findById(req.params.id)
+      .populate('user', 'email name')
+      .populate('election', 'title');
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
     console.log(`[CANDIDATE APPROVAL] Starting approval for candidate: ${candidate.name}`);
-    console.log(`[CANDIDATE APPROVAL] Candidate user ID: ${candidate.user}`);
+    console.log(`[CANDIDATE APPROVAL] Candidate user ID: ${candidate.user._id}`);
 
     candidate.status = "approved";
     await candidate.save();
@@ -262,10 +266,10 @@ const approveCandidate = asyncHandler(async (req, res) => {
     // This allows the student to access both Student and Candidate dashboards
     if (candidate.user) {
       try {
-        console.log(`[CANDIDATE APPROVAL] Updating user ${candidate.user} with candidate role...`);
+        console.log(`[CANDIDATE APPROVAL] Updating user ${candidate.user._id} with candidate role...`);
         
         const updatedUser = await User.findByIdAndUpdate(
-          candidate.user,
+          candidate.user._id,
           { $addToSet: { additionalRoles: 'candidate' } },
           { new: true }
         );
@@ -274,8 +278,29 @@ const approveCandidate = asyncHandler(async (req, res) => {
           console.log(`[CANDIDATE APPROVAL] ✅ SUCCESS! User updated: ${updatedUser.name} (${updatedUser.email})`);
           console.log(`[CANDIDATE APPROVAL] Primary role: ${updatedUser.role}`);
           console.log(`[CANDIDATE APPROVAL] Additional roles: ${JSON.stringify(updatedUser.additionalRoles)}`);
+          
+          // Send approval email
+          try {
+            const emailTemplate = emailTemplates.applicationApproved({
+              candidateName: candidate.name,
+              electionTitle: candidate.election.title,
+              position: candidate.position,
+              userEmail: updatedUser.email
+            });
+            
+            await sendEmail({
+              to: updatedUser.email,
+              subject: emailTemplate.subject,
+              html: emailTemplate.html
+            });
+            
+            console.log('[EMAIL SENT] Approval email sent to:', updatedUser.email);
+          } catch (emailError) {
+            console.error('[EMAIL ERROR] Failed to send approval email:', emailError.message);
+            // Don't fail the entire request if email fails
+          }
         } else {
-          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidate.user}`);
+          console.error(`[CANDIDATE APPROVAL] ❌ ERROR: User not found with ID ${candidate.user._id}`);
         }
       } catch (userUpdateError) {
         console.error(`[CANDIDATE APPROVAL] ❌ ERROR updating user:`, userUpdateError);
@@ -306,8 +331,8 @@ const approveCandidate = asyncHandler(async (req, res) => {
       console.error('Socket emit error (candidate approved):', e.message);
     }
     res.json({ message: "Candidate approved" });
-    console.error(`[CANDIDATE APPROVAL] ❌ FATAL ERROR:`, error);
   } catch (error) {
+    console.error(`[CANDIDATE APPROVAL] ❌ FATAL ERROR:`, error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -317,14 +342,42 @@ const approveCandidate = asyncHandler(async (req, res) => {
 // @access  Admin only
 const disqualifyCandidate = asyncHandler(async (req, res) => {
   try {
-    const candidate = await Candidate.findById(req.params.id);
+    const candidate = await Candidate.findById(req.params.id)
+      .populate('user', 'email name')
+      .populate('election', 'title');
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
+    const { reason } = req.body; // Optional reason for disqualification
+
     candidate.status = "disqualified";
     await candidate.save();
+    
+    // Send disqualification email
+    if (candidate.user && candidate.user.email) {
+      try {
+        const emailTemplate = emailTemplates.applicationDisqualified({
+          candidateName: candidate.name,
+          electionTitle: candidate.election.title,
+          position: candidate.position,
+          userEmail: candidate.user.email,
+          reason: reason || undefined
+        });
+        
+        await sendEmail({
+          to: candidate.user.email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html
+        });
+        
+        console.log('[EMAIL SENT] Disqualification email sent to:', candidate.user.email);
+      } catch (emailError) {
+        console.error('[EMAIL ERROR] Failed to send disqualification email:', emailError.message);
+        // Don't fail the entire request if email fails
+      }
+    }
     
     // Log activity
     await logActivity({
@@ -332,7 +385,7 @@ const disqualifyCandidate = asyncHandler(async (req, res) => {
       action: 'update',
       entityType: 'Candidate',
       entityId: candidate._id.toString(),
-      details: `Disqualified candidate: ${candidate.name} for ${candidate.position}`,
+      details: `Disqualified candidate: ${candidate.name} for ${candidate.position}${reason ? ` - Reason: ${reason}` : ''}`,
       status: 'success',
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)

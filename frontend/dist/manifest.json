@@ -1,6 +1,6 @@
 {
   "name": "Campus Ballot",
-  "short_name": "Campus Ballot",
+  "short_name": "Ballot",
   "description": "Campus Election and Voting System",
   "start_url": "/",
   "display": "standalone",
@@ -9,25 +9,17 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/android-chrome-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "/android-chrome-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "utilities"],
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "type": "image/png",
-      "sizes": "540x720",
-      "form_factor": "narrow"
-    }
-  ]
+  "categories": ["education", "utilities"]
 }

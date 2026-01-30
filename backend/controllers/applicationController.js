@@ -1,6 +1,9 @@
 const asyncHandler = require('express-async-handler');
 const Candidate = require('../models/Candidate');
 const Election = require('../models/Election');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
+const emailTemplates = require('../utils/emailTemplates');
 
 // @desc    Candidate self-application
 // @route   POST /api/applications
@@ -56,6 +59,31 @@ const createApplication = asyncHandler(async (req, res) => {
       { $addToSet: { candidates: candidate._id } }
     );
     console.log('Application created successfully:', candidate._id);
+    
+    // Send pending application email to the user
+    try {
+      const applicantUser = await User.findById(user);
+      if (applicantUser && applicantUser.email) {
+        const emailTemplate = emailTemplates.applicationSubmitted({
+          candidateName: name,
+          electionTitle: validElection.title,
+          position: position,
+          userEmail: applicantUser.email
+        });
+        
+        await sendEmail({
+          to: applicantUser.email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html
+        });
+        
+        console.log('[EMAIL SENT] Application pending email sent to:', applicantUser.email);
+      }
+    } catch (emailError) {
+      console.error('[EMAIL ERROR] Failed to send application pending email:', emailError.message);
+      // Don't fail the entire request if email fails
+    }
+    
     res.status(201).json({ message: 'Application submitted', candidate });
   } catch (error) {
     console.error('Application submission error:', error);

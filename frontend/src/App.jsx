@@ -54,6 +54,17 @@ function ProtectedRoute({ user, requiredRole, children }) {
       return children; // Allow access
     }
     
+    // Super admin can access admin routes (admin level features)
+    // This allows super admin to view and manage all admin functions
+    if (user.role === 'super_admin' && requiredRole === 'admin') {
+      return children; // Allow super admin to access admin routes
+    }
+    
+    // Admin can access admin routes
+    if (user.role === 'admin' && requiredRole === 'admin') {
+      return children; // Allow admin to access admin routes
+    }
+    
     // Redirect to appropriate dashboard based on user's primary role
     if (user.role === 'admin') {
       return <Navigate to="/admin" replace />;

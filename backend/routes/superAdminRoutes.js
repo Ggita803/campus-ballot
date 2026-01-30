@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const {
+  getAnalytics,
+  getActivity,
   getSystemSummary,
   getAllAdmins,
   createAdmin,
@@ -26,6 +28,8 @@ const backup = require('../controllers/backupController');
 
 // Super Admin: Get system summary (dashboard stats)
 router.get('/reports/system-summary', protect, superAdminOnly, getSystemSummary);
+router.get('/reports/analytics', protect, superAdminOnly, getAnalytics);
+router.get('/reports/activity', protect, superAdminOnly, getActivity);
 
 // Super Admin: Manage admins
 router.get('/admins', protect, superAdminOnly, getAllAdmins);

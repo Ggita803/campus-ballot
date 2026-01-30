@@ -82,7 +82,7 @@ const LandingPage = () => {
 
       // Send to backend API
       const response = await fetch(
-        "https://api.campusballot.tech/api/contact",
+        "https://symmetrical-space-halibut-x56vpp9j9pxgf67vg-5000.app.github.dev/api/contact",
         {
           method: "POST",
           headers: {
