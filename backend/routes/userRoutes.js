@@ -52,6 +52,9 @@ router.get('/me/profile', protect, getCurrentUserProfile);
 // User: Update own profile
 router.put('/me/profile', protect, updateCurrentUserProfile);
 
+// Upload/update own profile photo
+router.post('/upload-profile-picture', protect, profileUpload.single('profileImage'), updateUserPhoto);
+
 // Upload/update profile photo (users can update their own, admins can update any)
 router.put('/:id/photo', protect, profileUpload.single('profilePicture'), updateUserPhoto);
 

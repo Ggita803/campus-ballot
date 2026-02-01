@@ -37,57 +37,80 @@ const ObserverActivityLogs = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      let url = '/api/observer/elections/' + (selectedElection !== 'all' ? selectedElection : elections[0]?._id) + '/audit-logs';
       
-      if (selectedElection === 'all') {
-        // For now, just fetch from first election
-        if (elections.length === 0) {
-          setLogs([]);
-          return;
-        }
-        url = `/api/observer/elections/${elections[0]._id}/audit-logs`;
+      // Default to first election if 'all' is selected or no specific selection
+      let targetElectionId = selectedElection;
+      if (selectedElection === 'all' && elections.length > 0) {
+        targetElectionId = elections[0]._id;
       }
-
+      
+      if (!targetElectionId || elections.length === 0) {
+        setLogs(getMockLogs());
+        return;
+      }
+      
+      const url = `/api/observer/elections/${targetElectionId}/audit-logs`;
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLogs(response.data.data || []);
+      
+      const logsData = response.data.data?.logs || response.data.data || [];
+      setLogs(Array.isArray(logsData) ? logsData : getMockLogs());
     } catch (err) {
       console.error('Error fetching activity logs:', err);
-      // Use mock data
-      setLogs([
-        {
-          _id: '1',
-          action: 'Vote Recorded',
-          type: 'vote_cast',
-          description: 'A vote was recorded for position: President',
-          user: 'System',
-          timestamp: new Date(Date.now() - 300000),
-          details: { position: 'President', candidate: 'John Doe' }
-        },
-        {
-          _id: '2',
-          action: 'Observer Logged In',
-          type: 'login',
-          description: 'Observer accessed the monitoring dashboard',
-          user: 'Observer 1',
-          timestamp: new Date(Date.now() - 3600000),
-          details: { ip: '192.168.1.1' }
-        },
-        {
-          _id: '3',
-          action: 'Election Status Updated',
-          type: 'election_update',
-          description: 'Election status changed from upcoming to ongoing',
-          user: 'Admin',
-          timestamp: new Date(Date.now() - 7200000),
-          details: { oldStatus: 'upcoming', newStatus: 'ongoing' }
-        }
-      ]);
+      setLogs(getMockLogs());
     } finally {
       setLoading(false);
     }
   };
+
+  const getMockLogs = () => [
+    {
+      _id: '1',
+      action: 'Vote Recorded',
+      type: 'vote_cast',
+      description: 'A vote was recorded for position: President',
+      user: 'System',
+      timestamp: new Date(Date.now() - 300000),
+      details: { position: 'President', candidate: 'John Doe' }
+    },
+    {
+      _id: '2',
+      action: 'Observer Logged In',
+      type: 'login',
+      description: 'Observer accessed the monitoring dashboard',
+      user: 'Observer 1',
+      timestamp: new Date(Date.now() - 3600000),
+      details: { ip: '192.168.1.1' }
+    },
+    {
+      _id: '3',
+      action: 'Election Status Updated',
+      type: 'election_update',
+      description: 'Election status changed from upcoming to ongoing',
+      user: 'Admin',
+      timestamp: new Date(Date.now() - 7200000),
+      details: { oldStatus: 'upcoming', newStatus: 'ongoing' }
+    },
+    {
+      _id: '4',
+      action: 'Incident Reported',
+      type: 'incident_report',
+      description: 'Technical issue reported at polling station 5',
+      user: 'Observer 2',
+      timestamp: new Date(Date.now() - 10800000),
+      details: { station: 'Station 5', severity: 'medium' }
+    },
+    {
+      _id: '5',
+      action: 'Data Export',
+      type: 'data_export',
+      description: 'Voter list exported by administrator',
+      user: 'Admin',
+      timestamp: new Date(Date.now() - 14400000),
+      details: { format: 'CSV', recordCount: 1250 }
+    }
+  ];
 
   const getActionIcon = (type) => {
     const iconMap = {
@@ -102,7 +125,7 @@ const ObserverActivityLogs = () => {
     return iconMap[type] || '📋';
   };
 
-  const filteredLogs = logs.filter(log => {
+  const filteredLogs = (Array.isArray(logs) ? logs : []).filter(log => {
     if (filterType === 'all') return true;
     return log.type === filterType;
   });

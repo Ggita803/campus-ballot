@@ -7,7 +7,14 @@ import ObserverHeader from './ObserverHeader';
 const ObserverLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      return null;
+    }
+  });
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -38,9 +45,16 @@ const ObserverLayout = () => {
       }
       
       const data = await response.json();
-      setUser(data);
+      
+      // Only update if we got valid data with _id
+      if (data && data._id) {
+        setUser(data);
+        // Update localStorage with fresh data
+        localStorage.setItem('currentUser', JSON.stringify(data));
+      }
     } catch (err) {
       console.error('Error fetching user data:', err);
+      // Don't clear user state on error - keep the localStorage data
     }
   };
 

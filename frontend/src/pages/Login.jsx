@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope, faLock, faSignInAlt, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope, faLock, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./Login.module.css";
 import useSocket from '../hooks/useSocket';

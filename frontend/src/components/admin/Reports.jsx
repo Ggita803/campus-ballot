@@ -106,7 +106,7 @@ function Reports() {
       document.body.removeChild(a);
 
       Swal.fire("Exported!", "Report exported as CSV.", "success");
-    } catch (err) {
+    } catch {
       Swal.fire("Error", "Failed to export report.", "error");
     }
   };

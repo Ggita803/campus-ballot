@@ -4,9 +4,9 @@ import axios from 'axios';
 import { FaCog, FaBell, FaLock, FaUser, FaSave } from 'react-icons/fa';
 
 const ObserverSettings = () => {
-  const { isDarkMode, colors } = useTheme();
+  const { isDarkMode: _isDarkMode, colors } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
-  const [user, setUser] = useState(null);
+  const [_user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,6 +25,9 @@ const ObserverSettings = () => {
     autoLogoutTime: 30
   });
   const [successMessage, setSuccessMessage] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     fetchUserData();
@@ -33,7 +36,7 @@ const ObserverSettings = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/user/profile', {
+      const response = await axios.get('/api/users/me/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
@@ -43,10 +46,52 @@ const ObserverSettings = () => {
         phoneNumber: response.data.phoneNumber || '',
         organization: response.data.observerInfo?.organization || ''
       });
+      setProfileImage(response.data.profilePicture || null);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.post('/api/users/upload-profile-picture', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setProfileImage(response.data.profilePicture);
+      setSuccessMessage('Profile image updated successfully!');
+      setShowImageModal(false);
+      setImagePreview(null);
+      
+      // Update localStorage user data
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      userData.profilePicture = response.data.profilePicture;
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert(err.response?.data?.message || 'Failed to upload image. Please try again.');
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -485,6 +530,101 @@ const ObserverSettings = () => {
           </div>
         </div>
       </div>
+      
+      {/* Image Upload Modal */}
+      {showImageModal && (
+        <div 
+          className="modal fade show" 
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowImageModal(false)}
+        >
+          <div 
+            className="modal-dialog modal-dialog-centered" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="modal-content"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`
+              }}
+            >
+              <div 
+                className="modal-header"
+                style={{ borderBottom: `1px solid ${colors.border}` }}
+              >
+                <h5 className="modal-title" style={{ color: colors.text }}>Update Profile Picture</h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowImageModal(false)}
+                  style={{ filter: isDarkMode ? 'invert(1)' : 'none' }}
+                ></button>
+              </div>
+              <div className="modal-body text-center">
+                {imagePreview && (
+                  <div className="mb-3">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="rounded-circle"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        objectFit: 'cover',
+                        border: `3px solid ${colors.border}`
+                      }}
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{
+                    background: colors.surface,
+                    color: colors.text,
+                    border: `1px solid ${colors.border}`
+                  }}
+                />
+                <small className="text-muted mt-2 d-block">
+                  Supported formats: JPG, PNG, GIF. Max size: 2MB
+                </small>
+              </div>
+              <div 
+                className="modal-footer"
+                style={{ borderTop: `1px solid ${colors.border}` }}
+              >
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowImageModal(false);
+                    setImagePreview(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    const fileInput = document.querySelector('input[type="file"]');
+                    const file = fileInput.files[0];
+                    if (file) {
+                      handleImageUpload(file);
+                    }
+                  }}
+                  disabled={!imagePreview}
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FaUser } from 'react-icons/fa';
 import axios from 'axios';
 import { confirmLogout } from '../../utils/sweetAlerts';
+import getImageUrl from '../../utils/getImageUrl';
 
 const navItems = [
   { label: 'Dashboard', icon: 'fa-solid fa-gauge', to: '/observer/dashboard' },
@@ -20,9 +22,13 @@ const navItems = [
 export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobile }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const fileRef = useRef(null);
   const [assignedElections, setAssignedElections] = useState([]);
   const [profileImage, setProfileImage] = useState(user?.profilePicture || null);
+  const [uploading, setUploading] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
@@ -31,6 +37,21 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       setProfileImage(user?.profilePicture || null);
     }
   }, [user]);
+
+  // Helper function to get the correct image URL (like admin sidebar)
+  const getProfileImageSrc = () => {
+    if (profileImage) {
+      const imageUrl = getImageUrl(profileImage);
+      if (imageUrl) return imageUrl;
+    }
+    if (user?.profilePicture) {
+      const imageUrl = getImageUrl(user.profilePicture);
+      if (imageUrl) return imageUrl;
+    }
+    return null; // Return null to show initials
+  };
+
+  const profileImgSrc = getProfileImageSrc();
 
   const fetchAssignedElections = async () => {
     try {
@@ -44,47 +65,72 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
     }
   };
 
-  // Handle profile image upload
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // File upload handlers like admin sidebar
+  const onChooseFile = () => {
+    fileRef.current?.click();
+  };
 
-    const formData = new FormData();
-    formData.append('profilePicture', file);
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setShowUploadModal(true);
+    }
+  };
 
+  const handleSaveUpload = async () => {
+    if (!selectedFile) return;
+    
+    if (!user?._id) {
+      alert('User data not loaded. Please refresh the page and try again.');
+      setShowUploadModal(false);
+      setSelectedFile(null);
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
+      return;
+    }
+    
+    setUploading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('/api/observer/upload-profile-picture', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      const fd = new FormData();
+      fd.append('profilePicture', selectedFile);
+      const res = await axios.put(`/api/users/${user._id}/photo`, fd, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
-      
-      if (response.data.profilePicture) {
-        setProfileImage(response.data.profilePicture);
-        // Update user in localStorage
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        currentUser.profilePicture = response.data.profilePicture;
-        localStorage.setItem('user', JSON.stringify(currentUser));
+      if (res.data && res.data.profilePicture) {
+        setProfileImage(res.data.profilePicture);
+        // update localStorage user if present
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.profilePicture = res.data.profilePicture;
+            localStorage.setItem('user', JSON.stringify(parsed));
+          }
+        } catch (e) {}
       }
+      setShowUploadModal(false);
+      setSelectedFile(null);
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
     } catch (error) {
-      console.error('Error uploading profile picture:', error);
+      console.error('Upload error:', error);
+      alert(error.response?.data?.message || 'Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const handleCancelUpload = () => {
+    setShowUploadModal(false);
+    setSelectedFile(null);
+    setPreviewUrl(null);
   };
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : 'OB';
-
-  const handleLogout = async () => {
-    const result = await confirmLogout(isDarkMode);
-    if (result.isConfirmed) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/login');
-    }
-  };
 
   return (
     <>
@@ -129,7 +175,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       >
         {/* Header with Profile */}
         <div className="sidebar-header text-center" style={{ 
-          padding: collapsed ? '1rem 0' : '1.5rem 1rem', 
+          padding: collapsed ? '2rem 0' : '3rem 1rem 2rem', 
           position: 'relative', 
           flexShrink: 0,
           borderBottom: `1px solid ${colors.border}`,
@@ -201,17 +247,13 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
               position: 'relative',
               overflow: 'hidden',
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              backgroundImage: profileImage ? `url(${profileImage})` : 'none',
+              backgroundImage: profileImgSrc ? `url(${profileImgSrc})` : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               transition: 'all 0.3s ease',
               border: '3px solid rgba(255, 255, 255, 0.2)'
             }}
-            onClick={() => {
-              if (!collapsed) {
-                setShowDropdown(!showDropdown);
-              }
-            }}
+            onClick={onChooseFile}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = isDarkMode 
@@ -227,174 +269,27 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
             tabIndex={0}
             aria-label="Profile photo"
           >
-            {!profileImage && initials}
-            
-            {/* Online Status Indicator */}
-            {!collapsed && (
-              <div style={{
-                position: 'absolute',
-                bottom: 3,
-                right: 3,
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                background: '#10b981',
-                border: `2.5px solid ${colors.surface}`,
-                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.6)',
-              }} />
-            )}
+            {!profileImgSrc && initials}
+
+            {/* Upload overlay (hidden) */}
+            <input
+              type="file"
+              ref={fileRef}
+              accept="image/*"
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+              aria-label="Upload profile picture"
+            />
 
             {/* Upload overlay (hidden) */}
             <input
               type="file"
               id="profileImageUpload"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={handleFileSelect}
               style={{ display: 'none' }}
               aria-label="Upload profile picture"
             />
-            
-            {/* Dropdown */}
-            {!collapsed && showDropdown && (
-              <div
-                className="profile-dropdown"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: 'absolute',
-                  top: 80,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: colors.surface,
-                  color: colors.text,
-                  borderRadius: 12,
-                  boxShadow: isDarkMode ? '0 8px 24px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.15)',
-                  minWidth: 220,
-                  zIndex: 200,
-                  padding: '0.5rem 0',
-                  border: `1px solid ${colors.border}`,
-                  animation: 'slideDown 0.2s ease-out'
-                }}
-              >
-                <button
-                  onClick={() => document.getElementById('profileImageUpload').click()}
-                  className="dropdown-item"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    background: 'none',
-                    border: 'none',
-                    color: colors.text,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
-                    fontSize: '0.9rem',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colors.surfaceHover;
-                    e.currentTarget.style.paddingLeft = '1.5rem';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.paddingLeft = '1.25rem';
-                  }}
-                >
-                  <i className="fa-solid fa-camera" style={{ width: 16 }}></i>
-                  Change Photo
-                </button>
-                <Link
-                  to="/observer/profile"
-                  className="dropdown-item"
-                  style={{
-                    padding: '0.75rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    textDecoration: 'none',
-                    color: colors.text,
-                    transition: 'all 0.2s',
-                    fontSize: '0.9rem',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colors.surfaceHover;
-                    e.currentTarget.style.paddingLeft = '1.5rem';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.paddingLeft = '1.25rem';
-                  }}
-                >
-                  <i className="fa-solid fa-user" style={{ width: 16 }}></i>
-                  My Profile
-                </Link>
-                <Link
-                  to="/observer/settings"
-                  className="dropdown-item"
-                  style={{
-                    padding: '0.75rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    textDecoration: 'none',
-                    color: colors.text,
-                    transition: 'all 0.2s',
-                    fontSize: '0.9rem',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colors.surfaceHover;
-                    e.currentTarget.style.paddingLeft = '1.5rem';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.paddingLeft = '1.25rem';
-                  }}
-                >
-                  <i className="fa-solid fa-gear" style={{ width: 16 }}></i>
-                  Settings
-                </Link>
-                <div style={{ 
-                  height: 1, 
-                  background: colors.border, 
-                  margin: '0.5rem 0' 
-                }} />
-                <button
-                  onClick={handleLogout}
-                  className="dropdown-item"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    textAlign: 'left',
-                    fontSize: '0.9rem',
-                    fontWeight: 500
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                    e.currentTarget.style.paddingLeft = '1.5rem';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.paddingLeft = '1.25rem';
-                  }}
-                >
-                  <i className="fa-solid fa-right-from-bracket" style={{ width: 16 }}></i>
-                  Logout
-                </button>
-              </div>
-            )}
           </div>
           {!collapsed && (
             <>
@@ -405,7 +300,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 color: colors.text,
                 letterSpacing: '0.3px'
               }}>
-                Welcome, {user?.name?.split(' ')[0] || 'Observer'}!
+                {user?.name || 'Observer'}
               </div>
               <div style={{ fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                 <span className="badge" style={{ 
@@ -443,8 +338,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
 
         {/* Navigation Menu */}
         <nav className="sidebar-nav" style={{ 
-          flex: 1, 
-          padding: '0.5rem 0.5rem', 
+          padding: '2rem 0.5rem', 
           overflowY: 'auto',
           overflowX: 'hidden'
         }}>
@@ -596,110 +490,28 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
             </>
           )}
         </nav>
+        
+        {/* Spacer to push footer to bottom */}
+        <div style={{ flex: 1 }}></div>
 
-        {/* Footer with Logout */}
+        {/* Footer */}
         <div className="sidebar-footer" style={{ 
-          padding: 0,
+          padding: '2.5rem 1rem',
           borderTop: `1px solid ${colors.border}`, 
           flexShrink: 0,
-          background: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(16, 185, 129, 0.02)'
+          background: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(16, 185, 129, 0.02)',
+          textAlign: 'center',
+          minHeight: '100px'
         }}>
-          {/* System Status - Minimal */}
           {!collapsed && (
-            <div style={{ 
-              padding: '0.75rem 1rem', 
-              borderBottom: `1px solid ${colors.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div className="d-flex align-items-center gap-2">
-                <div style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)',
-                  animation: 'pulse 2s ease-in-out infinite'
-                }} />
-                <span style={{ 
-                  fontSize: '0.7rem', 
-                  color: colors.textMuted,
-                  fontWeight: 500 
-                }}>
-                  Online
-                </span>
-              </div>
+            <div>
               <span style={{ 
                 fontSize: '0.65rem', 
                 color: colors.textMuted,
                 opacity: 0.7
               }}>
-                v2.1.0
+                Campus Ballot Observer v2.1.0
               </span>
-            </div>
-          )}
-
-          {/* Logout Button */}
-          <div style={{ padding: '0 1rem 1rem' }}>
-            <button
-              onClick={handleLogout}
-              className="btn w-100"
-              style={{
-                background: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)',
-                color: '#ef4444',
-                border: `1px solid ${isDarkMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)'}`,
-                padding: collapsed ? '0.6rem' : '0.75rem',
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                gap: collapsed ? 0 : '0.75rem',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.08)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <i className="fa-solid fa-right-from-bracket" style={{ fontSize: '1rem' }}></i>
-              {!collapsed && <span>Logout</span>}
-            </button>
-          </div>
-
-          {/* Copyright */}
-          {!collapsed && (
-            <div style={{ 
-              padding: '0.75rem 1.5rem', 
-              textAlign: 'center',
-              borderTop: `1px solid ${colors.border}`,
-              background: isDarkMode ? 'rgba(0,0,0,0.15)' : 'rgba(16, 185, 129, 0.02)'
-            }}>
-              <p style={{ 
-                fontSize: '0.7rem', 
-                color: colors.textMuted, 
-                margin: 0,
-                fontWeight: 500
-              }}>
-                <i className="fa-solid fa-shield-halved me-1"></i>
-                Campus Ballot System
-              </p>
-              <p style={{ 
-                fontSize: '0.65rem', 
-                color: colors.textMuted, 
-                margin: '0.25rem 0 0',
-                opacity: 0.7
-              }}>
-                © {new Date().getFullYear()} All rights reserved
-              </p>
             </div>
           )}
         </div>
@@ -756,6 +568,104 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
           }
         `}</style>
       </aside>
+
+      {/* Profile Picture Upload Modal */}
+      {showUploadModal && (
+        <div 
+          className="modal fade show d-block" 
+          tabIndex="-1"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9999
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content"
+              style={{
+                backgroundColor: colors.cardBg,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+              }}
+            >
+              <div 
+                className="modal-header"
+                style={{
+                  borderBottom: `1px solid ${colors.border}`,
+                  backgroundColor: colors.headerBg
+                }}
+              >
+                <h5 
+                  className="modal-title"
+                  style={{ color: colors.text }}
+                >
+                  Update Profile Picture
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCancelUpload}
+                  style={{
+                    filter: isDarkMode ? 'invert(1)' : 'none'
+                  }}
+                />
+              </div>
+              
+              <div className="modal-body text-center py-4">
+                {previewUrl && (
+                  <div className="mb-3">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #10b981',
+                        boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <p 
+                  className="mb-0"
+                  style={{ color: colors.text }}
+                >
+                  Do you want to update your profile picture?
+                </p>
+              </div>
+              
+              <div 
+                className="modal-footer"
+                style={{
+                  borderTop: `1px solid ${colors.border}`,
+                  backgroundColor: colors.headerBg
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleCancelUpload}
+                  disabled={uploading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleSaveUpload}
+                  disabled={uploading}
+                >
+                  {uploading ? 'Uploading...' : 'Save Photo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
