@@ -300,7 +300,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 color: colors.text,
                 letterSpacing: '0.3px'
               }}>
-                {user?.name || 'Observer'}
+                Welcome, {user?.name || 'Observer'}
               </div>
               <div style={{ fontSize: '0.8rem', color: colors.textMuted, marginTop: '0.5rem' }}>
                 <span className="badge" style={{ 
@@ -317,21 +317,15 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   Observer Access
                 </span>
               </div>
-              {user?.observerInfo?.organization && (
-                <div style={{ 
-                  fontSize: '0.75rem', 
-                  color: colors.textMuted, 
-                  marginTop: '0.75rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  fontWeight: 500
-                }}>
-                  <i className="fa-solid fa-building" style={{ fontSize: '0.7rem' }}></i>
-                  {user.observerInfo.organization}
-                </div>
-              )}
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: colors.textMuted, 
+                marginTop: '0.75rem',
+                fontWeight: 500
+              }}>
+                <i className="fa-solid fa-building me-1" style={{ fontSize: '0.7rem' }}></i>
+                Org: {user?.observerInfo?.organization || user?.organization || 'Independent Observer'}
+              </div>
             </>
           )}
         </div>
@@ -505,13 +499,21 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
         }}>
           {!collapsed && (
             <div>
-              <span style={{ 
+              <div style={{ 
                 fontSize: '0.65rem', 
                 color: colors.textMuted,
-                opacity: 0.7
+                opacity: 0.7,
+                marginBottom: '0.5rem'
               }}>
                 Campus Ballot Observer v2.1.0
-              </span>
+              </div>
+              <div style={{ 
+                fontSize: '0.6rem', 
+                color: colors.textMuted,
+                opacity: 0.6
+              }}>
+                © 2026 All Rights Reserved
+              </div>
             </div>
           )}
         </div>

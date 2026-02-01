@@ -46,11 +46,14 @@ const ObserverLayout = () => {
       
       const data = await response.json();
       
+      // API returns { message: "Profile fetched", user: {...} }
+      const userData = data.user || data;
+      
       // Only update if we got valid data with _id
-      if (data && data._id) {
-        setUser(data);
+      if (userData && userData._id) {
+        setUser(userData);
         // Update localStorage with fresh data
-        localStorage.setItem('currentUser', JSON.stringify(data));
+        localStorage.setItem('currentUser', JSON.stringify(userData));
       }
     } catch (err) {
       console.error('Error fetching user data:', err);
