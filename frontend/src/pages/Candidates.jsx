@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
+import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
 import getImageUrl from '../utils/getImageUrl';
 import Select from "react-select";
 import ugandaPartiesOptions from '../utils/ugandaParties';
@@ -361,6 +362,7 @@ function Candidates({ user }) {
     manifesto: "",
   });
   const [creating, setCreating] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const { isDarkMode, colors } = useTheme();
 
   const token = localStorage.getItem("token");
@@ -397,9 +399,10 @@ function Candidates({ user }) {
     }
   };
 
-  const exportToCSV = () => {
+  const exportToCSV = async () => {
     try {
-      const headers = ['Name', 'Party', 'Election', 'Position', 'Status'];
+      setExportLoading(true);
+      const headers = ['Name', 'Party', 'Election', 'Position', 'Status', 'Email', 'Faculty', 'Course', 'Year'];
       const rows = [headers];
       
       statusFilteredCandidates.forEach(candidate => {
@@ -408,7 +411,11 @@ function Candidates({ user }) {
           candidate.party || '',
           candidate.election?.title || '',
           candidate.position || '',
-          candidate.status || ''
+          candidate.status || '',
+          candidate.user?.email || candidate.email || '',
+          candidate.faculty || '',
+          candidate.course || '',
+          candidate.year || ''
         ]);
       });
       
@@ -422,10 +429,29 @@ function Candidates({ user }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported ${statusFilteredCandidates.length} candidates to CSV`,
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
       console.error('Export failed:', error);
       Swal.fire('Error', 'Failed to export candidates', 'error');
+    } finally {
+      setExportLoading(false);
     }
+  };
+
+  const exportToPDF = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'PDF Export',
+      text: 'PDF export functionality will be available soon. Use CSV export for now.',
+      confirmButtonText: 'OK'
+    });
   };
 
   const handleBulkApprove = async () => {
@@ -680,8 +706,33 @@ function Candidates({ user }) {
           <button className="btn btn-success me-2" onClick={handleShowCreate}>
             <i className="fa fa-plus me-2"></i> Add Candidate
           </button>
-          <button className="btn btn-outline-primary me-2" onClick={exportToCSV}>
-            <i className="fa fa-download me-2"></i> Export CSV
+          <button 
+            className="btn me-2" 
+            onClick={exportToCSV}
+            disabled={exportLoading || statusFilteredCandidates.length === 0}
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            {exportLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FaFileCsv className="me-2" /> Export CSV
+              </>
+            )}
+          </button>
+          <button 
+            className="btn btn-outline-primary me-2" 
+            onClick={exportToPDF}
+            disabled={statusFilteredCandidates.length === 0}
+          >
+            <FaFilePdf className="me-2" /> Export PDF
           </button>
           <button className="btn btn-outline-secondary me-2" onClick={handleBulkApprove}>
             <i className="fa fa-check me-2"></i> Bulk Approve

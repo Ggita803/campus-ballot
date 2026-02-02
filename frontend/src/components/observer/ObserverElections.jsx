@@ -215,8 +215,7 @@ const ObserverElections = () => {
             border: `1px solid ${colors.border}`
           }}
         >
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
+          <ThemedTable striped hover responsive>
               <thead style={{ 
                 background: isDarkMode ? colors.surfaceHover : '#f9fafb',
                 borderBottom: `2px solid ${colors.border}`
@@ -276,8 +275,7 @@ const ObserverElections = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+            </ThemedTable>
         </div>
       ) : (
         <div

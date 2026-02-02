@@ -17,6 +17,7 @@ const ObserverVotersList = () => {
   const [limit, setLimit] = useState(25);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -27,13 +28,13 @@ const ObserverVotersList = () => {
       setCurrentPage(1); // Reset to page 1 when election changes
       fetchVoters();
     }
-  }, [selectedElection]);
+  }, [selectedElection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (selectedElection) {
       fetchVoters();
     }
-  }, [currentPage, limit, searchTerm, sortBy, sortOrder]);
+  }, [currentPage, limit, searchTerm, sortBy, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchElections = async () => {
     try {
@@ -86,17 +87,111 @@ const ObserverVotersList = () => {
     }
   };
 
+  // Export functionality
+  const handleExportVoters = async (format = 'csv') => {
+    if (!selectedElection) {
+      alert('Please select an election first');
+      return;
+    }
+
+    try {
+      setExportLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const params = new URLSearchParams({
+        search: searchTerm,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+        format: format
+      });
+      
+      const response = await axios.get(
+        `/api/observer/elections/${selectedElection}/voters/export?${params}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const election = elections.find(e => e._id === selectedElection);
+      const electionTitle = election?.title || 'election';
+      const timestamp = new Date().toISOString().split('T')[0];
+      
+      link.setAttribute('download', `${electionTitle.replace(/\s+/g, '_')}_voters_${timestamp}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting voters:', err);
+      alert('Failed to export voters list');
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
 
   return (
     <div className="container-fluid p-4">
       {/* Header */}
       <div className="mb-4">
-        <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
-          <i className="fas fa-users me-2"></i>
-          Eligible Voters
-        </h3>
-        <p className="text-muted mb-0">View and manage eligible voters in elections</p>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div>
+            <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
+              <i className="fas fa-users me-2"></i>
+              Eligible Voters
+            </h3>
+            <p className="text-muted mb-0">View and manage eligible voters in elections</p>
+          </div>
+          
+          {/* Export Buttons */}
+          {selectedElection && voters.length > 0 && (
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-success"
+                onClick={() => handleExportVoters('csv')}
+                disabled={exportLoading}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-file-csv"></i>
+                    Export CSV
+                  </>
+                )}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => handleExportVoters('pdf')}
+                disabled={exportLoading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fas fa-file-pdf"></i>
+                Export PDF
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -186,64 +281,140 @@ const ObserverVotersList = () => {
       {/* Statistics Cards */}
       {statistics && (
         <div className="row g-3 mb-4">
-          <div className="col-12 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <div
-              className="card p-3"
+              className="card p-3 h-100"
               style={{
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
-                borderRadius: '8px'
+                borderRadius: '8px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <small className="text-muted">Total Eligible Voters</small>
-              <h4 className="fw-bold mt-2" style={{ color: colors.text }}>
-                {statistics.totalEligible || 0}
-              </h4>
+              <div className="d-flex align-items-center">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    flexShrink: 0
+                  }}
+                >
+                  <i className="fas fa-users text-white" style={{ fontSize: '1.25rem' }}></i>
+                </div>
+                <div>
+                  <small style={{ color: colors.textMuted, display: 'block', marginBottom: '4px' }}>Total Eligible Voters</small>
+                  <h4 className="fw-bold mb-0" style={{ color: colors.text }}>
+                    {statistics.totalEligible || 0}
+                  </h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="col-12 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <div
-              className="card p-3"
+              className="card p-3 h-100"
               style={{
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
-                borderRadius: '8px'
+                borderRadius: '8px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <small className="text-muted">Total Voted</small>
-              <h4 className="fw-bold mt-2" style={{ color: '#10b981' }}>
-                {statistics.totalVoted || 0}
-              </h4>
+              <div className="d-flex align-items-center">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    flexShrink: 0
+                  }}
+                >
+                  <i className="fas fa-check-circle text-white" style={{ fontSize: '1.25rem' }}></i>
+                </div>
+                <div>
+                  <small style={{ color: colors.textMuted, display: 'block', marginBottom: '4px' }}>Total Voted</small>
+                  <h4 className="fw-bold mb-0" style={{ color: '#10b981' }}>
+                    {statistics.totalVoted || 0}
+                  </h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="col-12 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <div
-              className="card p-3"
+              className="card p-3 h-100"
               style={{
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
-                borderRadius: '8px'
+                borderRadius: '8px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <small className="text-muted">Pending</small>
-              <h4 className="fw-bold mt-2" style={{ color: '#f59e0b' }}>
-                {statistics.pendingVoters || 0}
-              </h4>
+              <div className="d-flex align-items-center">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    flexShrink: 0
+                  }}
+                >
+                  <i className="fas fa-clock text-white" style={{ fontSize: '1.25rem' }}></i>
+                </div>
+                <div>
+                  <small style={{ color: colors.textMuted, display: 'block', marginBottom: '4px' }}>Pending</small>
+                  <h4 className="fw-bold mb-0" style={{ color: '#f59e0b' }}>
+                    {statistics.pendingVoters || 0}
+                  </h4>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="col-12 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <div
-              className="card p-3"
+              className="card p-3 h-100"
               style={{
                 background: colors.surface,
                 border: `1px solid ${colors.border}`,
-                borderRadius: '8px'
+                borderRadius: '8px',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: isDarkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <small className="text-muted">Turnout %</small>
-              <h4 className="fw-bold mt-2" style={{ color: '#3b82f6' }}>
-                {parseFloat(statistics.turnoutPercentage || 0).toFixed(1)}%
-              </h4>
+              <div className="d-flex align-items-center">
+                <div
+                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    flexShrink: 0
+                  }}
+                >
+                  <i className="fas fa-percentage text-white" style={{ fontSize: '1.25rem' }}></i>
+                </div>
+                <div>
+                  <small style={{ color: colors.textMuted, display: 'block', marginBottom: '4px' }}>Turnout %</small>
+                  <h4 className="fw-bold mb-0" style={{ color: '#8b5cf6' }}>
+                    {parseFloat(statistics.turnoutPercentage || 0).toFixed(1)}%
+                  </h4>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -269,8 +440,7 @@ const ObserverVotersList = () => {
             borderRadius: '8px'
           }}
         >
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
+          <ThemedTable striped hover responsive>
               <thead style={{
                 background: isDarkMode ? colors.surfaceHover : '#f9fafb',
                 borderBottom: `2px solid ${colors.border}`
@@ -319,7 +489,7 @@ const ObserverVotersList = () => {
                     </td>
                   </tr>
                 ) : (
-                  voters.map((voter, idx) => (
+                  voters.map((voter) => (
                     <tr key={voter._id} style={{ borderColor: colors.border }}>
                       <td style={{ color: colors.text }}>
                         <div className="d-flex align-items-center">
@@ -379,8 +549,7 @@ const ObserverVotersList = () => {
                   ))
                 )}
               </tbody>
-            </table>
-          </div>
+            </ThemedTable>
         </div>
       )}
 

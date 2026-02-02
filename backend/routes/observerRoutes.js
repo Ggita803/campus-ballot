@@ -12,7 +12,12 @@ const {
   getIncidents,
   reportIncident,
   getNotifications,
-  markNotificationAsRead
+  markNotificationAsRead,
+  exportElectionVoters,
+  generateElectionReport,
+  exportElectionReport,
+  getRecentReports,
+  downloadReport
 } = require("../controllers/observerController");
 
 // All routes require authentication and observer role
@@ -35,6 +40,13 @@ router.get("/elections/:electionId/audit-logs", observerWithAccess(true), getEle
 router.get("/elections/:electionId/turnout-trends", observerWithAccess(true), getTurnoutTrends);
 router.get("/elections/:electionId/candidates", observerWithAccess(true), getElectionCandidates);
 router.get("/elections/:electionId/voters", observerWithAccess(true), getElectionVoters);
+router.get("/elections/:electionId/voters/export", observerWithAccess(true), exportElectionVoters);
+
+// Report routes
+router.get("/elections/:electionId/reports/:reportType", observerWithAccess(true), generateElectionReport);
+router.get("/elections/:electionId/reports/:reportType/export", observerWithAccess(true), exportElectionReport);
+router.get("/reports/recent", getRecentReports);
+router.get("/reports/:reportId/download", downloadReport);
 
 // Incidents routes
 router.get("/incidents", getIncidents);

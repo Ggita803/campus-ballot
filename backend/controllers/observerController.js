@@ -806,6 +806,276 @@ const markNotificationAsRead = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Export election voters list
+// @route   GET /api/observer/elections/:electionId/voters/export
+// @access  Private (Observer with access)
+const exportElectionVoters = asyncHandler(async (req, res) => {
+  const { electionId } = req.params;
+  const { format = 'csv', search = '', sortBy = 'name', sortOrder = 'asc' } = req.query;
+
+  const election = await Election.findById(electionId);
+  if (!election) {
+    res.status(404);
+    throw new Error('Election not found');
+  }
+
+  // Build query
+  let query = { role: 'voter', accountStatus: 'active' };
+  
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { studentId: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  // Get voters
+  const voters = await User.find(query)
+    .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+    .select('name email studentId faculty phone accountStatus createdAt');
+
+  // Check who has voted
+  const votes = await Vote.find({ election: electionId }).distinct('voter');
+  const votersWithStatus = voters.map(voter => ({
+    name: voter.name,
+    email: voter.email,
+    studentId: voter.studentId || 'N/A',
+    faculty: voter.faculty || 'N/A',
+    phone: voter.phone || 'N/A',
+    accountStatus: voter.accountStatus,
+    registeredAt: voter.createdAt,
+    hasVoted: votes.includes(voter._id.toString()) ? 'Yes' : 'No'
+  }));
+
+  if (format === 'csv') {
+    // Generate CSV
+    const fields = ['name', 'email', 'studentId', 'faculty', 'phone', 'accountStatus', 'registeredAt', 'hasVoted'];
+    const csvHeader = fields.join(',') + '\n';
+    const csvRows = votersWithStatus.map(voter => 
+      fields.map(field => {
+        const value = voter[field];
+        if (field === 'registeredAt') {
+          return new Date(value).toLocaleDateString();
+        }
+        return `"${value}"`;
+      }).join(',')
+    ).join('\n');
+    
+    const csv = csvHeader + csvRows;
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=voters_${electionId}.csv`);
+    res.send(csv);
+  } else if (format === 'pdf') {
+    // For PDF, return JSON with instructions to generate PDF on frontend
+    // Or implement PDF generation using a library like pdfkit
+    res.status(501);
+    throw new Error('PDF export not yet implemented. Please use CSV format.');
+  } else {
+    res.status(400);
+    throw new Error('Invalid export format. Use csv or pdf.');
+  }
+});
+
+// @desc    Generate election report
+// @route   GET /api/observer/elections/:electionId/reports/:reportType
+// @access  Private (Observer with access)
+const generateElectionReport = asyncHandler(async (req, res) => {
+  const { electionId, reportType } = req.params;
+
+  const election = await Election.findById(electionId).populate('positions');
+  if (!election) {
+    res.status(404);
+    throw new Error('Election not found');
+  }
+
+  let reportData = {};
+
+  switch (reportType) {
+    case 'summary':
+      const totalVoters = await User.countDocuments({ role: 'voter', accountStatus: 'active' });
+      const totalVotes = await Vote.countDocuments({ election: electionId });
+      const candidates = await Candidate.countDocuments({ election: electionId });
+      
+      reportData = {
+        election: {
+          title: election.title,
+          description: election.description,
+          startDate: election.startDate,
+          endDate: election.endDate,
+          status: calculateElectionStatus(election)
+        },
+        statistics: {
+          totalEligibleVoters: totalVoters,
+          totalVotesCast: totalVotes,
+          turnoutPercentage: totalVoters > 0 ? ((totalVotes / totalVoters) * 100).toFixed(2) : 0,
+          totalCandidates: candidates,
+          totalPositions: election.positions?.length || 0
+        },
+        timestamp: new Date()
+      };
+      break;
+
+    case 'voters':
+      const voters = await User.find({ role: 'voter', accountStatus: 'active' })
+        .select('name email studentId faculty createdAt');
+      const votedIds = await Vote.find({ election: electionId }).distinct('voter');
+      
+      reportData = {
+        election: { title: election.title },
+        totalVoters: voters.length,
+        totalVoted: votedIds.length,
+        turnoutPercentage: voters.length > 0 ? ((votedIds.length / voters.length) * 100).toFixed(2) : 0,
+        voters: voters.map(v => ({
+          ...v.toObject(),
+          hasVoted: votedIds.includes(v._id.toString())
+        })),
+        timestamp: new Date()
+      };
+      break;
+
+    case 'candidates':
+      const allCandidates = await Candidate.find({ election: electionId })
+        .populate('userId', 'name email studentId')
+        .populate('position', 'title');
+      
+      reportData = {
+        election: { title: election.title },
+        totalCandidates: allCandidates.length,
+        candidates: allCandidates.map(c => ({
+          name: c.userId?.name,
+          email: c.userId?.email,
+          studentId: c.userId?.studentId,
+          position: c.position?.title,
+          manifesto: c.manifesto,
+          status: c.status
+        })),
+        timestamp: new Date()
+      };
+      break;
+
+    case 'results':
+      const resultCandidates = await Candidate.find({ election: electionId })
+        .populate('userId', 'name')
+        .populate('position', 'title');
+      
+      const voteCounts = await Promise.all(
+        resultCandidates.map(async (candidate) => {
+          const voteCount = await Vote.countDocuments({
+            election: electionId,
+            position: candidate.position._id,
+            candidate: candidate._id
+          });
+          return {
+            candidate: candidate.userId?.name,
+            position: candidate.position?.title,
+            votes: voteCount
+          };
+        })
+      );
+      
+      reportData = {
+        election: { title: election.title },
+        results: voteCounts,
+        timestamp: new Date()
+      };
+      break;
+
+    case 'audit':
+      const logs = await Log.find({ 
+        election: electionId 
+      })
+        .populate('user', 'name email')
+        .sort({ timestamp: -1 })
+        .limit(1000);
+      
+      reportData = {
+        election: { title: election.title },
+        totalLogs: logs.length,
+        logs: logs.map(log => ({
+          action: log.action,
+          description: log.description,
+          user: log.user?.name || 'System',
+          timestamp: log.timestamp,
+          ipAddress: log.ipAddress
+        })),
+        timestamp: new Date()
+      };
+      break;
+
+    default:
+      res.status(400);
+      throw new Error('Invalid report type');
+  }
+
+  res.json({
+    success: true,
+    data: reportData
+  });
+});
+
+// @desc    Export election report
+// @route   GET /api/observer/elections/:electionId/reports/:reportType/export
+// @access  Private (Observer with access)
+const exportElectionReport = asyncHandler(async (req, res) => {
+  const { electionId, reportType } = req.params;
+  const { format = 'pdf' } = req.query;
+
+  // First generate the report data
+  const election = await Election.findById(electionId);
+  if (!election) {
+    res.status(404);
+    throw new Error('Election not found');
+  }
+
+  // Get report data (reuse logic from generateElectionReport)
+  let reportData = { election: { title: election.title }, data: 'Report data here' };
+
+  if (format === 'csv') {
+    const csv = 'Report Title,Value\n' + 
+                `Election,${election.title}\n` +
+                `Report Type,${reportType}\n` +
+                `Generated,${new Date().toISOString()}\n`;
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=${reportType}_report_${electionId}.csv`);
+    res.send(csv);
+  } else if (format === 'pdf' || format === 'xlsx') {
+    // For now, return a simple text file
+    // In production, you would use libraries like pdfkit or xlsx
+    res.status(501);
+    throw new Error(`${format.toUpperCase()} export not yet implemented. Please use CSV format.`);
+  } else {
+    res.status(400);
+    throw new Error('Invalid export format');
+  }
+});
+
+// @desc    Get recent reports
+// @route   GET /api/observer/reports/recent
+// @access  Private (Observer)
+const getRecentReports = asyncHandler(async (req, res) => {
+  // This would fetch from a Reports collection if implemented
+  // For now, return empty array
+  res.json({
+    success: true,
+    data: []
+  });
+});
+
+// @desc    Download a report
+// @route   GET /api/observer/reports/:reportId/download
+// @access  Private (Observer)
+const downloadReport = asyncHandler(async (req, res) => {
+  const { reportId } = req.params;
+  
+  // This would fetch the actual report file
+  // For now, return not found
+  res.status(404);
+  throw new Error('Report not found');
+});
+
 module.exports = {
   getObserverDashboard,
   getElectionStatistics,
@@ -817,5 +1087,10 @@ module.exports = {
   getIncidents,
   reportIncident,
   getNotifications,
-  markNotificationAsRead
+  markNotificationAsRead,
+  exportElectionVoters,
+  generateElectionReport,
+  exportElectionReport,
+  getRecentReports,
+  downloadReport
 };

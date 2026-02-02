@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { FaFileCsv, FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import useSocket from '../../hooks/useSocket';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -25,6 +26,7 @@ function Results({ user }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unpublished, setUnpublished] = useState(false); // true when 403 returned
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -105,24 +107,70 @@ function Results({ user }) {
     }
   };
 
-  const exportResultsCSV = () => {
+  const exportResultsCSV = async () => {
     try {
-      const rows = [['Candidate','Votes']];
-      results.forEach(r => rows.push([`"${r.name || ''}"`, r.votes || 0]));
+      setExportLoading(true);
+      const electionTitle = selectedElection?.title || 'results';
+      const rows = [['Candidate', 'Votes', 'Percentage', 'Status']];
+      const totalVotes = results.reduce((sum, r) => sum + (r.votes || 0), 0);
+      const maxVotes = Math.max(...results.map(r => r.votes || 0), 0);
+      
+      results.forEach(r => {
+        const percent = totalVotes > 0 ? ((r.votes || 0) / totalVotes * 100).toFixed(1) : '0.0';
+        const isWinner = r.votes === maxVotes && maxVotes > 0;
+        rows.push([
+          `"${r.name || ''}"`,
+          r.votes || 0,
+          `${percent}%`,
+          isWinner ? 'Winner' : ''
+        ]);
+      });
+      
+      rows.push(['']);
+      rows.push(['Total Votes', totalVotes]);
+      
       const csv = rows.map(r => r.join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const filename = typeof selectedElection === 'string' && selectedElection.length > 0 ? selectedElection : (selectedElection?.title || 'results');
-      a.download = `${filename}.csv`;
+      a.download = `${electionTitle}_results_${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      URL.revokeObjectURL(url);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported results for "${electionTitle}"`,
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (err) {
       console.error('Export failed', err);
       Swal.fire('Error', 'Failed to export results', 'error');
+    } finally {
+      setExportLoading(false);
     }
+  };
+
+  const exportToExcel = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'Excel Export',
+      text: 'Excel export functionality will be available soon. Use CSV export for now.',
+      confirmButtonText: 'OK'
+    });
+  };
+
+  const exportToPDF = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'PDF Export',
+      text: 'PDF export functionality will be available soon. Use CSV export for now.',
+      confirmButtonText: 'OK'
+    });
   };
 
   // Listen for server-side published events and refresh when relevant
@@ -204,7 +252,41 @@ function Results({ user }) {
                     })
                   ) : null}
                 </select>
-                <button className="btn btn-outline-secondary btn-sm" onClick={exportResultsCSV} disabled={!results.length}>Export CSV</button>
+                <button 
+                  className="btn btn-sm me-2" 
+                  onClick={exportResultsCSV} 
+                  disabled={!results.length || exportLoading}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: 'white',
+                    border: 'none'
+                  }}
+                >
+                  {exportLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <FaFileCsv className="me-2" /> CSV
+                    </>
+                  )}
+                </button>
+                <button 
+                  className="btn btn-outline-success btn-sm me-2" 
+                  onClick={exportToExcel}
+                  disabled={!results.length}
+                >
+                  <FaFileExcel className="me-2" /> Excel
+                </button>
+                <button 
+                  className="btn btn-outline-primary btn-sm" 
+                  onClick={exportToPDF}
+                  disabled={!results.length}
+                >
+                  <FaFilePdf className="me-2" /> PDF
+                </button>
               </div>
             </div>
           </div>

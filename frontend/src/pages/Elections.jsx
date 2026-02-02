@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -45,6 +46,7 @@ function Elections({ user }) {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedElection, setSelectedElection] = useState(null);
   const [facultiesExpanded, setFacultiesExpanded] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     ongoing: 0,
@@ -426,9 +428,10 @@ function Elections({ user }) {
   };
 
   // Add missing exportToCSV function
-  const exportToCSV = () => {
+  const exportToCSV = async () => {
     try {
-      const headers = ['Title', 'Status', 'Start Date', 'End Date', 'Candidates', 'Votes'];
+      setExportLoading(true);
+      const headers = ['Title', 'Status', 'Start Date', 'End Date', 'Candidates', 'Votes', 'Description'];
       const rows = [headers];
       
       filteredElections.forEach(election => {
@@ -438,7 +441,8 @@ function Elections({ user }) {
           election.startDate ? new Date(election.startDate).toLocaleDateString() : '',
           election.endDate ? new Date(election.endDate).toLocaleDateString() : '',
           election.candidatesCount || 0,
-          election.votesCount || 0
+          election.votesCount || 0,
+          (election.description || '').replace(/["\n]/g, ' ')
         ]);
       });
       
@@ -452,10 +456,29 @@ function Elections({ user }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported ${filteredElections.length} elections to CSV`,
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
       console.error('Export failed:', error);
       Swal.fire('Error', 'Failed to export elections', 'error');
+    } finally {
+      setExportLoading(false);
     }
+  };
+
+  const exportToPDF = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'PDF Export',
+      text: 'PDF export functionality will be available soon. Use CSV export for now.',
+      confirmButtonText: 'OK'
+    });
   };
 
   if (loading) {
@@ -505,8 +528,33 @@ function Elections({ user }) {
           <button className="btn btn-success me-2" onClick={() => setShowCreateModal(true)} disabled>
             <i className="fa fa-plus me-2"></i> Create Election
           </button>
-          <button className="btn btn-outline-primary me-2" onClick={exportToCSV}>
-            <i className="fa fa-download me-2"></i> Export CSV
+          <button 
+            className="btn me-2" 
+            onClick={exportToCSV}
+            disabled={exportLoading || filteredElections.length === 0}
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            {exportLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FaFileCsv className="me-2" /> Export CSV
+              </>
+            )}
+          </button>
+          <button 
+            className="btn btn-outline-primary me-2" 
+            onClick={exportToPDF}
+            disabled={filteredElections.length === 0}
+          >
+            <FaFilePdf className="me-2" /> Export PDF
           </button>
         </div>
       </div>

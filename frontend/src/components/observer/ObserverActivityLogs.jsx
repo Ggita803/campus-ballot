@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import axios from 'axios';
-import { FaHistory, FaFilter } from 'react-icons/fa';
+import { FaHistory, FaFilter, FaFileCsv, FaFilePdf } from 'react-icons/fa';
 
 const ObserverActivityLogs = () => {
   const { isDarkMode, colors } = useTheme();
@@ -10,6 +10,7 @@ const ObserverActivityLogs = () => {
   const [filterType, setFilterType] = useState('all');
   const [elections, setElections] = useState([]);
   const [selectedElection, setSelectedElection] = useState('all');
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
     fetchElections();
@@ -125,6 +126,49 @@ const ObserverActivityLogs = () => {
     return iconMap[type] || '📋';
   };
 
+  const handleExportLogs = async (format = 'csv') => {
+    try {
+      setExportLoading(true);
+      const filteredData = filteredLogs.map(log => ({
+        Action: log.action,
+        Type: log.type,
+        Description: log.description,
+        User: log.user || 'System',
+        Timestamp: log.timestamp instanceof Date
+          ? log.timestamp.toLocaleString()
+          : new Date(log.timestamp).toLocaleString()
+      }));
+      
+      if (format === 'csv') {
+        // Generate CSV
+        const headers = Object.keys(filteredData[0]).join(',');
+        const rows = filteredData.map(row =>
+          Object.values(row).map(val => `"${val}"`).join(',')
+        ).join('\n');
+        
+        const csv = headers + '\n' + rows;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.setAttribute('download', `activity_logs_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert('PDF export coming soon. Please use CSV for now.');
+      }
+    } catch (err) {
+      console.error('Error exporting logs:', err);
+      alert('Failed to export activity logs');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const filteredLogs = (Array.isArray(logs) ? logs : []).filter(log => {
     if (filterType === 'all') return true;
     return log.type === filterType;
@@ -134,11 +178,58 @@ const ObserverActivityLogs = () => {
     <div className="container-fluid p-4">
       {/* Header */}
       <div className="mb-4">
-        <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
-          <FaHistory className="me-2" />
-          Activity Logs
-        </h3>
-        <p className="text-muted mb-0">View all activities and events in the election system</p>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div>
+            <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
+              <FaHistory className="me-2" />
+              Activity Logs
+            </h3>
+            <p className="text-muted mb-0">View all activities and events in the election system</p>
+          </div>
+          
+          {/* Export Buttons */}
+          {filteredLogs.length > 0 && (
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-success"
+                onClick={() => handleExportLogs('csv')}
+                disabled={exportLoading}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <FaFileCsv />
+                    Export CSV
+                  </>
+                )}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => handleExportLogs('pdf')}
+                disabled={exportLoading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <FaFilePdf />
+                Export PDF
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

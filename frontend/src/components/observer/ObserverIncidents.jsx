@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import axios from 'axios';
 import ThemedTable from '../common/ThemedTable';
+import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
 
 const ObserverIncidents = () => {
   const { isDarkMode, colors } = useTheme();
@@ -9,6 +10,7 @@ const ObserverIncidents = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -94,6 +96,49 @@ const ObserverIncidents = () => {
     return statusMap[status] || statusMap.open;
   };
 
+  const handleExportIncidents = async (format = 'csv') => {
+    try {
+      setExportLoading(true);
+      const exportData = filteredIncidents.map(incident => ({
+        Title: incident.title,
+        Description: incident.description,
+        Severity: incident.severity,
+        Status: incident.status,
+        'Reported By': incident.reportedBy?.name || 'Unknown',
+        'Reported At': new Date(incident.reportedAt || incident.createdAt).toLocaleString(),
+        Election: incident.election?.title || 'N/A'
+      }));
+      
+      if (format === 'csv') {
+        // Generate CSV
+        const headers = Object.keys(exportData[0]).join(',');
+        const rows = exportData.map(row =>
+          Object.values(row).map(val => `"${val}"`).join(',')
+        ).join('\n');
+        
+        const csv = headers + '\n' + rows;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        const timestamp = new Date().toISOString().split('T')[0];
+        link.setAttribute('download', `incidents_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        alert('PDF export coming soon. Please use CSV for now.');
+      }
+    } catch (err) {
+      console.error('Error exporting incidents:', err);
+      alert('Failed to export incidents');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const filteredIncidents = incidents.filter(incident =>
     selectedStatus === 'all' ? true : incident.status === selectedStatus
   );
@@ -101,7 +146,7 @@ const ObserverIncidents = () => {
   return (
     <div className="container-fluid p-4">
       {/* Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
+      <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
           <h3 className="fw-bold mb-1" style={{ color: colors.text }}>
             <i className="fas fa-triangle-exclamation me-2"></i>
@@ -109,13 +154,56 @@ const ObserverIncidents = () => {
           </h3>
           <p className="text-muted mb-0">Report and track incidents during elections</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowForm(!showForm)}
-        >
-          <i className="fas fa-plus me-2"></i>
-          Report Incident
-        </button>
+        <div className="d-flex gap-2">
+          {filteredIncidents.length > 0 && (
+            <>
+              <button
+                className="btn btn-success"
+                onClick={() => handleExportIncidents('csv')}
+                disabled={exportLoading}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <FaFileCsv />
+                    Export CSV
+                  </>
+                )}
+              </button>
+              <button
+                className="btn btn-outline-primary"
+                onClick={() => handleExportIncidents('pdf')}
+                disabled={exportLoading}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <FaFilePdf />
+                Export PDF
+              </button>
+            </>
+          )}
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <i className="fas fa-plus me-2"></i>
+            Report Incident
+          </button>
+        </div>
       </div>
 
       {/* Incident Form */}

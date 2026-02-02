@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
 import { showWelcomeToast, showNetworkError } from '../../utils/sweetAlerts';
 import ObserverCharts from './ObserverCharts';
+import ThemedTable from '../common/ThemedTable';
 
 // Helper function to calculate election status based on dates
 const calculateElectionStatus = (election) => {
@@ -465,8 +466,7 @@ const ObserverDashboardContent = () => {
                   }}>No elections assigned yet</p>
                 </div>
               ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
+                <ThemedTable striped hover responsive>
                     <thead style={{ 
                       background: isDarkMode ? 'rgba(16, 185, 129, 0.05)' : 'rgba(16, 185, 129, 0.03)',
                       borderBottom: `2px solid ${colors.border}`
@@ -633,8 +633,7 @@ const ObserverDashboardContent = () => {
                         </tr>
                       )})}
                     </tbody>
-                  </table>
-                </div>
+                  </ThemedTable>
               )}
             </div>
           </div>

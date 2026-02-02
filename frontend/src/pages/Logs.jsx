@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Form, Button } from "react-bootstrap";
 import ThemedTable from "../components/common/ThemedTable";
@@ -58,6 +59,7 @@ function Logs({ user }) {
     error: 0,
     success: 0
   });
+  const [exportLoading, setExportLoading] = useState(false);
   const logsPerPage = 10;
 
   // Form state for creating new log
@@ -261,20 +263,58 @@ function Logs({ user }) {
     }
   };
 
-  const exportLogs = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Timestamp,Status,Action,Entity Type,Details,User,IP Address\n"
-      + filteredLogs.map(log => 
-          `"${formatDateTime(log.createdAt || log.timestamp)}","${log.status}","${log.action}","${log.entityType}","${log.details || ''}","${log.user?.name || ''}","${log.ipAddress || ''}"`
-        ).join("\n");
+  const exportLogsCSV = async () => {
+    try {
+      setExportLoading(true);
+      const headers = ['Timestamp', 'Status', 'Action', 'Entity Type', 'Details', 'User', 'IP Address', 'User Agent'];
+      const rows = [headers];
+      
+      filteredLogs.forEach(log => {
+        rows.push([
+          formatDateTime(log.createdAt || log.timestamp),
+          log.status || '',
+          log.action || '',
+          log.entityType || '',
+          (log.details || '').replace(/["\n]/g, ' '),
+          log.user?.name || 'System',
+          log.ipAddress || '',
+          (log.userAgent || '').replace(/["\n]/g, ' ')
+        ]);
+      });
+      
+      const csvContent = rows.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `logs_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Successful',
+        text: `Exported ${filteredLogs.length} log entries to CSV`,
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      Swal.fire('Error', 'Failed to export logs', 'error');
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `logs_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportLogsPDF = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'PDF Export',
+      text: 'PDF export functionality will be available soon. Use CSV export for now.',
+      confirmButtonText: 'OK'
+    });
   };
 
   const openDetailsModal = (log) => {
@@ -718,7 +758,39 @@ function Logs({ user }) {
                   <FontAwesomeIcon icon={faHistory} className="me-2 text-primary" />
                   Activity Logs
                 </h5>
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  {filteredLogs.length > 0 && (
+                    <>
+                      <button 
+                        className="btn btn-sm" 
+                        onClick={exportLogsCSV}
+                        disabled={exportLoading}
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          color: 'white',
+                          border: 'none'
+                        }}
+                      >
+                        {exportLoading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Exporting...
+                          </>
+                        ) : (
+                          <>
+                            <FaFileCsv className="me-2" /> Export CSV
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-outline-primary" 
+                        onClick={exportLogsPDF}
+                        disabled={exportLoading}
+                      >
+                        <FaFilePdf className="me-2" /> Export PDF
+                      </button>
+                    </>
+                  )}
                   <span className="badge bg-primary fs-6">{filteredLogs.length} entries</span>
                   {filteredLogs.length > 0 && (
                     <small className="text-muted">

@@ -5,7 +5,7 @@ const ThemedTable = ({
   children, 
   striped = true, 
   bordered = true, 
-  hover = true, 
+  hover = true,
   responsive = true, 
   size = null,
   className = '',
