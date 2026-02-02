@@ -13,7 +13,8 @@ import {
   FaSignOutAlt,
   FaMoon,
   FaSun,
-  FaBookOpen
+  FaBookOpen,
+  FaTasks
 } from 'react-icons/fa';
 import { IoCloseOutline } from 'react-icons/io5';
 
@@ -29,6 +30,7 @@ const ElectionStats = React.lazy(() => import('../components/candidacy/ElectionS
 const AgentManagement = React.lazy(() => import('../components/candidacy/AgentManagement'));
 const CampaignMaterials = React.lazy(() => import('../components/candidacy/CampaignMaterials'));
 const VoterEngagement = React.lazy(() => import('../components/candidacy/VoterEngagement'));
+const TaskManagement = React.lazy(() => import('../components/candidacy/TaskManagement'));
 
 const CandidateDashboard = ({ user, onLogout }) => {
   const { isDarkMode, toggleTheme, colors } = useTheme();
@@ -79,6 +81,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
     { path: '/candidate', icon: FaHome, label: 'Dashboard', exact: true },
     { path: '/candidate/stats', icon: FaChartLine, label: 'Statistics' },
     { path: '/candidate/agents', icon: FaUsers, label: 'Agents' },
+    { path: '/candidate/tasks', icon: FaTasks, label: 'Tasks' },
     { path: '/candidate/materials', icon: FaImages, label: 'Materials' },
     { path: '/candidate/engagement', icon: FaComments, label: 'Engagement' },
     { path: '/candidate/profile', icon: FaUser, label: 'Profile' }
@@ -624,6 +627,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 <Route path="/stats/:id" element={<ElectionStats />} />
                 <Route path="/stats" element={<ElectionStats />} />
                 <Route path="/agents" element={<AgentManagement />} />
+                <Route path="/tasks" element={<TaskManagement />} />
                 <Route path="/materials" element={<CampaignMaterials />} />
                 <Route path="/engagement" element={<VoterEngagement />} />
               </Routes>

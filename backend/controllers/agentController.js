@@ -135,6 +135,18 @@ const addAgent = asyncHandler(async (req, res) => {
       return res.status(403).json({ message: "You must be an approved candidate to add agents" });
     }
 
+    // Check maximum agent limit (3 agents per candidate)
+    const existingAgentsCount = await Agent.countDocuments({
+      candidate: req.user._id,
+      status: { $nin: ['removed', 'rejected'] }
+    });
+
+    if (existingAgentsCount >= 3) {
+      return res.status(400).json({ 
+        message: "Maximum agent limit reached. You can only have 3 agents at a time." 
+      });
+    }
+
     // Check if user exists and is a student
     const student = await User.findById(userId);
     if (!student) {

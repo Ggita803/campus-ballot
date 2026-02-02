@@ -10,7 +10,7 @@ const createTask = asyncHandler(async (req, res) => {
   const { title, description, priority, dueDate, assignedTo } = req.body;
 
   // Check if user is candidate or senior agent
-  const userIsCandid = req.user.role === 'candidate' || 
+  const userIsCandidate = req.user.role === 'candidate' || 
                         req.user.additionalRoles?.includes('candidate');
   
   let creatorType = 'candidate';
