@@ -123,7 +123,8 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
         justifyContent: 'space-between', 
         gap: 'clamp(0.5rem, 2vw, 1.5rem)', 
         flexWrap: (window.innerWidth <= 480) ? 'nowrap' : 'wrap',
-        overflow: 'hidden'
+        overflow: 'visible',
+        position: 'relative'
       }}>
         
         {/* Mobile Menu Button */}
@@ -201,9 +202,11 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: window.innerWidth <= 480 ? '0.5rem' : 'clamp(0.5rem, 1.5vw, 1rem)', 
+          gap: (window.innerWidth <= 480) ? '0.5rem' : 'clamp(0.5rem, 1.5vw, 1rem)', 
           marginLeft: 'auto',
-          flexShrink: 0
+          flexShrink: 0,
+          position: 'relative',
+          zIndex: 10
         }}>
           
           {/* Role Switcher */}
@@ -263,7 +266,10 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
                 justifyContent: 'center',
                 cursor: 'pointer',
                 color: colors.text,
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                position: 'relative',
+                zIndex: 20,
+                pointerEvents: 'auto'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#e5e7eb';
@@ -279,7 +285,7 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
           )}
 
           {/* Notifications */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', zIndex: 20 }}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               style={{
@@ -294,7 +300,9 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
                 cursor: 'pointer',
                 color: colors.text,
                 position: 'relative',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                zIndex: 21,
+                pointerEvents: 'auto'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#e5e7eb';
