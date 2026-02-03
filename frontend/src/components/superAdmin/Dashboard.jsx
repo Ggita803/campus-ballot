@@ -249,7 +249,8 @@ const SuperAdminDashboard = ({ user }) => {
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  minHeight: '80px'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
@@ -261,7 +262,7 @@ const SuperAdminDashboard = ({ user }) => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div className="d-flex align-items-center gap-3 mb-2">
+                <div className="d-flex align-items-center gap-3">
                   <div
                     style={{
                       width: '40px',
@@ -271,18 +272,21 @@ const SuperAdminDashboard = ({ user }) => {
                       color: '#fff',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      flexShrink: 0
                     }}
                   >
                     <i className={`fa-solid ${item.icon}`}></i>
                   </div>
+                  <div className="flex-grow-1">
+                    <h6 className="fw-bold mb-1" style={{ color: item.color }}>
+                      {item.title}
+                    </h6>
+                    <small className="text-muted d-block">
+                      {item.description}
+                    </small>
+                  </div>
                 </div>
-                <h6 className="fw-bold mb-1" style={{ color: item.color }}>
-                  {item.title}
-                </h6>
-                <small className="text-muted d-block">
-                  {item.description}
-                </small>
               </button>
             </div>
           ))}
