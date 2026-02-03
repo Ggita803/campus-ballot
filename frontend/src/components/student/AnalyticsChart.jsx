@@ -54,35 +54,78 @@ const AnalyticsChart = ({ myVotes, electionStats }) => {
             </h6>
           </div>
           <div className="card-body p-4">
-            <div className="d-flex align-items-end gap-3" style={{ height: '200px' }}>
-              {monthlyData.map((data, index) => {
-                const height = maxVotes > 0 ? (data.votes / maxVotes) * 100 : 0;
-                return (
-                  <div key={index} className="flex-fill d-flex flex-column align-items-center" style={{ height: '100%' }}>
-                    <div className="flex-fill d-flex flex-column justify-content-end w-100">
-                      <div
-                        className="w-100"
-                        style={{
-                          height: `${height}%`,
-                          background: `linear-gradient(to top, ${colors.primary}, ${isDarkMode ? '#1d4ed8' : '#1d4ed8d'})`,
-                          borderRadius: '4px 4px 0 0',
-                          transition: 'height 0.3s ease',
-                          minHeight: data.votes > 0 ? '20px' : '0'
-                        }}
-                        title={`${data.votes} votes`}
+            <div style={{ height: '200px', position: 'relative' }}>
+              <svg width="100%" height="160" viewBox="0 0 400 160" style={{ overflow: 'visible' }}>
+                {/* Grid lines */}
+                {[...Array(5)].map((_, i) => {
+                  const y = (i * 160) / 4;
+                  return (
+                    <line
+                      key={i}
+                      x1="0"
+                      y1={y}
+                      x2="400"
+                      y2={y}
+                      stroke={isDarkMode ? colors.border : '#e9ecef'}
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                    />
+                  );
+                })}
+                
+                {/* Line chart */}
+                <polyline
+                  points={monthlyData.map((data, index) => {
+                    const x = (index * 400) / Math.max(monthlyData.length - 1, 1);
+                    const y = maxVotes > 0 ? 160 - (data.votes / maxVotes) * 140 : 160;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke={colors.primary}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                
+                {/* Data points */}
+                {monthlyData.map((data, index) => {
+                  const x = (index * 400) / Math.max(monthlyData.length - 1, 1);
+                  const y = maxVotes > 0 ? 160 - (data.votes / maxVotes) * 140 : 160;
+                  return (
+                    <g key={index}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r="6"
+                        fill={colors.primary}
+                        stroke={isDarkMode ? colors.surface : '#fff'}
+                        strokeWidth="2"
                       />
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r="4"
+                        fill={isDarkMode ? '#1d4ed8' : '#1d4ed8'}
+                      />
+                      <title>{`${data.month}: ${data.votes} votes`}</title>
+                    </g>
+                  );
+                })}
+              </svg>
+              
+              {/* X-axis labels */}
+              <div className="d-flex justify-content-between mt-2">
+                {monthlyData.map((data, index) => (
+                  <div key={index} className="text-center">
+                    <div className="fw-bold small" style={{ color: isDarkMode ? colors.text : '#212529' }}>
+                      {data.votes}
                     </div>
-                    <div className="text-center mt-2">
-                      <div className="fw-bold small" style={{ color: isDarkMode ? colors.text : '#212529' }}>
-                        {data.votes}
-                      </div>
-                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                        {data.month}
-                      </div>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      {data.month}
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -125,7 +168,7 @@ const AnalyticsChart = ({ myVotes, electionStats }) => {
             style={{
               background: `linear-gradient(135deg, ${colors.primary} 0%, ${isDarkMode ? '#1d4ed8' : '#1d4ed8'} 100%)`,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '12px',
               color: '#fff'
             }}
           >

@@ -57,12 +57,30 @@ const TaskManagement = () => {
   const fetchAgents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidates/agents/my-agents', {
+      const response = await axios.get('/api/candidates/agents', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAgents(response.data.agents || []);
+      
+      console.log('Candidate agents response:', response.data);
+      
+      // Handle different response formats
+      let agentsList = [];
+      if (Array.isArray(response.data)) {
+        agentsList = response.data;
+      } else if (response.data.agents && Array.isArray(response.data.agents)) {
+        agentsList = response.data.agents;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        agentsList = response.data.data;
+      }
+      
+      console.log('Processed agents list:', agentsList);
+      setAgents(agentsList);
     } catch (err) {
       console.error('Error fetching agents:', err);
+      if (err.response) {
+        console.error('Error response:', err.response.status, err.response.data);
+      }
+      setAgents([]);
     }
   };
 
@@ -71,6 +89,9 @@ const TaskManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      console.log('Submitting task with data:', formData);
+      console.log('Assigned agents:', formData.assignedTo);
       
       if (editingTask) {
         await axios.put(`/api/tasks/${editingTask._id}`, formData, {
@@ -85,9 +106,11 @@ const TaskManagement = () => {
           color: colors.text
         });
       } else {
-        await axios.post('/api/tasks', formData, {
+        const response = await axios.post('/api/tasks', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        console.log('Task creation response:', response.data);
         
         Swal.fire({
           icon: 'success',
@@ -632,39 +655,54 @@ const TaskManagement = () => {
                       Assign to Agents (Optional)
                     </label>
                     {agents.length === 0 ? (
-                      <p className="text-muted small">No agents available. Add agents first.</p>
+                      <div>
+                        <p className="text-muted small">No agents available. Add agents first.</p>
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={fetchAgents}
+                        >
+                          Refresh Agents
+                        </button>
+                      </div>
                     ) : (
                       <div className="d-flex flex-column gap-2">
-                        {agents.map((agent) => (
-                          <div key={agent._id} className="form-check">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              id={`agent-${agent._id}`}
-                              checked={formData.assignedTo.includes(agent.user._id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setFormData({
-                                    ...formData,
-                                    assignedTo: [...formData.assignedTo, agent.user._id]
-                                  });
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    assignedTo: formData.assignedTo.filter(id => id !== agent.user._id)
-                                  });
-                                }
-                              }}
-                            />
-                            <label
-                              className="form-check-label"
-                              htmlFor={`agent-${agent._id}`}
-                              style={{ color: colors.text }}
-                            >
-                              {agent.user.name} ({agent.agentRole})
-                            </label>
-                          </div>
-                        ))}
+                        {agents.map((agent) => {
+                          const agentUserId = agent.user?._id || agent._id || agent.userId;
+                          const agentName = agent.user?.name || agent.name || 'Unknown Agent';
+                          const agentRole = agent.agentRole || agent.role || 'Agent';
+                          
+                          return (
+                            <div key={agent._id || agent.userId} className="form-check">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id={`agent-${agentUserId}`}
+                                checked={formData.assignedTo.includes(agentUserId)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      assignedTo: [...formData.assignedTo, agentUserId]
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      assignedTo: formData.assignedTo.filter(id => id !== agentUserId)
+                                    });
+                                  }
+                                }}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor={`agent-${agentUserId}`}
+                                style={{ color: colors.text }}
+                              >
+                                {agentName} ({agentRole})
+                              </label>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

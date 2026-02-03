@@ -34,16 +34,21 @@ const createTask = asyncHandler(async (req, res) => {
 
   // Validate assigned agents exist and belong to this candidate
   if (assignedTo && assignedTo.length > 0) {
+    console.log('Validating agents:', assignedTo);
     const agents = await Agent.find({
       user: { $in: assignedTo },
       candidate: candidateId,
       status: 'active'
     });
+    console.log(`Found ${agents.length} matching agents for candidate ${candidateId}`);
 
     if (agents.length !== assignedTo.length) {
+      console.log('Agent validation failed:', { expected: assignedTo.length, found: agents.length });
       return res.status(400).json({ message: 'One or more assigned agents are invalid' });
     }
   }
+
+  console.log('Creating task with:', { title, assignedTo, candidateId, creatorType });
 
   const task = await Task.create({
     title,
@@ -55,6 +60,8 @@ const createTask = asyncHandler(async (req, res) => {
     candidate: candidateId,
     assignedTo: assignedTo || []
   });
+
+  console.log('Task created successfully:', task._id);
 
   // Update agent task counts
   if (assignedTo && assignedTo.length > 0) {
@@ -97,15 +104,35 @@ const getCandidateTasks = asyncHandler(async (req, res) => {
 const getAgentTasks = asyncHandler(async (req, res) => {
   const { status, priority } = req.query;
 
-  const query = { assignedTo: req.user._id };
+  // Find the agent record for this user to get both user ID and agent ID
+  const agent = await Agent.findOne({ user: req.user._id }).populate('candidate');
+  
+  let query;
+  if (agent) {
+    // Look for tasks assigned to either the user ID or the agent ID
+    query = { 
+      $or: [
+        { assignedTo: req.user._id },
+        { assignedTo: agent._id }
+      ]
+    };
+  } else {
+    // Fallback to just user ID
+    query = { assignedTo: req.user._id };
+  }
   
   if (status) query.status = status;
   if (priority) query.priority = priority;
 
+  console.log('Agent tasks query:', JSON.stringify(query, null, 2));
+
   const tasks = await Task.find(query)
     .populate('createdBy', 'name email')
     .populate('candidate', 'name email')
+    .populate('assignedTo', 'name email')
     .sort({ dueDate: 1 });
+
+  console.log(`Found ${tasks.length} tasks for agent ${req.user._id}`);
 
   res.json(tasks);
 });

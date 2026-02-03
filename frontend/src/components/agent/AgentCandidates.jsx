@@ -32,6 +32,8 @@ const AgentCandidates = () => {
   const fetchCandidateData = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Fetch agent dashboard info
       const response = await axios.get('/api/agent/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -39,9 +41,28 @@ const AgentCandidates = () => {
       console.log('[AgentCandidates] Dashboard response:', response.data);
 
       if (response.data?.agent) {
-        setCandidate(response.data.agent);
-        if (response.data.agent.candidateId) {
-          fetchCandidateMaterials(response.data.agent.candidateId);
+        // Also fetch real task data to get accurate counts
+        const tasksResponse = await axios.get(`/api/tasks/agent?t=${Date.now()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        console.log('[AgentCandidates] Tasks response:', tasksResponse.data);
+        
+        const tasks = tasksResponse.data || [];
+        const activeTasks = tasks.filter(t => t.status !== 'completed').length;
+        const completedTasks = tasks.filter(t => t.status === 'completed').length;
+
+        // Update candidate data with real task counts
+        const candidateData = {
+          ...response.data.agent,
+          tasksActive: activeTasks,
+          tasksCompleted: completedTasks
+        };
+
+        setCandidate(candidateData);
+        
+        if (candidateData.candidateId) {
+          fetchCandidateMaterials(candidateData.candidateId);
         }
       }
       setLoading(false);

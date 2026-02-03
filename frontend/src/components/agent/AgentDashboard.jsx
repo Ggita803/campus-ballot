@@ -125,6 +125,22 @@ const AgentDashboard = () => {
 
       console.log('[AgentDashboard] Stats response:', statsResponse.data);
 
+      // Fetch agent's tasks with cache busting and enhanced logging
+      const tasksResponse = await axios.get(`/api/tasks/agent?t=${Date.now()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('[AgentDashboard] Tasks response:', tasksResponse.data);
+      console.log('[AgentDashboard] Number of tasks found:', tasksResponse.data?.length || 0);
+
+      const tasks = tasksResponse.data || [];
+      
+      // Process tasks to calculate analytics data
+      const processedTasks = tasks.map(task => ({
+        ...task,
+        source: 'candidate-assigned'
+      }));
+
       const agent = dashboardResponse.data?.agent;
       
       // Transform agent to candidates format (single candidate - the candidate they work for)
@@ -134,18 +150,18 @@ const AgentDashboard = () => {
         email: agent.candidateEmail,
         role: agent.role,
         status: agent.status,
-        tasks: agent.tasksActive,
-        tasksCompleted: agent.tasksCompleted,
+        tasks: processedTasks.filter(t => t.status !== 'completed').length,
+        tasksCompleted: processedTasks.filter(t => t.status === 'completed').length,
         joinedDate: agent.joinedDate
       }] : [];
 
       setDashboardData({
         candidates,
-        tasks: [],
+        tasks: processedTasks,
         stats: {
           totalCandidates: statsResponse.data?.totalCandidates || 0,
-          activeTasks: statsResponse.data?.tasksActive || 0,
-          completedTasks: statsResponse.data?.tasksCompleted || 0,
+          activeTasks: processedTasks.filter(t => t.status !== 'completed').length,
+          completedTasks: processedTasks.filter(t => t.status === 'completed').length,
           role: statsResponse.data?.role || 'agent',
           status: statsResponse.data?.status || 'inactive',
           voterOutreach: statsResponse.data?.voterOutreach || 0,
@@ -154,84 +170,25 @@ const AgentDashboard = () => {
         }
       });
       
-      // Generate analytics data from tasks
-      if (dashboardResponse.data?.tasks) {
-        const tasksByWeek = generateTaskAnalytics(dashboardResponse.data.tasks);
-        setAnalyticsData(tasksByWeek);
-      }
+      // Generate analytics data from processed tasks
+      const tasksByWeek = generateTaskAnalytics(processedTasks);
+      setAnalyticsData(tasksByWeek);
       
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setDashboardData({
-        candidates: [
-          {
-            _id: '1',
-            name: 'John Kamau',
-            position: 'President',
-            election: 'Student Council 2025',
-            status: 'active',
-            avatar: null,
-            currentVotes: 234,
-            tasks: 3
-          },
-          {
-            _id: '2',
-            name: 'Mary Wanjiku',
-            position: 'Secretary',
-            election: 'Faculty Representative',
-            status: 'upcoming',
-            avatar: null,
-            currentVotes: 0,
-            tasks: 5
-          }
-        ],
-        tasks: [
-          {
-            _id: '1',
-            title: 'Distribute campaign flyers',
-            candidateName: 'John Kamau',
-            priority: 'high',
-            dueDate: '2025-01-18',
-            status: 'pending',
-            description: 'Distribute 500 flyers in main campus'
-          },
-          {
-            _id: '2',
-            title: 'Update social media posts',
-            candidateName: 'John Kamau',
-            priority: 'medium',
-            dueDate: '2025-01-16',
-            status: 'in-progress',
-            description: 'Post daily campaign updates'
-          },
-          {
-            _id: '3',
-            title: 'Organize debate preparation',
-            candidateName: 'Mary Wanjiku',
-            priority: 'high',
-            dueDate: '2025-01-17',
-            status: 'pending',
-            description: 'Schedule and organize debate prep session'
-          }
-        ],
+        candidates: [],
+        tasks: [],
         stats: {
-          totalCandidates: 2,
-          activeTasks: 5,
-          completedTasks: 12,
-          pendingApprovals: 2,
-          upcomingDeadlines: 3,
-          voterOutreach: 350,
-          engagementRate: 62,
-          campaignEfficiency: 85
+          totalCandidates: 0,
+          activeTasks: 0,
+          completedTasks: 0,
+          voterOutreach: 0,
+          engagementRate: 0,
+          campaignEfficiency: 0
         }
       });
-      
-      // Generate analytics data from error fallback tasks
-      if (dashboardData.tasks) {
-        const tasksByWeek = generateTaskAnalytics(dashboardData.tasks);
-        setAnalyticsData(tasksByWeek);
-      }
       
       setLoading(false);
     }

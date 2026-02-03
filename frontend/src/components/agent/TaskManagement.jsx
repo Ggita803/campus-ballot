@@ -25,6 +25,7 @@ const TaskManagement = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
+  const [filterSource, setFilterSource] = useState('all'); // New filter for task source
   const [sortBy, setSortBy] = useState('dueDate');
   const [agents, setAgents] = useState([]);
   const [formData, setFormData] = useState({
@@ -44,16 +45,32 @@ const TaskManagement = () => {
 
   const fetchTasks = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidates/agents', {
+      
+      // Fetch tasks assigned to this agent with cache busting
+      const response = await axios.get(`/api/tasks/agent?t=${Date.now()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Agents are the tasks in this context - agents assigned to candidates
-      setTasks(response.data);
-      setLoading(false);
+
+      console.log('Agent tasks response:', response.data);
+      console.log('Number of tasks found:', response.data?.length || 0);
+
+      // For now, mark all tasks as candidate-assigned since agents primarily work on tasks from candidates
+      // This can be refined later when we have better task source tracking in the backend
+      const processedTasks = (response.data || []).map(task => ({
+        ...task,
+        source: 'candidate-assigned' // Default to candidate-assigned for agent tasks
+      }));
+
+      setTasks(processedTasks);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('Error fetching agent tasks:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.status, error.response.data);
+      }
       setTasks([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -61,12 +78,98 @@ const TaskManagement = () => {
   const fetchAgents = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/api/candidates/agents', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAgents(response.data.filter(agent => agent.status === 'active'));
+      
+      // For agents, we should get fellow agents from the agent dashboard or a different endpoint
+      console.log('Fetching agents...');
+      
+      let response;
+      let agentsList = [];
+      
+      try {
+        // Try getting agent dashboard info first
+        response = await axios.get('/api/agent/dashboard', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('Agent dashboard response:', response.data);
+        
+        // If we get agent info, we can try to find other agents working for the same candidate
+        if (response.data.agent) {
+          const candidateId = response.data.agent.candidateId;
+          
+          if (candidateId) {
+            // Now try to get other agents for this candidate
+            try {
+              const agentsResponse = await axios.get(`/api/candidates/${candidateId}/agents`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              console.log('Candidate agents response:', agentsResponse.data);
+              
+              if (Array.isArray(agentsResponse.data)) {
+                agentsList = agentsResponse.data;
+              } else if (agentsResponse.data.agents) {
+                agentsList = agentsResponse.data.agents;
+              }
+            } catch (candidateAgentError) {
+              console.log('Failed to get candidate agents, using current agent only');
+              // Fallback: at least include the current agent
+              agentsList = [{
+                _id: response.data.agent.userId,
+                name: response.data.agent.candidateName,
+                email: response.data.agent.candidateEmail,
+                status: 'active'
+              }];
+            }
+          }
+        }
+        
+      } catch (dashboardError) {
+        console.log('Dashboard endpoint failed, trying direct agents endpoint');
+        
+        // Fallback: try the original endpoint
+        try {
+          response = await axios.get('/api/candidates/agents', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (Array.isArray(response.data)) {
+            agentsList = response.data;
+          } else if (response.data.agents) {
+            agentsList = response.data.agents;
+          }
+        } catch (originalError) {
+          console.error('All endpoints failed:', originalError);
+          // Last resort: create a dummy agent list from current user
+          const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          agentsList = [{
+            _id: currentUser._id,
+            name: currentUser.name || 'Current User',
+            email: currentUser.email,
+            status: 'active'
+          }];
+        }
+      }
+
+      // Process the agents list
+      const processedAgents = agentsList
+        .filter(agent => agent && (agent.status === 'active' || !agent.status))
+        .map(agent => ({
+          _id: agent._id || agent.user?._id || agent.userId,
+          name: agent.name || agent.user?.name || agent.candidateName || 'Unknown Agent',
+          email: agent.email || agent.user?.email || agent.candidateEmail || '',
+          status: agent.status || 'active'
+        }))
+        .filter(agent => agent._id && agent.name);
+
+      console.log('Final processed agents:', processedAgents);
+      setAgents(processedAgents);
+      
+      if (processedAgents.length === 0) {
+        console.warn('No agents found. This might be a permissions or data issue.');
+      }
+      
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      console.error('Error in fetchAgents:', error);
       setAgents([]);
     }
   };
@@ -265,10 +368,36 @@ const TaskManagement = () => {
     );
   };
 
+  const getSourceBadge = (source) => {
+    const sources = {
+      'candidate-assigned': { color: '#dc2626', text: 'From Candidate', icon: FaUserTie },
+      'self-created': { color: '#059669', text: 'Self Created', icon: FaTasks }
+    };
+    const config = sources[source] || sources['self-created'];
+    const Icon = config.icon;
+
+    return (
+      <span
+        className="badge d-inline-flex align-items-center gap-1"
+        style={{
+          backgroundColor: `${config.color}20`,
+          color: config.color,
+          padding: '0.4rem 0.8rem',
+          borderRadius: '20px',
+          fontSize: '0.75rem'
+        }}
+      >
+        <Icon size={12} />
+        {config.text}
+      </span>
+    );
+  };
+
   // Filter and sort tasks
   let filteredTasks = tasks.filter(task => {
     if (filterStatus !== 'all' && task.status !== filterStatus) return false;
     if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
+    if (filterSource !== 'all' && task.source !== filterSource) return false;
     return true;
   });
 
@@ -287,7 +416,9 @@ const TaskManagement = () => {
     pending: tasks.filter(t => t.status === 'pending').length,
     inProgress: tasks.filter(t => t.status === 'in-progress').length,
     completed: tasks.filter(t => t.status === 'completed').length,
-    overdue: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== 'completed').length
+    overdue: tasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== 'completed').length,
+    candidateAssigned: tasks.filter(t => t.source === 'candidate-assigned').length,
+    selfCreated: tasks.filter(t => t.source === 'self-created').length
   };
 
   if (loading) {
@@ -507,7 +638,7 @@ const TaskManagement = () => {
       {/* Filters and Sort */}
       <div className="mb-4">
         <div className="row g-3">
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-3">
             <div className="input-group">
               <span className="input-group-text" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
                 <FaFilter color={colors.textMuted} />
@@ -530,7 +661,7 @@ const TaskManagement = () => {
             </div>
           </div>
 
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-3">
             <div className="input-group">
               <span className="input-group-text" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
                 <FaFilter color={colors.textMuted} />
@@ -553,7 +684,29 @@ const TaskManagement = () => {
             </div>
           </div>
 
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-3">
+            <div className="input-group">
+              <span className="input-group-text" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
+                <FaUserTie color={colors.textMuted} />
+              </span>
+              <select
+                className="form-select"
+                value={filterSource}
+                onChange={(e) => setFilterSource(e.target.value)}
+                style={{
+                  background: isDarkMode ? colors.surface : '#fff',
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`
+                }}
+              >
+                <option value="all">All Tasks</option>
+                <option value="candidate-assigned">Assigned by Candidate</option>
+                <option value="self-created">Self Created</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-3">
             <div className="input-group">
               <span className="input-group-text" style={{ background: isDarkMode ? colors.surface : '#fff', border: `1px solid ${colors.border}` }}>
                 <FaSort color={colors.textMuted} />
@@ -576,6 +729,25 @@ const TaskManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Candidate Assigned Tasks Summary */}
+      {tasks.filter(task => task.source === 'candidate-assigned').length > 0 && (
+        <div className="alert alert-info d-flex align-items-center gap-3 mb-4" style={{
+          background: isDarkMode ? `${colors.primary}15` : '#e3f2fd',
+          border: `1px solid ${isDarkMode ? colors.primary : '#2196f3'}`,
+          borderRadius: '12px',
+          color: isDarkMode ? colors.text : '#1565c0'
+        }}>
+          <FaUserTie size={20} />
+          <div>
+            <strong>Candidate Assigned Tasks</strong>
+            <p className="mb-0 small">
+              You have {tasks.filter(task => task.source === 'candidate-assigned' && task.status !== 'completed').length} pending tasks 
+              assigned by your candidate out of {tasks.filter(task => task.source === 'candidate-assigned').length} total.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Tasks List */}
       <div
@@ -614,6 +786,7 @@ const TaskManagement = () => {
                           {getPriorityBadge(task.priority)}
                           {getCategoryBadge(task.category)}
                           {getStatusBadge(task.status)}
+                          {getSourceBadge(task.source)}
                         </div>
                       </div>
                     </div>
@@ -768,8 +941,13 @@ const TaskManagement = () => {
                       >
                         <option value="">Select Agent</option>
                         {agents.map(agent => (
-                          <option key={agent._id} value={agent._id}>{agent.name}</option>
+                          <option key={agent._id} value={agent._id}>
+                            {agent.name} ({agent.email})
+                          </option>
                         ))}
+                        {agents.length === 0 && (
+                          <option value="" disabled>No agents available</option>
+                        )}
                       </select>
                     </div>
                     <div className="col-md-6">
