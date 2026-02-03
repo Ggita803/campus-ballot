@@ -192,25 +192,26 @@ const CandidacyDashboard = () => {
         }}
       >
         <div className="position-relative" style={{ zIndex: 1 }}>
-          <div className="d-flex align-items-center gap-3 mb-3 flex-column flex-sm-row">
+          <div className="d-flex align-items-center gap-2 gap-sm-3 mb-3">
+            {/* Profile Circle - Commented out for mobile optimization
             <div 
               className="d-flex align-items-center justify-content-center flex-shrink-0"
               style={{
-                width: 'clamp(50px, 10vw, 70px)',
-                height: 'clamp(50px, 10vw, 70px)',
+                width: 'clamp(40px, 8vw, 70px)',
+                height: 'clamp(40px, 8vw, 70px)',
                 borderRadius: '50%',
                 background: 'rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(10px)',
-                order: 2
+                backdropFilter: 'blur(10px)'
               }}
             >
-              <i className="fa-solid fa-person-circle text-light" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}></i>
+              <i className="fa-solid fa-person-circle text-light" style={{ fontSize: 'clamp(1.2rem, 4vw, 2.2rem)' }}></i>
             </div>
-            <div style={{ order: 1, minWidth: 0 }}>
-              <h2 className="mb-2 fw-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', lineHeight: 1.2 }}>
+            */}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h2 className="mb-1 mb-sm-2 fw-bold" style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', lineHeight: 1.2 }}>
                 Welcome, {user?.name?.split(' ')[0] || 'Candidate'}! 🚀
               </h2>
-              <p className="mb-0 opacity-90" style={{ fontSize: 'clamp(0.85rem, 2vw, 1rem)', lineHeight: 1.4 }}>
+              <p className="mb-0 opacity-90" style={{ fontSize: 'clamp(0.8rem, 2vw, 1rem)', lineHeight: 1.3 }}>
                 Manage your campaign and track your performance
               </p>
             </div>

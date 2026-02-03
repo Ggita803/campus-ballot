@@ -73,13 +73,43 @@ const AnalyticsChart = ({ myVotes, electionStats }) => {
                   );
                 })}
                 
-                {/* Line chart */}
-                <polyline
-                  points={monthlyData.map((data, index) => {
-                    const x = (index * 400) / Math.max(monthlyData.length - 1, 1);
-                    const y = maxVotes > 0 ? 160 - (data.votes / maxVotes) * 140 : 160;
-                    return `${x},${y}`;
-                  }).join(' ')}
+                {/* Smooth curved line chart */}
+                <path
+                  d={(() => {
+                    if (monthlyData.length === 0) return '';
+                    
+                    const points = monthlyData.map((data, index) => {
+                      const x = (index * 400) / Math.max(monthlyData.length - 1, 1);
+                      const y = maxVotes > 0 ? 160 - (data.votes / maxVotes) * 140 : 160;
+                      return { x, y };
+                    });
+                    
+                    if (points.length === 1) {
+                      return `M ${points[0].x} ${points[0].y}`;
+                    }
+                    
+                    let path = `M ${points[0].x} ${points[0].y}`;
+                    
+                    for (let i = 1; i < points.length; i++) {
+                      const prevPoint = points[i - 1];
+                      const currentPoint = points[i];
+                      const nextPoint = points[i + 1];
+                      
+                      // Calculate control points for smooth curves
+                      const controlPoint1 = {
+                        x: prevPoint.x + (currentPoint.x - prevPoint.x) * 0.3,
+                        y: prevPoint.y
+                      };
+                      const controlPoint2 = {
+                        x: currentPoint.x - (currentPoint.x - prevPoint.x) * 0.3,
+                        y: currentPoint.y
+                      };
+                      
+                      path += ` C ${controlPoint1.x} ${controlPoint1.y}, ${controlPoint2.x} ${controlPoint2.y}, ${currentPoint.x} ${currentPoint.y}`;
+                    }
+                    
+                    return path;
+                  })()}
                   fill="none"
                   stroke={colors.primary}
                   strokeWidth="3"

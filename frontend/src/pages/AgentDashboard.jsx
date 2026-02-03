@@ -133,7 +133,8 @@ const AgentDashboard = ({ user, onLogout }) => {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          flexShrink: 0
+          flexShrink: 0,
+          padding:'10px 0px'
         }}
       >
         <div style={{ padding: isMobile ? '1rem' : '0.5rem', flex: 1, overflowY: 'auto', margin: 0 }}>
@@ -145,8 +146,11 @@ const AgentDashboard = ({ user, onLogout }) => {
                 fontSize: 'clamp(1.1rem, 2vw, 1.3rem)',
                 marginTop: 'clamp(0.5rem, 2vw, 1rem)'
               }}>
+              {/* 
                 <FaUserTie style={{ marginRight: '0.5rem', color: '#8b5cf6' }} />
                 Agent Portal
+              */}
+                
               </h4>
             )}
             {isMobile ? (
@@ -368,60 +372,35 @@ const AgentDashboard = ({ user, onLogout }) => {
         
         {isMobile && (
           <div style={{ 
-            marginTop: 'auto', 
-            padding: '0.75rem 1rem',
+            padding: '1rem 1.5rem',
+            marginTop: 'auto',
             borderTop: `1px solid ${colors.border}`,
-            display: 'flex',
-            gap: '0.5rem',
-            justifyContent: 'center'
+            background: colors.surface,
+            color: colors.textMuted,
+            fontSize: '0.75rem',
+            textAlign: 'center',
           }}>
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: '0.5rem 1rem',
-                background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb',
-                border: 'none',
-                borderRadius: '6px',
-                color: colors.text,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.75rem',
-                fontWeight: 500
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.15)' : '#d1d5db';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e7eb';
-              }}
-            >
-              {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
-            </button>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FaBookOpen style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2026 VoteSys
+            </div>
             <button
               onClick={handleLogout}
               style={{
-                padding: '0.5rem 1rem',
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '6px',
-                color: '#ef4444',
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.75rem',
-                fontWeight: 500
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
               }}
             >
-              <FaSignOutAlt size={14} />
+              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+              Logout
             </button>
           </div>
         )}
