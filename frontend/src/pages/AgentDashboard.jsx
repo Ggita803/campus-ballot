@@ -72,7 +72,7 @@ const AgentDashboard = ({ user, onLogout }) => {
     // { path: '/agent/communication', icon: FaComment, label: 'Communication' },
     // { path: '/agent/email', icon: FaEnvelope, label: 'Email Campaigns' },
     // { path: '/agent/sessions', icon: FaVideo, label: 'Live Sessions' },
-    { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
+    // { path: '/agent/polls', icon: FaChartBar, label: 'Polls & Surveys' },
     // { path: '/agent/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/agent/help', icon: FaQuestionCircle, label: 'Help & Support' }
   ];
