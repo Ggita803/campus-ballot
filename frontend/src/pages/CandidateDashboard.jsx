@@ -14,7 +14,8 @@ import {
   FaMoon,
   FaSun,
   FaBookOpen,
-  FaTasks
+  FaTasks,
+  FaTimes
 } from 'react-icons/fa';
 import { IoCloseOutline } from 'react-icons/io5';
 
@@ -95,56 +96,255 @@ const CandidateDashboard = ({ user, onLogout }) => {
       background: colors.background,
       overflow: 'hidden'
     }}>
-      {/* Mobile Overlay */}
+      {/* Mobile Sidebar */}
+      <div
+        className={`shadow-sm border-end position-fixed top-0 start-0 h-100 d-lg-none${sidebarOpen ? '' : ' d-none'}`}
+        style={{
+          width: '80vw',
+          maxWidth: '320px',
+          zIndex: 2000,
+          transition: 'transform 0.3s',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          boxShadow: sidebarOpen ? '2px 0 16px rgba(0,0,0,0.08)' : 'none',
+          background: isDarkMode ? colors.surface : '#fff',
+          borderColor: isDarkMode ? colors.border : '#dee2e6',
+        }}
+      >
+        <div className="p-3">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="text-uppercase small fw-bold mb-0" style={{ color: isDarkMode ? colors.textSecondary : '#6c757d' }}>Navigation</h6>
+            <button 
+              className="btn btn-outline-secondary btn-sm" 
+              onClick={() => setSidebarOpen(false)} 
+              aria-label="Close sidebar menu"
+              style={{
+                borderColor: isDarkMode ? colors.border : '#dee2e6',
+                color: isDarkMode ? colors.text : 'inherit'
+              }}
+            >
+              <FaTimes />
+            </button>
+          </div>
+          
+          {/* Enhanced Profile Section */}
+          <div style={{
+            marginBottom: '0.75rem',
+            padding: '0.75rem',
+            background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
+            borderRadius: '8px',
+            border: `1px solid rgba(59, 130, 246, 0.2)`
+          }}>
+            <div
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '1.3rem',
+                margin: '0 auto 0.5rem',
+                overflow: 'hidden',
+                border: '2px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)'
+              }}
+            >
+              {user?.profilePicture ? (
+                <img 
+                  src={user.profilePicture || '/default-avatar.png'} 
+                  alt={user?.name} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span style={{ display: user?.profilePicture ? 'none' : 'flex' }}>
+                {user?.name?.charAt(0) || 'C'}
+              </span>
+            </div>
+            <div className="text-center">
+              <div className="fw-bold" style={{ 
+                color: colors.text, 
+                fontSize: '0.85rem', 
+                marginBottom: '0.2rem',
+                lineHeight: '1.1'
+              }}>
+                {user?.name || 'Candidate'}
+              </div>
+              <div style={{ 
+                fontSize: '0.7rem', 
+                color: '#3b82f6',
+                fontWeight: '500',
+                marginBottom: '0.2rem'
+              }}>
+                🏆 Candidate
+              </div>
+              <div style={{ 
+                fontSize: '0.65rem', 
+                color: colors.textSecondary,
+                wordBreak: 'break-word',
+                lineHeight: '1.1'
+              }}>
+                {user?.email}
+              </div>
+            </div>
+          </div>
+
+          {/* Status Section */}
+          <div style={{
+            marginBottom: '0.75rem',
+            padding: '0.75rem',
+            background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+            borderRadius: '8px',
+            border: `1px solid rgba(16, 185, 129, 0.2)`
+          }}>
+            <div className="text-center">
+              <div style={{ 
+                fontSize: '0.75rem', 
+                color: '#10b981',
+                fontWeight: '600',
+                marginBottom: '0.25rem'
+              }}>
+                🟢 Campaign Active
+              </div>
+              <div style={{ fontSize: '0.7rem', color: colors.textSecondary }}>
+                Ready to connect with voters
+              </div>
+            </div>
+          </div>
+        
+          <nav className="nav flex-column">
+            {menuItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`nav-link btn btn-link text-start border-0 rounded d-flex align-items-center justify-content-between`}
+                  onClick={() => setSidebarOpen(false)}
+                  style={{ 
+                    textDecoration: 'none',
+                    background: window.location.pathname === item.path ? colors.primary : 'transparent',
+                    color: window.location.pathname === item.path ? '#fff' : isDarkMode ? colors.text : '#212529',
+                    transition: 'all 0.2s ease',
+                    padding: '0.45rem 0.6rem',
+                    fontSize: '0.85rem',
+                    borderRadius: '8px',
+                    marginBottom: '0.2rem'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (window.location.pathname !== item.path) {
+                      e.currentTarget.style.background = isDarkMode ? colors.sidebarHover : '#f8f9fa';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (window.location.pathname !== item.path) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                >
+                  <span className="d-flex align-items-center gap-2">
+                    <IconComponent size={16} />
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+          
+          {/* Mobile Sidebar Footer */}
+          <div
+            style={{
+              padding: '0.5rem 1.5rem',
+              borderTop: `1px solid ${colors.border}`,
+              background: colors.surface,
+              color: colors.textMuted,
+              fontSize: '0.75rem',
+              textAlign: 'center',
+              marginTop: 'auto'
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <FaBookOpen style={{ marginRight: '0.25rem' }} />
+              v1.0.0 © 2026 VoteSys
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                padding: '0.25rem',
+              }}
+            >
+              <FaSignOutAlt style={{ marginRight: '0.25rem' }} />
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 999,
-            display: isMobile ? 'block' : 'none'
-          }}
+          className="position-fixed top-0 start-0 w-100 h-100 d-lg-none"
+          style={{ background: 'rgba(0,0,0,0.2)', zIndex: 1999 }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
       
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}  
       <div
+        className="d-none d-lg-flex"
         style={{
-          width: isMobile ? (sidebarOpen ? '320px' : '0') : (sidebarOpen ? '280px' : '0'),
+          width: sidebarOpen ? '280px' : '0',
           background: isDarkMode ? colors.surface : '#fff',
           borderRight: `1px solid ${colors.border}`,
           transition: 'width 0.3s ease',
           overflow: 'hidden',
           position: 'fixed',
           height: '100vh',
+          maxHeight: '100vh',
           zIndex: 1000,
           left: 0,
-          top: 0
+          top: 0,
+          flexDirection: 'column'
         }}
       >
-        <div style={{ padding: '1.5rem' }}>
-          <div className="d-flex align-items-center justify-content-end" style={{ marginBottom: '1rem' }}>
+        <div style={{ 
+          padding: '1rem',
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div className="d-flex align-items-center justify-content-end mb-3">
             <button
               className="btn btn-sm"
               onClick={() => setSidebarOpen(false)}
               style={{ 
                 color: colors.text,
-                background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                border: `1px solid ${colors.border}`,
-                borderRadius: '5px',
-                width: '35px',
-                height: '35px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              <IoCloseOutline size={24} strokeWidth={1} />
+              <FaTimes size={14} />
             </button>
           </div>
 
@@ -168,7 +368,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
                 color: '#fff',
                 fontWeight: 'bold',
                 fontSize: '2rem',
-                margin: '0 auto 1rem',
+                margin: '0 auto 1rem', 
                 overflow: 'hidden',
                 border: '3px solid rgba(59, 130, 246, 0.3)',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
@@ -236,8 +436,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
               </div>
               <div style={{ 
                 fontSize: '0.7rem', 
-                color: colors.textSecondary,
-                lineHeight: '1.2'
+                color: colors.textSecondary
               }}>
                 Ready to connect with voters
               </div>
@@ -250,20 +449,20 @@ const CandidateDashboard = ({ user, onLogout }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => isMobile && setSidebarOpen(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '0.75rem 1rem',
-                  marginBottom: '0.5rem',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '0.6rem 0.8rem',
+                  marginBottom: '0.8rem',
                   borderRadius: '8px',
                   textDecoration: 'none',
-                  color: colors.text,
-                  background: window.location.pathname === item.path
-                    ? colors.primary
-                    : 'transparent',
+                  border: 'none',
+                  background: window.location.pathname === item.path ? colors.primary : 'transparent',
+                  color: window.location.pathname === item.path ? '#fff' : colors.text,
                   transition: 'all 0.2s',
-                  fontSize: '0.875rem'
+                  fontSize: '0.85rem'
                 }}
                 onMouseEnter={(e) => {
                   if (window.location.pathname !== item.path) {
@@ -276,8 +475,10 @@ const CandidateDashboard = ({ user, onLogout }) => {
                   }
                 }}
               >
-                <item.icon className="me-2" />
-                {item.label}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <item.icon size={16} />
+                  {item.label}
+                </span>
               </Link>
             ))}
           </nav>
@@ -285,12 +486,12 @@ const CandidateDashboard = ({ user, onLogout }) => {
           {/* Sidebar Footer */}
           <div style={{ 
             padding: '1rem 1.5rem',
-            marginTop: 'auto',
             borderTop: `1px solid ${colors.border}`,
             background: colors.surface,
             color: colors.textMuted,
             fontSize: '0.75rem',
             textAlign: 'center',
+            flexShrink: 0
           }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <FaBookOpen style={{ marginRight: '0.25rem' }} />
@@ -323,7 +524,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
         style={{
           flex: 1,
           width: '100%',
-          marginLeft: isMobile ? '0' : (sidebarOpen ? '280px' : '0'),
+          marginLeft: window.innerWidth > 992 ? (sidebarOpen ? '280px' : '0') : '0',
           transition: 'margin-left 0.3s ease',
           minHeight: '100vh',
           overflow: 'auto'
@@ -540,7 +741,7 @@ const CandidateDashboard = ({ user, onLogout }) => {
 
         {/* Routes */}
         <div style={{ 
-          padding: '1.5rem',
+          padding: isMobile ? '0.75rem' : '1.5rem',
           width: '100%',
           maxWidth: '100%',
           overflow: 'hidden',

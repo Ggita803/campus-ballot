@@ -202,7 +202,6 @@ function StudentDashboard({ user: initialUser }) {
         const res = await axios.get('/api/users/me/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
         if (res.data) {
           let updatedUser = res.data;
           
