@@ -141,7 +141,7 @@ const AgentHeader = ({ user, onLogout, isMobile, sidebarOpen, setSidebarOpen, is
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '1.1rem',
-              borderRadius: '8px',
+              borderRadius: '4px',
               transition: 'all 0.2s',
               width: '40px',
               height: '40px',
