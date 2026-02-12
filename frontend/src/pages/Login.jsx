@@ -57,7 +57,7 @@ function Login({ setCurrentUser }) {
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/auth/login",
+        "https://api.campusballot.tech/api/auth/login",
         form
       );
       // Save user and token to localStorage

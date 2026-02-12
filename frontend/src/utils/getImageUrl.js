@@ -7,7 +7,7 @@ function getImageUrl(imagePath) {
   }
   // Otherwise, return null (do not fallback to /uploads)
   return null;
-  return `https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev${imagePath}`;
+  return `https://api.campusballot.tech${imagePath}`;
 }
 
 export default getImageUrl;

@@ -23,7 +23,7 @@ import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGener
 import { getDepartmentFromCourse } from '../utils/academicStructure';
 
 // Set axios base URL
-axios.defaults.baseURL = "https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev";
+axios.defaults.baseURL = "https://api.campusballot.tech";
 import {
   FaSignOutAlt,
   FaUserCircle,

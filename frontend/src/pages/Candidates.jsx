@@ -474,8 +474,8 @@ function Candidates({ user }) {
     setLoading(true);
     try {
       const url = query
-        ? `https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates/search?q=${encodeURIComponent(query)}`
-        : "https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates";
+        ? `https://api.campusballot.tech/api/candidates/search?q=${encodeURIComponent(query)}`
+        : "https://api.campusballot.tech/api/candidates";
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -489,7 +489,7 @@ function Candidates({ user }) {
 
   const approveCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates/${candidateId}/approve`, {}, {
+      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate approved successfully', 'success');
@@ -501,7 +501,7 @@ function Candidates({ user }) {
 
   const disqualifyCandidate = async (candidateId) => {
     try {
-      await axios.put(`https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates/${candidateId}/disqualify`, {}, {
+      await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       Swal.fire('Success', 'Candidate disqualified successfully', 'success');
@@ -523,7 +523,7 @@ function Candidates({ user }) {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates/${candidateId}`, {
+        await axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         Swal.fire('Success', 'Candidate deleted successfully', 'success');
@@ -537,10 +537,10 @@ function Candidates({ user }) {
   const fetchElectionsAndUsers = async () => {
     try {
       const [electionRes, userRes] = await Promise.all([
-        axios.get("https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/elections", {
+        axios.get("https://api.campusballot.tech/api/elections", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/users/all", {
+        axios.get("https://api.campusballot.tech/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -618,7 +618,7 @@ function Candidates({ user }) {
       Object.entries(form).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
-      await axios.post("https://curly-tribble-xqvw69x9749cvqqq-5000.app.github.dev/api/candidates", data, {
+      await axios.post("https://api.campusballot.tech/api/candidates", data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
