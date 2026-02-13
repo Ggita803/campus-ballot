@@ -22,6 +22,54 @@ body {
   font-family: 'Poppins', Arial, Helvetica, sans-serif;
 }
 
+/* Make content smaller on desktop/laptop/tablet without distortion */
+@media (min-width: 577px) {
+  html {
+    font-size: 14px; /* Reduce base font size from 16px to 14px */
+  }
+  
+  /* Reduce spacing for common Bootstrap classes */
+  .container, .container-fluid {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  /* Reduce padding and margins for cards and components */
+  .card {
+    font-size: 0.9rem;
+  }
+  
+  .card-body {
+    padding: 1rem 0.8rem;
+  }
+  
+  /* Reduce button sizes */
+  .btn {
+    padding: 0.375rem 0.55rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn-lg {
+    padding: 0.5rem 0.8rem;
+    font-size: 1rem;
+  }
+  
+  /* Reduce table font size */
+  table {
+    font-size: 0.85rem;
+  }
+  
+  /* Reduce modal sizes */
+  .modal-body, .modal-header, .modal-footer {
+    padding: 0.8rem;
+  }
+  
+  /* Reduce form spacing */
+  .form-group, .mb-3 {
+    margin-bottom: 0.8rem !important;
+  }
+}
+
 /* Hero section adjustments to account for fixed navbar height so content centers
    correctly on mobile and desktop. We subtract the navbar height from 100vh. */
 .hero-section {
