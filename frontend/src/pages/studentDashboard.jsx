@@ -2564,19 +2564,19 @@ function StudentDashboard({ user: initialUser }) {
                background: isDarkMode ? colors.surface : '#fff',
                borderColor: isDarkMode ? colors.border : '#dee2e6',
              }}>
-          <div style={{ padding: '1.5rem' }}>
+          <div style={{ padding: '1rem' }}>
             {/* Student Profile Section */}
             <div style={{
-              marginBottom: '1rem',
-              padding: '1rem',
+              marginBottom: '0.8rem',
+              padding: '0.7rem',
               background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)',
-              borderRadius: '12px',
+              borderRadius: '10px',
               border: `1px solid rgba(59, 130, 246, 0.2)`
             }}>
               <div
                 style={{
-                  width: '80px',
-                  height: '80px',
+                  width: '60px',
+                  height: '60px',
                   borderRadius: '50%',
                   background: user?.profilePicture ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                   display: 'flex',
@@ -2584,11 +2584,11 @@ function StudentDashboard({ user: initialUser }) {
                   justifyContent: 'center',
                   color: '#fff',
                   fontWeight: 'bold',
-                  fontSize: '2rem',
-                  margin: '0 auto 1rem',
+                  fontSize: '1.6rem',
+                  margin: '0 auto 0.6rem',
                   overflow: 'hidden',
-                  border: `3px solid rgba(59, 130, 246, 0.3)`,
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                  border: `2px solid rgba(59, 130, 246, 0.3)`,
+                  boxShadow: '0 3px 10px rgba(59, 130, 246, 0.2)'
                 }}
               >
                 {user?.profilePicture ? (
@@ -2607,18 +2607,18 @@ function StudentDashboard({ user: initialUser }) {
                 </span>
               </div>
               <div className="text-center">
-                <div className="fw-bold" style={{ color: colors.text, fontSize: '1.1rem', marginBottom: '0.25rem' }}>
+                <div className="fw-bold" style={{ color: colors.text, fontSize: '0.95rem', marginBottom: '0.15rem' }}>
                   {user?.name || 'Student'}
                 </div>
                 <div style={{ 
-                  fontSize: '0.85rem', 
+                  fontSize: '0.75rem', 
                   color: '#3b82f6',
                   fontWeight: '500',
-                  marginBottom: '0.25rem'
+                  marginBottom: '0.15rem'
                 }}>
                   🎓 Student
                 </div>
-                <div style={{ fontSize: '0.75rem', color: colors.textSecondary }}>
+                <div style={{ fontSize: '0.7rem', color: colors.textSecondary }}>
                   {user?.email}
                 </div>
               </div>
@@ -2626,22 +2626,22 @@ function StudentDashboard({ user: initialUser }) {
 
             {/* Status Section */}
             <div style={{
-              marginBottom: '0.75rem',
-              padding: '0.75rem',
+              marginBottom: '0.6rem',
+              padding: '0.5rem',
               background: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
-              borderRadius: '8px',
+              borderRadius: '7px',
               border: `1px solid rgba(16, 185, 129, 0.2)`
             }}>
               <div className="text-center">
                 <div style={{ 
-                  fontSize: '0.75rem', 
+                  fontSize: '0.7rem', 
                   color: '#10b981',
                   fontWeight: '600',
-                  marginBottom: '0.25rem'
+                  marginBottom: '0.15rem'
                 }}>
                   🟢 Voting Enabled
                 </div>
-                <div style={{ fontSize: '0.7rem', color: colors.textSecondary }}>
+                <div style={{ fontSize: '0.65rem', color: colors.textSecondary }}>
                   Ready to participate in elections
                 </div>
               </div>
