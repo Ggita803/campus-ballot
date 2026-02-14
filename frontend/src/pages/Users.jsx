@@ -513,8 +513,8 @@ const Users = ({ user }) => {
                                                                     .action-btn {
                                                                         font-size: 0.75rem !important;
                                                                         padding: 0.18rem 0.38rem !important;
-                                                                        min-width: 1.5rem;
-                                                                        min-height: 1.5rem;
+                                                                        min-width: 2rem;
+                                                                        min-height: 2rem;
                                                                         line-height: 1.1;
                                                                     }
                                                                 `}</style>
@@ -522,7 +522,7 @@ const Users = ({ user }) => {
                                     <thead className="table-light">
                                         <tr>
                                             {/* ID intentionally hidden; admin can copy via action */}
-                                            {/* <th>ID</th> */}
+                                            <th>ID</th>
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>Student ID</th>
@@ -538,7 +538,7 @@ const Users = ({ user }) => {
                                                 const uid = u._id || u.id;
                                                 return (
                                                     <tr key={uid}>
-                                                        {/* <td>{uid}</td> */}
+                                                        <td>{uid}</td>
                                                         <td>{u.name}</td>
                                                         <td>{u.email}</td>
                                                         <td>{u.studentId || 'N/A'}</td>
