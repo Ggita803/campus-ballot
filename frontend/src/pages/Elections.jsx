@@ -36,6 +36,20 @@ import { useTheme } from "../contexts/ThemeContext";
 axios.defaults.baseURL = "https://api.campusballot.tech";
 
 function Elections({ user }) {
+    // Compact table and button styles (similar to Users.jsx)
+    // .elections-table-font84 for table font size, .action-btn for action buttons
+    const tableStyles = `
+      .elections-table-font84, .elections-table-font84 th, .elections-table-font84 td {
+        font-size: 0.84rem !important;
+      }
+      .action-btn {
+        font-size: 0.75rem !important;
+        padding: 0.18rem 0.38rem !important;
+        max-width: 2rem;
+        max-height: 2rem;
+        line-height: 1.1;
+      }
+    `;
   const [elections, setElections] = useState([]);
   const [filteredElections, setFilteredElections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -492,8 +506,15 @@ function Elections({ user }) {
     );
   }
 
+  // Render style block for table/button compactness
+  // Only one style block is needed per page
+  // eslint-disable-next-line react/no-danger
+  const styleBlock = <style dangerouslySetInnerHTML={{ __html: tableStyles }} />;
+
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: colors.background }}>
+    <>
+      {styleBlock}
+      <div className="container-fluid py-4" style={{ backgroundColor: colors.background }}>
       {/* Banner */}
       <div
         className="mb-4 rounded shadow-sm"
@@ -605,7 +626,7 @@ function Elections({ user }) {
           overflow: 'hidden',
           boxShadow: isDarkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         }}>
-          <table className="table table-hover table-striped mb-0" style={{
+          <table className="table table-hover table-striped mb-0 elections-table-font84" style={{
             ...(isDarkMode && {
               '--bs-table-bg': colors.surface,
               '--bs-table-striped-bg': '#2d3748',
@@ -719,21 +740,21 @@ function Elections({ user }) {
                     <td style={{ padding: '0.75rem' }}>
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-sm btn-outline-info"
+                          className="btn btn-sm btn-outline-info action-btn"
                           onClick={() => openDetailsModal(election)}
                           title="View"
                         >
                           <i className="fa fa-eye"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-warning"
+                          className="btn btn-sm btn-outline-warning action-btn"
                           onClick={() => openEditModal(election)}
                           title="Edit"
                         >
                           <i className="fa fa-edit"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger"
+                          className="btn btn-sm btn-outline-danger action-btn"
                           onClick={() => handleDelete(election)}
                           title="Delete"
                         >
@@ -1184,6 +1205,7 @@ function Elections({ user }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
