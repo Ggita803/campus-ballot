@@ -52,30 +52,7 @@ function Elections({ user }) {
         color: #fff !important;
         transition: background 0.15s;
       }
-      .btn-outline-info.action-btn {
-        background: #0dcaf0;
-        color: #fff !important;
-      }
-      .btn-outline-warning.action-btn {
-        background: #ffc107;
-        color: #212529 !important;
-      }
-      .btn-outline-danger.action-btn {
-        background: #dc3545;
-        color: #fff !important;
-      }
-      .btn-outline-info.action-btn:hover, .btn-outline-info.action-btn:focus {
-        background: #31d2f2 !important;
-        color: #fff !important;
-      }
-      .btn-outline-warning.action-btn:hover, .btn-outline-warning.action-btn:focus {
-        background: #ffcd39 !important;
-        color: #212529 !important;
-      }
-      .btn-outline-danger.action-btn:hover, .btn-outline-danger.action-btn:focus {
-        background: #bb2d3b !important;
-        color: #fff !important;
-      }
+      /* Removed outline button overrides, now using solid btn-* classes */
     `;
   const [elections, setElections] = useState([]);
   const [filteredElections, setFilteredElections] = useState([]);
@@ -767,21 +744,21 @@ function Elections({ user }) {
                     <td style={{ padding: '0.75rem' }}>
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-sm btn-outline-info action-btn"
+                          className="btn btn-sm btn-info action-btn"
                           onClick={() => openDetailsModal(election)}
                           title="View"
                         >
                           <i className="fa fa-eye"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-warning action-btn"
+                          className="btn btn-sm btn-warning action-btn"
                           onClick={() => openEditModal(election)}
                           title="Edit"
                         >
                           <i className="fa fa-edit"></i>
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger action-btn"
+                          className="btn btn-sm btn-danger action-btn"
                           onClick={() => handleDelete(election)}
                           title="Delete"
                         >
