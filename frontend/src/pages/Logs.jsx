@@ -891,7 +891,8 @@ function Logs({ user }) {
                               </span>
                             </td>
                             <td style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}>
-                              <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.92rem' }}>
+                              {/* Font size is forced to 0.8rem !important for consistency with the rest of the table */}
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: '200px', fontSize: '0.8rem', padding: '0.35rem 0.5rem', lineHeight: 1.3, verticalAlign: 'middle', fontWeight: 400, color: '#222', wordBreak: 'break-word', whiteSpace: 'normal', overflowWrap: 'anywhere', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', fontFamily: 'inherit', fontStyle: 'normal', fontVariant: 'normal', fontStretch: 'normal', fontWeight: 'normal', letterSpacing: 'normal', textAlign: 'left', background: 'none', border: 'none', outline: 'none', boxShadow: 'none', margin: 0, display: 'inline-block', verticalAlign: 'middle', fontSize: '0.8rem !important' }}>
                                 {log.action === 'vote' ? 'voted' : (log.details || 'No details')}
                               </span>
                             </td>
