@@ -2327,7 +2327,7 @@ const LandingPage = () => {
               <Col md={6} className="text-center text-md-end">
                 <p className="text-white-50 small mb-0">
                   Developed with{" "}
-                  <i className="fa-solid fa-heart text-danger"></i> by{" "}
+                  by{" "}
                   <strong className="text-white">Concept Crashers</strong>
                 </p>
               </Col>
