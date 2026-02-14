@@ -507,11 +507,18 @@ const Users = ({ user }) => {
                             {/* Users Table */}
                             <div className="table-responsive">
                                                                 <style>{`
-                                                                    .users-table-font82, .users-table-font82 th, .users-table-font82 td {
-                                                                        font-size: 0.82rem !important;
+                                                                    .users-table-font84, .users-table-font84 th, .users-table-font84 td {
+                                                                        font-size: 0.84rem !important;
+                                                                    }
+                                                                    .action-btn {
+                                                                        font-size: 0.75rem !important;
+                                                                        padding: 0.18rem 0.38rem !important;
+                                                                        min-width: 1.5rem;
+                                                                        min-height: 1.5rem;
+                                                                        line-height: 1.1;
                                                                     }
                                                                 `}</style>
-                                                                <table className="table table-striped table-hover users-table-font82">
+                                                                <table className="table table-striped table-hover users-table-font84">
                                     <thead className="table-light">
                                         <tr>
                                             {/* ID intentionally hidden; admin can copy via action */}
