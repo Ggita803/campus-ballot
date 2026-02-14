@@ -426,7 +426,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
 
         {/* Navigation Menu */}
         <nav className="sidebar-nav" style={{ 
-          padding: '2rem 0.5rem', 
+          padding: '0.5rem 0.5rem', 
           overflowY: 'auto',
           overflowX: 'hidden'
         }}>
@@ -486,7 +486,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
       {/* High-specificity CSS for nav link font size and spacing override */}
       <style>{`
         .observer-navlink-font, .observer-navlink-font * {
-          font-size: 1rem !important;
+          font-size: 0.9rem !important;
           margin-bottom: 0.20rem !important;
         }
       `}</style>
