@@ -373,7 +373,7 @@ export default function SuperAdminSidebar({ user, collapsed, setCollapsed, isMob
       {/* High-specificity CSS for nav link font size and spacing override */}
       <style>{`
         .custom-superadmin-navlink {
-          font-size: .84rem !important;
+          font-size: .9rem !important;
           margin-bottom: 0.42rem !important;
         }
       `}</style>
