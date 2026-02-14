@@ -155,12 +155,11 @@ const SuperAdmin = ({ user, onLogout }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '18px 32px 18px 0',
-            // background: isDarkMode ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)' : colors.bgLight,
+            padding: '0.75rem 1.5rem',
             background: colors.surface,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-            borderBottom: isDarkMode ? '1px solid #222' : '1px solid #e5e7eb',
-            minHeight: 72,
+            borderBottom: `1px solid ${colors.border}`,
+            minHeight: 52,
+            boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
           }}
         >
           {/* Left: Back button and dashboard title */}
@@ -183,28 +182,27 @@ const SuperAdmin = ({ user, onLogout }) => {
             >
               <span className="fa fa-chevron-left" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
             </button> */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: '50px'  }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span
                 style={{
-                  // background: '#22c55e',
                   background: '#2563eb',
                   color: '#fff',
                   borderRadius: '6px',
-                  width: 45,
-                  height: 45,
+                  width: 36,
+                  height: 36,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 600,
-                  fontSize: 18,
-                  boxShadow: '0 2px 8px rgba(34,197,94,0.08)',
+                  fontSize: 14,
+                  boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
                 }}
               >
-                <i className="fa fa-chart-line" style={{ fontSize: 18, color: '#fff' }}></i>
+                <i className="fa fa-chart-line" style={{ fontSize: 14, color: '#fff' }}></i>
               </span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 20, color: isDarkMode ? '#fff' : '#222' }}>Super Admin Dashboard</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manage system administration and oversight</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: isDarkMode ? '#fff' : '#222' }}>Super Admin Dashboard</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Manage system administration and oversight</div>
               </div>
             </div>
           </div>
@@ -215,12 +213,12 @@ const SuperAdmin = ({ user, onLogout }) => {
               background: colors.primary,
               color: '#fff',
               borderRadius: 3,
-              padding: '4px 16px',
+              padding: '3px 12px',
               fontWeight: 500,
-              fontSize: 14,
+              fontSize: 12,
               display: 'flex',
               alignItems: 'center',
-              minWidth: 80,
+              minWidth: 70,
               justifyContent: 'center',
             }}>
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
@@ -260,8 +258,8 @@ const SuperAdmin = ({ user, onLogout }) => {
                   background: 'none',
                   border: 'none',
                   borderRadius: '50%',
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -269,7 +267,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                 }}
                 onClick={() => setIsSearchExpanded(true)}
               >
-                <span className="fa fa-search" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+                <span className="fa fa-search" style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#222' }} />
               </button>
             )}
             {/* Notification icon with border */}
@@ -277,10 +275,10 @@ const SuperAdmin = ({ user, onLogout }) => {
               aria-label="Notifications"
               style={{
                 background: 'none',
-                border: isDarkMode ? '2px solid #334155' : '2px solid #e5e7eb',
-                borderRadius: '10px',
-                width: 36,
-                height: 36,
+                border: isDarkMode ? '1.5px solid #334155' : '1.5px solid #e5e7eb',
+                borderRadius: '8px',
+                width: 32,
+                height: 32,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -290,6 +288,7 @@ const SuperAdmin = ({ user, onLogout }) => {
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <span className="fa fa-bell" style={{ fontSize: 18, color: isDarkMode ? '#fff' : '#222' }} />
+                            <span className="fa fa-bell" style={{ fontSize: 14, color: isDarkMode ? '#fff' : '#222' }} />
               {/* Notification dot */}
               {notifications.some(n => !n.read) && (
                 <span style={{
@@ -311,8 +310,8 @@ const SuperAdmin = ({ user, onLogout }) => {
             <div style={{ position: 'relative' }}>
               <div
                 style={{
-                  width: '45px',
-                  height: '45px',
+                  width: '36px',
+                  height: '36px',
                   cursor: 'pointer',
                   borderRadius: '50%',
                   background: '#22c55e',
@@ -320,7 +319,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   fontWeight: 'bold',
                   overflow: 'hidden',
                   transition: 'box-shadow 0.18s, transform 0.18s',
