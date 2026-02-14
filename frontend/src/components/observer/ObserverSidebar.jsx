@@ -298,7 +298,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                 justifyContent: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)',
+                fontSize: 'clamp(0.75rem, 1.5vw, 0.84rem)',
                 fontWeight: 'bold',
                 boxShadow: '0 0.125rem 0.5rem rgba(0,0,0,0.1)',
                 zIndex: 10
@@ -450,7 +450,7 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   background: isActive 
                     ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                     : 'transparent',
-                  borderRadius: '6px',
+                  borderRadius: '4px',
                   borderLeft: isActive ? '3px solid #10b981' : '3px solid transparent',
                   transition: 'all 0.2s',
                   position: 'relative',
