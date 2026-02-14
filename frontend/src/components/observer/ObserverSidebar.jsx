@@ -437,14 +437,14 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
               <Link
                 key={item.to}
                 to={item.to}
-                className="nav-link"
+                className="nav-link observer-navlink-font"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: collapsed ? 0 : '0.75rem',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   padding: collapsed ? '0.5rem' : '0.6rem 1rem',
-                  margin: '0.15rem 0',
+                  margin: '0.35rem 0',
                   textDecoration: 'none',
                   color: isActive ? '#fff' : colors.text,
                   background: isActive 
@@ -455,7 +455,6 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                   transition: 'all 0.2s',
                   position: 'relative',
                   fontWeight: isActive ? 600 : 500,
-                  fontSize: '0.9rem',
                   boxShadow: isActive 
                     ? '0 2px 8px rgba(16, 185, 129, 0.25)'
                     : 'none'
@@ -484,6 +483,13 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
               </Link>
             );
           })}
+      {/* High-specificity CSS for nav link font size and spacing override */}
+      <style>{`
+        .observer-navlink-font, .observer-navlink-font * {
+          font-size: 1rem !important;
+          margin-bottom: 0.35rem !important;
+        }
+      `}</style>
 
           {/* Assigned Elections Section */}
           {!collapsed && assignedElections.length > 0 && (
