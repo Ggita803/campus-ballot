@@ -513,8 +513,8 @@ const Users = ({ user }) => {
                                                                     .action-btn {
                                                                         font-size: 0.75rem !important;
                                                                         padding: 0.18rem 0.38rem !important;
-                                                                        min-width: 2rem;
-                                                                        min-height: 2rem;
+                                                                        max-width: 2rem;
+                                                                        max-height: 2rem;
                                                                         line-height: 1.1;
                                                                     }
                                                                 `}</style>
