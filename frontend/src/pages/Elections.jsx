@@ -48,6 +48,33 @@ function Elections({ user }) {
         max-width: 2rem;
         max-height: 2rem;
         line-height: 1.1;
+        border: none;
+        color: #fff !important;
+        transition: background 0.15s;
+      }
+      .btn-outline-info.action-btn {
+        background: #0dcaf0;
+        color: #fff !important;
+      }
+      .btn-outline-warning.action-btn {
+        background: #ffc107;
+        color: #212529 !important;
+      }
+      .btn-outline-danger.action-btn {
+        background: #dc3545;
+        color: #fff !important;
+      }
+      .btn-outline-info.action-btn:hover, .btn-outline-info.action-btn:focus {
+        background: #31d2f2 !important;
+        color: #fff !important;
+      }
+      .btn-outline-warning.action-btn:hover, .btn-outline-warning.action-btn:focus {
+        background: #ffcd39 !important;
+        color: #212529 !important;
+      }
+      .btn-outline-danger.action-btn:hover, .btn-outline-danger.action-btn:focus {
+        background: #bb2d3b !important;
+        color: #fff !important;
       }
     `;
   const [elections, setElections] = useState([]);
