@@ -154,7 +154,8 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
         accessLevel: observer.observerInfo?.accessLevel || 'election-specific',
         assignedElectionsCount: observer.observerInfo?.assignedElections?.length || 0,
         totalVotes: totalVotes,
-        totalUniqueVoters: uniqueVoters.length
+        totalUniqueVoters: uniqueVoters.length,
+        organization: observer.observerInfo?.organization || observer.organization || observer.observerOrganization || observer.orgName || observer.companyName || observer.organizationName || ''
       },
       elections: elections.map(e => ({
         id: e._id,
