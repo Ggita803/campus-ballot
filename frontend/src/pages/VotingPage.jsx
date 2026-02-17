@@ -147,7 +147,7 @@ const VotingPage = () => {
   return (
     <div style={{ minHeight: "100vh", width: "100vw", background: "linear-gradient(135deg, #f3e8ff 0%, #f0f4ff 100%)", padding: 0 }}>
       <div style={{ width: "100%", padding: "32px 0" }}>
-        <h2 style={{ color: "#a21caf", fontWeight: 700, marginBottom: 24, textAlign: "center" }}>2025 Student Council Elections</h2>
+        <h2 style={{ color: "#a21caf", fontWeight: 700, marginBottom: 24, textAlign: "center" }}>2026 Student Council Elections</h2>
         <div style={{ width: "90%", margin: "0 auto 16px auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ color: "#7c3aed", fontWeight: 600 }}>Position {currentIndex + 1} of {positions.length}</span>

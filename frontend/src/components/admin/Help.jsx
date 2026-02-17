@@ -48,7 +48,7 @@ const helpTopics = [
   },
   {
     title: 'How do I contact support?',
-    content: 'Use the contact form below or email campusballot-support@example.com.',
+    content: 'Use the contact form below or email campusballot-support@campusballot.tech.',
     category: 'Support'
   },
   {
@@ -479,7 +479,7 @@ function Help() {
       </div>
 
       <div className="mt-5 text-muted" style={{ color: colors.textMuted }}>
-        <small>For further assistance, contact campusballot-support@example.com</small>
+        <small>For further assistance, contact campusballot-support@campusballot.tech</small>
       </div>
     </div>
   );

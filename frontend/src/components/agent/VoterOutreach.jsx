@@ -54,7 +54,7 @@ const VoterOutreach = () => {
           neutralResponses: 10,
           negativeResponses: 3,
           agentName: 'John Smith',
-          date: '2025-01-14',
+          date: '2026-01-14',
           notes: 'Great response from first-year students. Many interested in mental health initiatives.'
         },
         {
@@ -66,7 +66,7 @@ const VoterOutreach = () => {
           neutralResponses: 25,
           negativeResponses: 6,
           agentName: 'Jane Doe',
-          date: '2025-01-13',
+          date: '2026-01-13',
           notes: 'Campus town hall was well attended. Distributed 100 flyers.'
         },
         {
@@ -78,7 +78,7 @@ const VoterOutreach = () => {
           neutralResponses: 18,
           negativeResponses: 4,
           agentName: 'Mike Johnson',
-          date: '2025-01-12',
+          date: '2026-01-12',
           notes: 'Called student organizations leaders. Secured endorsements from 3 clubs.'
         }
       ]);
@@ -88,7 +88,7 @@ const VoterOutreach = () => {
           title: 'Campus Rally',
           description: 'Main campaign rally at the quad',
           location: 'Main Quad',
-          date: '2025-01-20',
+          date: '2026-01-20',
           time: '15:00',
           expectedAttendance: 200,
           status: 'upcoming'
@@ -98,7 +98,7 @@ const VoterOutreach = () => {
           title: 'Meet & Greet - Engineering',
           description: 'Informal meeting with engineering students',
           location: 'Engineering Building',
-          date: '2025-01-18',
+          date: '2026-01-18',
           time: '12:00',
           expectedAttendance: 50,
           status: 'upcoming'

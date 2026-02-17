@@ -39,7 +39,7 @@ const WelcomeCard = () => {
           </div>
           <div className="mt-3 d-flex align-items-center" style={{ gap: 16 }}>
             <div style={{ fontWeight: 600 }}><FontAwesomeIcon icon={faCalendarAlt} className="me-2" />Voting Period</div>
-            <div style={{ color: "#6b7280" }}>August 25 - August 31, 2025</div>
+            <div style={{ color: "#6b7280" }}>August 25 - August 31, 2026</div>
             <div style={{ color: "#71717a", fontSize: 15 }}><i>2d 16h 42m remaining</i></div>
           </div>
         </div>

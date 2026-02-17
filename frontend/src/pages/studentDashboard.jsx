@@ -2715,7 +2715,7 @@ function StudentDashboard({ user: initialUser }) {
           >
             <div style={{ marginBottom: '0.5rem' }}>
               <FaFileAlt style={{ marginRight: '0.25rem' }} />
-              v1.0.0 © 2025 Campus Ballot
+              v1.0.0 © 2026 Campus Ballot
             </div>
             <button
               onClick={async () => {
@@ -2940,7 +2940,7 @@ function StudentDashboard({ user: initialUser }) {
             >
               <div style={{ marginBottom: '0.5rem' }}>
                 <FaFileAlt style={{ marginRight: '0.25rem' }} />
-                v1.0.0 © 2025 Campus Ballot
+                v1.0.0 © 2026 Campus Ballot
               </div>
               <button
                 onClick={async () => {

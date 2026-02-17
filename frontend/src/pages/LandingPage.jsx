@@ -474,7 +474,7 @@ const LandingPage = () => {
                 }}
               >
                 <p className="text-white-50 small mb-0 text-center">
-                  © 2025 Campus Ballot
+                  © 2026 Campus Ballot
                 </p>
                 <p className="text-white-50 small mb-0 text-center">
                   Kyambogo University

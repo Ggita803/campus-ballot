@@ -46,7 +46,7 @@ function CreateElection({ onCreated }) {
           setAvailableFaculties(['Engineering','Science','Business','Arts']);
         }
         if ((!resCoh || !Array.isArray(resCoh.data) || resCoh.data.length === 0) && availableCohorts.length === 0) {
-          setAvailableCohorts(['2025','2024','2023','2022']);
+          setAvailableCohorts(['2026','2024','2023','2022']);
         }
       } catch (err) {
         console.warn('Failed to fetch faculties/cohorts meta, falling back to defaults', err);
@@ -65,7 +65,7 @@ function CreateElection({ onCreated }) {
             'Special Needs & Rehabilitation',
             'Vocational Studies'
           ]);
-          if (availableCohorts.length === 0) setAvailableCohorts(['2025','2024','2023','2022']);
+          if (availableCohorts.length === 0) setAvailableCohorts(['2026','2024','2023','2022']);
         }
       }
     };

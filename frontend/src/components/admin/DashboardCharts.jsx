@@ -308,7 +308,7 @@ function DashboardCharts() {
 
         // realtime turnout point
         if (payload && payload.turnoutPoint) {
-          // turnoutPoint = { timestamp: '2025-10-22T12:00:00Z', votes: 42 }
+          // turnoutPoint = { timestamp: '2026-10-22T12:00:00Z', votes: 42 }
           setTurnoutSeries(prev => {
             const nextLabels = [...prev.labels, new Date(payload.turnoutPoint.timestamp).toLocaleString()];
             const nextData = [...prev.data, payload.turnoutPoint.votes];
