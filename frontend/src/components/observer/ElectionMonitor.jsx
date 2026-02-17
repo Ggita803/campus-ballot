@@ -502,11 +502,11 @@ const CandidatesView = ({ data }) => {
       {data.positions.map((position, index) => (
         <div key={position.positionId} className={index > 0 ? 'mt-4' : ''}>
           <div className="card border-0 shadow-sm">
-            <div className="card-header bg-primary text-white py-3">
+            <div className="card-header text-white py-3" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
               <h5 className="mb-0">
                 <i className="fas fa-trophy me-2"></i>
                 {position.positionTitle}
-                <span className="badge bg-white text-primary ms-2">
+                <span className="badge bg-white text-success ms-2">
                   {position.candidates.length} Candidate{position.candidates.length !== 1 ? 's' : ''}
                 </span>
               </h5>
