@@ -57,77 +57,25 @@ export default function ObserverSidebar({ user, collapsed, setCollapsed, isMobil
                           '';
       setUserOrganization(organization);
       
-      // If no organization found in user object, try fetching from API with better endpoints
+      // If no organization found in user object, fetch from observer dashboard (like settings)
       if (!organization) {
-        console.log('No organization found in user object, fetching from API...');
-        // Fetch user organization from working observer endpoints
         const fetchUserOrgData = async () => {
           try {
             const token = localStorage.getItem('token');
-            
-            // Try observer dashboard endpoint first (this one works)
-            try {
-              const response = await axios.get('/api/observer/dashboard', {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              
-              console.log('Observer dashboard response:', response.data);
-              
-              // Extract organization from dashboard data
-              if (response.data) {
-                const dashboardData = response.data.data || response.data;
-                const userData = response.data.user || dashboardData.user || user;
-                
-                const fetchedOrg = userData?.observerInfo?.organization || 
-                                  userData?.organization || 
-                                  userData?.observerOrganization ||
-                                  dashboardData?.organization ||
-                                  userData?.orgName ||
-                                  userData?.companyName ||
-                                  (userData?.roles?.includes('observer') && userData?.organizationName) ||
-                                  'Independent Observer';
-                
-                console.log('Setting organization from dashboard API:', fetchedOrg);
-                setUserOrganization(fetchedOrg);
-                return;
-              }
-            } catch (dashboardErr) {
-              console.log('Dashboard endpoint failed, trying fallback:', dashboardErr.message);
-            }
-            
-            // Fallback to assigned elections endpoint (this also works)
-            try {
-              const electionsResponse = await axios.get('/api/observer/assigned-elections', {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              
-              console.log('Elections response for org data:', electionsResponse.data);
-              
-              if (electionsResponse.data?.length > 0) {
-                // Try to extract organization from election data
-                const firstElection = electionsResponse.data[0];
-                const orgFromElection = firstElection?.organization || 
-                                       firstElection?.organizerOrganization ||
-                                       'Independent Observer';
-                console.log('Setting organization from elections API:', orgFromElection);
-                setUserOrganization(orgFromElection);
-              } else {
-                setUserOrganization('Independent Observer');
-              }
-            } catch (electionsErr) {
-              console.log('Elections endpoint also failed:', electionsErr.message);
-              setUserOrganization('Independent Observer');
-            }
-            
+            const response = await axios.get('/api/observer/dashboard', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            // Extract organization from dashboard API (overview)
+            const org = response?.data?.data?.overview?.organization || '';
+            setUserOrganization(org || 'Independent Observer');
           } catch (err) {
-            console.error('Error fetching user organization:', err.message);
-            // Provide a fallback organization name
+            console.error('Error fetching user organization from dashboard:', err.message);
             setUserOrganization('Independent Observer');
           }
         };
         fetchUserOrgData();
       } else {
-        console.log('Organization found in user object:', organization);
+        setUserOrganization(organization);
       }
     }
   }, [user]);
