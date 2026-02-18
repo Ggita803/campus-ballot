@@ -1089,7 +1089,7 @@ const LandingPage = () => {
               {[
                 {
                   img: BalibasekaImage,
-                  name: "Balibaseka Deo",
+                  name: "Balibaseka Deogiracious",
                   role: "Full Stack Engineer",
                   expertise: "Scalable Architecture",
                   bio: "Specializes in architecting robust end-to-end solutions and high-performance backends.",
@@ -1355,7 +1355,7 @@ const LandingPage = () => {
               {[
                 {
                   img: BalibasekaImage,
-                  name: "Balibaseka Deo",
+                  name: "Balibaseka Deogiracious",
                   role: "Full Stack Engineer",
                   expertise: "Scalable Architecture",
                   bio: "Specializes in architecting robust end-to-end solutions and high-performance backends.",
