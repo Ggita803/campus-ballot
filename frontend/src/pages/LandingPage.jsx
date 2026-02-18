@@ -1165,7 +1165,7 @@ const LandingPage = () => {
                 },
                 {
                   img: MugerwaImage,
-                  name: "Mugerwa Dickson",
+                  name: "Mugerwa Dickson Junior",
                   role: "Frontend Developer",
                   expertise: "Visual Design",
                   bio: "Bridging the gap between creative design and functional, pixel-perfect frontend code.",
@@ -1431,7 +1431,7 @@ const LandingPage = () => {
                 },
                 {
                   img: MugerwaImage,
-                  name: "Mugerwa Dickson",
+                  name: "Mugerwa Dickson Junior",
                   role: "Frontend Developer",
                   expertise: "Visual Design",
                   bio: "Bridging the gap between creative design and functional, pixel-perfect frontend code.",
