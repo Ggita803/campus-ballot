@@ -100,47 +100,118 @@ export default function CandidateApplication({ user, users = [] }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        // Filter elections based on user eligibility
         const allElections = data.elections || [];
+        const now = new Date();
+        
+        // Filter elections: must not be ended AND user must be eligible
         const eligibleElections = allElections.filter(election => {
-          // Check faculty eligibility
-          const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
-          if (hasFacultyRestriction && user?.faculty && !election.allowedFaculties.includes(user.faculty)) {
+          // First: filter out ended elections
+          if (election.endDate && new Date(election.endDate) < now) {
             return false;
           }
 
-          // Check specific eligibility criteria if they exist
-          if (election.eligibility) {
-            // Check faculty from eligibility object
-            if (election.eligibility.faculty && election.eligibility.faculty !== null && election.eligibility.faculty !== '') {
-              if (user?.faculty !== election.eligibility.faculty) {
-                return false;
-              }
-            }
-
-            // Check year of study
-            if (election.eligibility.yearOfStudy && election.eligibility.yearOfStudy !== null && election.eligibility.yearOfStudy !== '') {
-              if (user?.yearOfStudy !== election.eligibility.yearOfStudy) {
-                return false;
-              }
-            }
-
-            // Check course
-            if (election.eligibility.course && election.eligibility.course !== null && election.eligibility.course !== '') {
-              if (user?.course !== election.eligibility.course) {
-                return false;
-              }
-            }
-
-            // Check minimum GPA if applicable
-            if (election.eligibility.minimunmGPA && election.eligibility.minimunmGPA > 0) {
-              if (user?.gpa && user.gpa < election.eligibility.minimunmGPA) {
-                return false;
-              }
-            }
+          // GLOBAL: Always check allowedFaculties first (applies to ALL eligibility types)
+          const hasFacultyRestriction = election.allowedFaculties && Array.isArray(election.allowedFaculties) && election.allowedFaculties.length > 0;
+          if (hasFacultyRestriction) {
+            if (!user?.faculty) return false;
+            const userFacultyLower = user.faculty.toLowerCase().trim();
+            const matchesFaculty = election.allowedFaculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+            if (!matchesFaculty) return false;
           }
 
-          return true;
+          // Get eligibility type
+          let eligibilityType = election.eligibility?.type;
+          if (!eligibilityType) {
+            if (election.scope === 'university') eligibilityType = 'university';
+            else if (election.scope === 'federation') eligibilityType = 'federation';
+            else eligibilityType = 'all';
+          }
+
+          // Helper: get organization IDs
+          const getUserOrgId = () => {
+            if (!user?.organization) return null;
+            return typeof user.organization === 'object' ? user.organization._id?.toString() : user.organization?.toString();
+          };
+          const getUserOrgParentId = () => {
+            if (!user?.organization || typeof user.organization !== 'object') return null;
+            if (!user.organization.parent) return null;
+            return typeof user.organization.parent === 'object' ? user.organization.parent._id?.toString() : user.organization.parent?.toString();
+          };
+          const getElectionOrgId = () => {
+            if (!election.organization) return null;
+            return typeof election.organization === 'object' ? election.organization._id?.toString() : election.organization?.toString();
+          };
+
+          const userOrgId = getUserOrgId();
+          const userOrgParentId = getUserOrgParentId();
+          const electionOrgId = getElectionOrgId();
+
+          // Check based on eligibility type
+          switch (eligibilityType) {
+            case 'all':
+              return true;
+
+            case 'university':
+              // If faculty check passed above, user is eligible
+              if (hasFacultyRestriction) return true;
+              // Otherwise check org
+              if (election.allowedOrganizations?.length > 0) {
+                const allowedOrgIds = election.allowedOrganizations.map(org =>
+                  typeof org === 'object' ? org._id?.toString() : org?.toString()
+                ).filter(Boolean);
+                if (!userOrgId) return false;
+                return allowedOrgIds.includes(userOrgId) || (userOrgParentId && allowedOrgIds.includes(userOrgParentId));
+              }
+              if (electionOrgId) {
+                if (!userOrgId) return false;
+                return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+              }
+              return true;
+
+            case 'federation':
+              if (hasFacultyRestriction) return true;
+              if (election.allowedOrganizations?.length > 0) {
+                const federationId = typeof election.allowedOrganizations[0] === 'object' 
+                  ? election.allowedOrganizations[0]._id?.toString() 
+                  : election.allowedOrganizations[0]?.toString();
+                if (!userOrgId) return false;
+                return userOrgId === federationId || userOrgParentId === federationId;
+              }
+              if (electionOrgId) {
+                if (!userOrgId) return false;
+                return userOrgId === electionOrgId || userOrgParentId === electionOrgId;
+              }
+              return true;
+
+            case 'faculty':
+              if (election.eligibility?.faculties?.length > 0) {
+                if (!user?.faculty) return false;
+                const userFacultyLower = user.faculty.toLowerCase().trim();
+                return election.eligibility.faculties.some(f => f.toLowerCase().trim() === userFacultyLower);
+              }
+              return true;
+
+            case 'cohort':
+              if (election.eligibility?.cohorts?.length > 0) {
+                if (!user?.yearOfStudy) return false;
+                return election.eligibility.cohorts.includes(user.yearOfStudy.toString());
+              }
+              return true;
+
+            case 'csv':
+              if (election.eligibility?.whitelist?.length > 0) {
+                const userEmail = user?.email?.toLowerCase().trim();
+                const userStudentId = user?.studentId?.toString().trim();
+                return election.eligibility.whitelist.some(entry => {
+                  const entryLower = entry?.toLowerCase().trim();
+                  return entryLower === userEmail || entryLower === userStudentId;
+                });
+              }
+              return true;
+
+            default:
+              return true;
+          }
         });
 
         setElections(eligibleElections);
