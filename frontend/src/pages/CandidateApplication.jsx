@@ -293,8 +293,8 @@ export default function CandidateApplication({ user, users = [] }) {
       {/* Hero Banner */}
       <div style={{
         background: isDarkMode 
-          ? 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%)'
-          : 'linear-gradient(135deg, #0d6efd 0%, #6366f1 50%, #8b5cf6 100%)',
+          ? '#1e3a8a'
+          : '#0d6efd',
         padding: 'clamp(3rem, 8vw, 5rem) clamp(1rem, 3vw, 1.5rem) clamp(2.5rem, 6vw, 4rem)',
         position: 'relative',
         overflow: 'hidden',
