@@ -31,6 +31,8 @@ const OrganizationManagement = () => {
   const [expandedFederations, setExpandedFederations] = useState({});
   const [admins, setAdmins] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [isAddingNewOrg, setIsAddingNewOrg] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -126,6 +128,8 @@ const OrganizationManagement = () => {
   const openCreateModal = (type = 'university', parentId = '') => {
     setModalMode('create');
     setSelectedOrg(null);
+    setIsAddingNewOrg(false);
+    setNewOrgName('');
     setFormData({
       name: '',
       code: '',
@@ -654,15 +658,82 @@ const OrganizationManagement = () => {
                     {/* Basic Info */}
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Organization Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder={formData.type === 'federation' ? 'e.g., Nigerian University Students Federation' : 'e.g., University of Lagos'}
-                        required
-                        style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
-                      />
+                      {modalMode === 'edit' ? (
+                        // In edit mode, show text input
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder={formData.type === 'federation' ? 'e.g., Nigerian University Students Federation' : 'e.g., University of Lagos'}
+                          required
+                          style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
+                        />
+                      ) : isAddingNewOrg ? (
+                        // Adding new organization - show text input with cancel button
+                        <div className="input-group">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={newOrgName}
+                            onChange={(e) => {
+                              setNewOrgName(e.target.value);
+                              setFormData({ ...formData, name: e.target.value });
+                            }}
+                            placeholder={formData.type === 'federation' ? 'e.g., Nigerian University Students Federation' : 'e.g., University of Lagos'}
+                            required
+                            autoFocus
+                            style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => {
+                              setIsAddingNewOrg(false);
+                              setNewOrgName('');
+                              setFormData({ ...formData, name: '' });
+                            }}
+                            title="Cancel"
+                          >
+                            <FontAwesomeIcon icon={faTimes} />
+                          </button>
+                        </div>
+                      ) : (
+                        // Select from existing organizations
+                        <>
+                          <select
+                            className="form-select"
+                            value={formData.name}
+                            onChange={(e) => {
+                              if (e.target.value === '__ADD_NEW__') {
+                                setIsAddingNewOrg(true);
+                                setFormData({ ...formData, name: '' });
+                              } else {
+                                const selectedOrg = organizations.find(o => o.name === e.target.value);
+                                setFormData({ 
+                                  ...formData, 
+                                  name: e.target.value,
+                                  code: selectedOrg?.code || formData.code
+                                });
+                              }
+                            }}
+                            required
+                            style={{ backgroundColor: colors.background, color: colors.text, borderColor: colors.border }}
+                          >
+                            <option value="">-- Select {formData.type === 'federation' ? 'Federation' : 'University'} --</option>
+                            {organizations
+                              .filter(org => org.type === formData.type)
+                              .map(org => (
+                                <option key={org._id} value={org.name}>{org.name} ({org.code})</option>
+                              ))
+                            }
+                            <option value="__ADD_NEW__" style={{ fontStyle: 'italic', color: '#2563eb' }}>
+                              + Add New {formData.type === 'federation' ? 'Federation' : 'University'}...
+                            </option>
+                          </select>
+                          <small className="text-muted">Select existing or add new</small>
+                        </>
+                      )}
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Code *</label>

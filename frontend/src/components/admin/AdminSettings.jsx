@@ -18,6 +18,7 @@ import {
   faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../../contexts/ThemeContext';
+import ThemedTable from '../common/ThemedTable';
 
 function SectionCard({ id, title, children, onSave, onSaveDraft, saving }) {
   return (
@@ -400,13 +401,20 @@ export default function AdminSettings({ user }) {
         ? `<p>📧 ${res.data.emailsSent} welcome emails sent${res.data.emailsFailed > 0 ? `, ${res.data.emailsFailed} failed` : ''}</p>`
         : '';
       
+      // Show error details if any failures
+      const errorDetails = res.data.errors?.length > 0
+        ? `<details style="text-align:left;margin-top:10px"><summary style="cursor:pointer;color:#dc3545">View ${res.data.errors.length} error(s)</summary><ul style="max-height:200px;overflow-y:auto;font-size:0.85em">${res.data.errors.slice(0, 20).map(e => `<li style="color:#dc3545">${e}</li>`).join('')}${res.data.errors.length > 20 ? '<li>...and more</li>' : ''}</ul></details>`
+        : '';
+      
       Swal.fire({
         title: 'Import Complete!',
         html: `<p><strong>${res.data.imported}</strong> users imported successfully</p>
                <p>${res.data.skipped > 0 ? `${res.data.skipped} skipped (duplicates)` : ''}</p>
-               <p>${res.data.failed > 0 ? `${res.data.failed} failed` : ''}</p>
-               ${emailInfo}`,
-        icon: res.data.failed > 0 ? 'warning' : 'success'
+               <p>${res.data.failed > 0 ? `<span style="color:#dc3545">${res.data.failed} failed</span>` : ''}</p>
+               ${emailInfo}
+               ${errorDetails}`,
+        icon: res.data.failed > 0 ? 'warning' : 'success',
+        width: res.data.errors?.length > 0 ? '600px' : undefined
       });
     } catch (err) {
       console.error('Import error:', err);
@@ -712,24 +720,24 @@ export default function AdminSettings({ user }) {
               
               {/* Preview table */}
               {importValidation.preview && importValidation.preview.length > 0 && (
-                <div className="table-responsive" style={{ maxHeight: 200, borderRadius: '0.375rem', border: `1px solid ${colors.border}` }}>
-                  <table className="table table-sm mb-0" style={{ backgroundColor: colors.surface, color: colors.text, fontSize: '0.8rem' }}>
-                    <thead style={{ position: 'sticky', top: 0, backgroundColor: colors.surface }}>
+                <div style={{ maxHeight: 200, overflow: 'auto' }}>
+                  <ThemedTable size="sm" striped hover bordered>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: colors.surface, zIndex: 1 }}>
                       <tr>
-                        <th style={{ padding: '0.4rem' }}>Row</th>
-                        <th style={{ padding: '0.4rem' }}>Email</th>
-                        <th style={{ padding: '0.4rem' }}>Student ID</th>
-                        <th style={{ padding: '0.4rem' }}>Name</th>
-                        <th style={{ padding: '0.4rem' }}>Status</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Row</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Email</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Student ID</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Name</th>
+                        <th style={{ padding: '0.4rem', color: colors.text }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {importValidation.preview.slice(0, 20).map(p => (
-                        <tr key={p.row} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                          <td style={{ padding: '0.4rem' }}>{p.row}</td>
-                          <td style={{ padding: '0.4rem' }}>{p.email}</td>
-                          <td style={{ padding: '0.4rem' }}>{p.studentId || '-'}</td>
-                          <td style={{ padding: '0.4rem' }}>{p.name || <span className="text-muted">(auto)</span>}</td>
+                        <tr key={p.row}>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.row}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.email}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.studentId || '-'}</td>
+                          <td style={{ padding: '0.4rem', color: colors.text }}>{p.name || <span className="text-muted">(auto)</span>}</td>
                           <td style={{ padding: '0.4rem' }}>
                             {p.valid ? (
                               <span className="badge bg-success">Valid</span>
@@ -740,7 +748,7 @@ export default function AdminSettings({ user }) {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ThemedTable>
                 </div>
               )}
               
@@ -767,16 +775,33 @@ export default function AdminSettings({ user }) {
 
           {/* Import Result */}
           {importResult && (
-            <div className="mb-3 p-3 rounded border border-success" style={{ backgroundColor: 'rgba(25, 135, 84, 0.1)' }}>
-              <div className="fw-bold text-success mb-2">
+            <div className={`mb-3 p-3 rounded border ${importResult.failed > 0 ? 'border-warning' : 'border-success'}`} style={{ backgroundColor: importResult.failed > 0 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(25, 135, 84, 0.1)' }}>
+              <div className={`fw-bold ${importResult.failed > 0 ? 'text-warning' : 'text-success'} mb-2`}>
                 <FontAwesomeIcon icon={faCheck} className="me-2" />
                 Import Completed
               </div>
-              <div className="d-flex gap-4">
+              <div className="d-flex gap-4 mb-2">
                 <span><strong>{importResult.imported}</strong> imported</span>
                 {importResult.skipped > 0 && <span className="text-warning"><strong>{importResult.skipped}</strong> skipped</span>}
                 {importResult.failed > 0 && <span className="text-danger"><strong>{importResult.failed}</strong> failed</span>}
               </div>
+              
+              {/* Show import errors if any */}
+              {importResult.errors && importResult.errors.length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-danger small" style={{ cursor: 'pointer' }}>
+                    View {importResult.errors.length} error(s)
+                  </summary>
+                  <ul className="small mt-1 mb-0" style={{ maxHeight: 200, overflowY: 'auto' }}>
+                    {importResult.errors.slice(0, 30).map((err, i) => (
+                      <li key={i} className="text-danger">{err}</li>
+                    ))}
+                    {importResult.errors.length > 30 && (
+                      <li className="text-muted">...and {importResult.errors.length - 30} more</li>
+                    )}
+                  </ul>
+                </details>
+              )}
             </div>
           )}
 

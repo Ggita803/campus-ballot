@@ -257,24 +257,40 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
   const sendWelcomeEmail = req.body.sendWelcomeEmail === 'true';
   const defaultOrganizationId = req.body.organization || req.user.organization;
   
+  console.log('[BULK IMPORT] Starting import with options:', {
+    skipDuplicates,
+    sendWelcomeEmail,
+    defaultOrganizationId,
+    adminOrg: req.user.organization,
+    bodyOrg: req.body.organization
+  });
+  
   try {
     const rows = parseFile(req.file.buffer, req.file.originalname);
+    
+    console.log(`[BULK IMPORT] Parsed ${rows.length} rows from file`);
+    if (rows.length > 0) {
+      console.log('[BULK IMPORT] First row sample:', JSON.stringify(rows[0], null, 2));
+    }
     
     if (rows.length === 0) {
       res.status(400);
       throw new Error('File is empty or has no data rows');
     }
     
-    // Build organization code to ID map for rows that specify organization
-    const orgCodes = [...new Set(rows.map(r => r.organizationCode?.toUpperCase().trim()).filter(Boolean))];
-    const organizationMap = {};
+    // Build organization lookup map (by code AND by name for flexibility)
+    const orgValues = [...new Set(rows.map(r => r.organizationCode?.trim()).filter(Boolean))];
+    const organizationMap = {}; // code -> ID
+    const organizationNameMap = {}; // lowercase name -> ID
     
-    if (orgCodes.length > 0) {
-      const orgs = await Organization.find({ code: { $in: orgCodes }, status: 'active' });
-      orgs.forEach(org => {
-        organizationMap[org.code] = org._id;
-      });
-    }
+    // Fetch ALL active organizations for flexible matching
+    const allOrgs = await Organization.find({ status: 'active' }).select('_id name code');
+    allOrgs.forEach(org => {
+      organizationMap[org.code.toUpperCase()] = org._id;
+      organizationNameMap[org.name.toLowerCase()] = org._id;
+    });
+    
+    console.log('[BULK IMPORT] Available organizations:', allOrgs.map(o => `${o.name} (${o.code})`).join(', '));
     
     const results = {
       total: rows.length,
@@ -345,17 +361,30 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
         
         const role = (row.role || 'student').toLowerCase().trim();
         
-        // Determine organization for this user
+        // Determine organization for this user - try code first, then name
         let userOrganization = defaultOrganizationId;
         if (row.organizationCode) {
-          const orgCode = row.organizationCode.toUpperCase().trim();
-          if (organizationMap[orgCode]) {
-            userOrganization = organizationMap[orgCode];
+          const orgValue = row.organizationCode.trim();
+          const orgCodeUpper = orgValue.toUpperCase();
+          const orgNameLower = orgValue.toLowerCase();
+          
+          // Try matching by code first, then by name
+          if (organizationMap[orgCodeUpper]) {
+            userOrganization = organizationMap[orgCodeUpper];
+          } else if (organizationNameMap[orgNameLower]) {
+            userOrganization = organizationNameMap[orgNameLower];
           } else {
             results.failed++;
-            results.errors.push(`Row ${rowIndex}: Organization code '${orgCode}' not found or inactive`);
+            results.errors.push(`Row ${rowIndex}: Organization '${orgValue}' not found. Available: ${allOrgs.map(o => o.code).join(', ')}`);
             continue;
           }
+        }
+        
+        // If still no organization, fail with helpful message
+        if (!userOrganization) {
+          results.failed++;
+          results.errors.push(`Row ${rowIndex}: No organization specified and admin has no default organization. Add 'organization' column to CSV.`);
+          continue;
         }
         
         // Derive name from email if not provided
@@ -423,17 +452,11 @@ const bulkImportUsers = asyncHandler(async (req, res) => {
     // Log the activity
     await logActivity({
       userId: req.user._id,
-      action: 'BULK_USER_IMPORT',
-      description: `Imported ${results.imported} users from file (${results.skipped} skipped, ${results.failed} failed)`,
-      ip: getIpAddress(req),
-      userAgent: getUserAgent(req),
-      metadata: {
-        filename: req.file.originalname,
-        totalRows: results.total,
-        imported: results.imported,
-        skipped: results.skipped,
-        failed: results.failed
-      }
+      action: 'import',
+      entityType: 'User',
+      details: `Bulk imported ${results.imported} users from file ${req.file.originalname} (${results.skipped} skipped, ${results.failed} failed)`,
+      ipAddress: getIpAddress(req),
+      userAgent: getUserAgent(req)
     });
     
     // Send welcome emails to all imported users

@@ -9,7 +9,7 @@ const logSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['login', 'logout', 'create', 'update', 'delete', 'vote', 'view', 'maintenance', 'backup', 'security', 'configuration']
+    enum: ['login', 'logout', 'create', 'update', 'delete', 'vote', 'view', 'maintenance', 'backup', 'security', 'configuration', 'import', 'export']
   },
   entityType: {
     type: String,

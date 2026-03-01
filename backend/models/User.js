@@ -103,16 +103,14 @@ const userSchema = new mongoose.Schema({
     },
     faculty: {
         type: String,
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
         trim: true,
     },
     course: {
         type: String,
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
         trim: true,
     },
     department: {
@@ -123,16 +121,14 @@ const userSchema = new mongoose.Schema({
     yearOfStudy: {
         type: String,
         trim: true,
-        required: function() {
-            return this.role === 'student';
-        }
+        // Optional - not all imports have this data
+        required: false
     },
     gender: {
         type: String,
         enum: ['Male', 'Female', 'Other'],
-        required: function() {
-            return this.role === 'student';
-        },
+        // Optional - not all imports have this data
+        required: false,
     },
     phone: {
         type: String,
