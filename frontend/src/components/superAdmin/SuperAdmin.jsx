@@ -38,7 +38,7 @@ const SuperAdmin = ({ user, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.profilePicture || user?.avatarUrl || '/logo.png');
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Close profile menu on outside click
@@ -214,7 +214,7 @@ const SuperAdmin = ({ user, onLogout }) => {
             <div style={{
               background: colors.primary,
               color: '#fff',
-              borderRadius: 3,
+              borderRadius: 10,
               padding: '3px 12px',
               fontWeight: 500,
               fontSize: 12,
@@ -247,11 +247,7 @@ const SuperAdmin = ({ user, onLogout }) => {
                 }}
                 aria-label="Search input"
                 onFocus={e => e.target.style.boxShadow = '0 4px 16px rgba(37,99,235,0.18)'}
-                onBlur={e => {
-                  e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)';
-                  setIsSearchExpanded(false);
-                }}
-                autoFocus
+                onBlur={e => e.target.style.boxShadow = '0 2px 8px rgba(37,99,235,0.08)'}
               />
             ) : (
               <button
