@@ -296,23 +296,74 @@ const OrganizationManagement = () => {
     }
   };
 
-  // Card styles
+  // Surface styles tuned for stronger visual identity
   const cardStyle = {
-    backgroundColor: colors.surface,
+    background: isDarkMode
+      ? `linear-gradient(140deg, ${colors.surface} 0%, ${colors.background} 100%)`
+      : `linear-gradient(140deg, ${colors.surface} 0%, #f8fbff 100%)`,
     border: `1px solid ${colors.border}`,
-    borderRadius: '12px',
-    padding: '1.5rem',
-    marginBottom: '1rem'
+    borderRadius: '18px',
+    padding: '1.25rem',
+    marginBottom: '1rem',
+    boxShadow: isDarkMode
+      ? '0 10px 28px rgba(0, 0, 0, 0.28)'
+      : '0 12px 28px rgba(13, 38, 76, 0.08)'
+  };
+
+  const statCardBaseStyle = {
+    borderRadius: '20px',
+    padding: '1.1rem 1.15rem',
+    position: 'relative',
+    overflow: 'hidden',
+    border: isDarkMode ? `1px solid ${colors.border}` : '1px solid rgba(255,255,255,0.75)',
+    boxShadow: isDarkMode
+      ? '0 10px 24px rgba(0, 0, 0, 0.32)'
+      : '0 12px 30px rgba(14, 22, 40, 0.10)'
   };
 
   const orgCardStyle = {
-    backgroundColor: colors.surface,
+    background: isDarkMode
+      ? `linear-gradient(120deg, ${colors.surface} 0%, ${colors.background} 100%)`
+      : 'linear-gradient(120deg, #ffffff 0%, #f7fbff 100%)',
     border: `1px solid ${colors.border}`,
-    borderRadius: '8px',
+    borderRadius: '14px',
     padding: '1rem',
     marginBottom: '0.75rem',
     transition: 'all 0.2s ease',
-    cursor: 'pointer'
+    boxShadow: isDarkMode
+      ? '0 8px 18px rgba(0,0,0,0.22)'
+      : '0 8px 20px rgba(15, 48, 85, 0.08)'
+  };
+
+  const getStatusPillStyle = (status) => {
+    const active = status === 'active';
+    return {
+      padding: '0.32rem 0.7rem',
+      borderRadius: '999px',
+      fontSize: '0.72rem',
+      fontWeight: 700,
+      letterSpacing: '0.02em',
+      textTransform: 'uppercase',
+      border: `1px solid ${active ? '#10b98155' : '#9ca3af55'}`,
+      background: active ? '#10b9811a' : '#6b72801a',
+      color: active ? '#059669' : isDarkMode ? '#d1d5db' : '#4b5563'
+    };
+  };
+
+  const actionButtonStyle = {
+    borderRadius: '10px',
+    width: 34,
+    height: 34,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+
+  const addUniversityButtonStyle = {
+    borderRadius: '10px',
+    padding: '0.38rem 0.65rem',
+    fontWeight: 600,
+    fontSize: '0.78rem'
   };
 
   return (
@@ -369,51 +420,83 @@ const OrganizationManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div style={{ ...cardStyle, borderLeft: '4px solid #2563eb' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <p className="text-muted mb-1 small">Federations</p>
-                <h3 className="mb-0">{federations.length}</h3>
+      <div className="row mb-4 g-3">
+        {[
+          {
+            label: 'Federations',
+            value: federations.length,
+            icon: faBuilding,
+            accent: '#2563eb',
+            gradient: 'linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)'
+          },
+          {
+            label: 'Universities',
+            value: organizations.filter(o => o.type === 'university').length,
+            icon: faUniversity,
+            accent: '#10b981',
+            gradient: 'linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)'
+          },
+          {
+            label: 'Total Users',
+            value: organizations.reduce((sum, o) => sum + (o.stats?.totalUsers || 0), 0),
+            icon: faUsers,
+            accent: '#d97706',
+            gradient: 'linear-gradient(135deg, #ffedd5 0%, #fff7ed 100%)'
+          },
+          {
+            label: 'Total Elections',
+            value: organizations.reduce((sum, o) => sum + (o.stats?.totalElections || 0), 0),
+            icon: faVoteYea,
+            accent: '#0f766e',
+            gradient: 'linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 100%)'
+          }
+        ].map((stat) => (
+          <div key={stat.label} className="col-md-3 col-sm-6">
+            <div
+              style={{
+                ...statCardBaseStyle,
+                background: isDarkMode
+                  ? `linear-gradient(135deg, ${colors.surface} 0%, ${colors.background} 100%)`
+                  : stat.gradient
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  width: 88,
+                  height: 88,
+                  borderRadius: '50%',
+                  top: -30,
+                  right: -20,
+                  background: `${stat.accent}22`
+                }}
+              />
+              <div className="d-flex justify-content-between align-items-center" style={{ position: 'relative', zIndex: 1 }}>
+                <div>
+                  <p className="mb-1 small" style={{ color: isDarkMode ? colors.textSecondary : '#4b5563', fontWeight: 600 }}>
+                    {stat.label}
+                  </p>
+                  <h3 className="mb-0" style={{ color: isDarkMode ? colors.text : '#0f172a', fontWeight: 800 }}>
+                    {stat.value}
+                  </h3>
+                </div>
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: `${stat.accent}1f`
+                  }}
+                >
+                  <FontAwesomeIcon icon={stat.icon} style={{ fontSize: 20, color: stat.accent }} />
+                </div>
               </div>
-              <FontAwesomeIcon icon={faBuilding} style={{ fontSize: 24, color: '#2563eb', opacity: 0.7 }} />
             </div>
           </div>
-        </div>
-        <div className="col-md-3">
-          <div style={{ ...cardStyle, borderLeft: '4px solid #10b981' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <p className="text-muted mb-1 small">Universities</p>
-                <h3 className="mb-0">{organizations.filter(o => o.type === 'university').length}</h3>
-              </div>
-              <FontAwesomeIcon icon={faUniversity} style={{ fontSize: 24, color: '#10b981', opacity: 0.7 }} />
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div style={{ ...cardStyle, borderLeft: '4px solid #f59e0b' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <p className="text-muted mb-1 small">Total Users</p>
-                <h3 className="mb-0">{organizations.reduce((sum, o) => sum + (o.stats?.totalUsers || 0), 0)}</h3>
-              </div>
-              <FontAwesomeIcon icon={faUsers} style={{ fontSize: 24, color: '#f59e0b', opacity: 0.7 }} />
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div style={{ ...cardStyle, borderLeft: '4px solid #8b5cf6' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <p className="text-muted mb-1 small">Total Elections</p>
-                <h3 className="mb-0">{organizations.reduce((sum, o) => sum + (o.stats?.totalElections || 0), 0)}</h3>
-              </div>
-              <FontAwesomeIcon icon={faVoteYea} style={{ fontSize: 24, color: '#8b5cf6', opacity: 0.7 }} />
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Search & Filter */}
@@ -519,12 +602,11 @@ const OrganizationManagement = () => {
                   </div>
                 </div>
                 <div className="d-flex align-items-center gap-2">
-                  <span className={`badge ${federation.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                    {federation.status}
-                  </span>
+                  <span style={getStatusPillStyle(federation.status)}>{federation.status}</span>
                   <button 
                     className="btn btn-sm btn-outline-primary"
                     onClick={(e) => { e.stopPropagation(); openCreateModal('university', federation._id); }}
+                    style={addUniversityButtonStyle}
                   >
                     <FontAwesomeIcon icon={faPlus} className="me-1" />
                     Add University
@@ -532,12 +614,14 @@ const OrganizationManagement = () => {
                   <button 
                     className="btn btn-sm btn-outline-secondary"
                     onClick={(e) => { e.stopPropagation(); openEditModal(federation); }}
+                    style={actionButtonStyle}
                   >
                     <FontAwesomeIcon icon={faEdit} />
                   </button>
                   <button 
                     className="btn btn-sm btn-outline-danger"
                     onClick={(e) => { e.stopPropagation(); handleDelete(federation); }}
+                    style={actionButtonStyle}
                   >
                     <FontAwesomeIcon icon={faTrash} />
                   </button>
@@ -582,25 +666,26 @@ const OrganizationManagement = () => {
                           </div>
                         </div>
                         <div className="d-flex align-items-center gap-2">
-                          <span className={`badge ${uni.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                            {uni.status}
-                          </span>
+                          <span style={getStatusPillStyle(uni.status)}>{uni.status}</span>
                           <button 
                             className="btn btn-sm btn-outline-info"
                             onClick={() => handleAssignAdmin(uni)}
                             title="Assign Admin"
+                            style={actionButtonStyle}
                           >
                             <FontAwesomeIcon icon={faUserShield} />
                           </button>
                           <button 
                             className="btn btn-sm btn-outline-secondary"
                             onClick={() => openEditModal(uni)}
+                            style={actionButtonStyle}
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </button>
                           <button 
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => handleDelete(uni)}
+                            style={actionButtonStyle}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
@@ -646,25 +731,26 @@ const OrganizationManagement = () => {
                     </div>
                   </div>
                   <div className="d-flex align-items-center gap-2">
-                    <span className={`badge ${uni.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                      {uni.status}
-                    </span>
+                    <span style={getStatusPillStyle(uni.status)}>{uni.status}</span>
                     <button 
                       className="btn btn-sm btn-outline-info"
                       onClick={() => handleAssignAdmin(uni)}
                       title="Assign Admin"
+                      style={actionButtonStyle}
                     >
                       <FontAwesomeIcon icon={faUserShield} />
                     </button>
                     <button 
                       className="btn btn-sm btn-outline-secondary"
                       onClick={() => openEditModal(uni)}
+                      style={actionButtonStyle}
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
                     <button 
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => handleDelete(uni)}
+                      style={actionButtonStyle}
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
