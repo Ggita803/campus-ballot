@@ -160,19 +160,28 @@ const updateCandidate = asyncHandler(async (req, res) => {
       return res.status(403).json({ message: "You do not have permission to update this candidate" });
     }
 
+    // INTEGRITY CHECK: Prevent modifying critical fields if already approved
+    // Changing position or election after approval corrupts voting data
+    if (candidate.status === 'approved' && req.user.role !== 'admin') {
+       // Candidates cannot change these fields once approved
+       delete req.body.position;
+       delete req.body.party;
+       delete req.body.symbol;
+    }
+
     const fields = [
       "name", "photo", "position", "symbol",
-      "party", "description", "manifesto", "status",
+      "party", "description", "manifesto",
       "email", "phone", "studentId", "department", "yearOfStudy", "bio"
     ];
-
-    const arrayFields = ["campaignPromises", "qualifications", "achievements"];
 
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
         candidate[field] = req.body[field];
       }
     });
+    
+    const arrayFields = ["campaignPromises", "qualifications", "achievements"];
 
     arrayFields.forEach((field) => {
       if (req.body[field] !== undefined) {

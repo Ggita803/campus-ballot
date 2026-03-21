@@ -516,10 +516,8 @@ const login = asyncHandler(async (req, res) => {
     // Generate JWT
     const token = generateToken(user._id);
 
-    // For students, enforce single-device login by saving the token
-    if (user.role === 'student') {
-      user.currentSessionToken = token;
-    }
+    // Enforce single-device login / session tracking for ALL users (Students & Admins)
+    user.currentSessionToken = token;
     await user.save();
 
     console.log("[LOGIN]:", user.email, "Role:", user.role);
@@ -602,10 +600,8 @@ const logout = asyncHandler(async (req, res) => {
       ipAddress: getIpAddress(req),
       userAgent: getUserAgent(req)
     });
-      // For students, clear currentSessionToken to force logout on all devices
-      if (req.user.role === 'student') {
-        await User.findByIdAndUpdate(req.user._id, { $set: { currentSessionToken: null } });
-      }
+      // Clear currentSessionToken to invalidate the JWT immediately
+      await User.findByIdAndUpdate(req.user._id, { $set: { currentSessionToken: null } });
   }
   res.json({ message: "Logout successful" });
 });

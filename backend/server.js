@@ -161,6 +161,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- SECURITY: Global NoSQL Injection Sanitization ---
+// Recursively removes keys starting with '$' or containing '.' from req.body, req.query, req.params
+const mongoSanitize = (req, res, next) => {
+  const sanitize = (obj) => {
+    for (let key in obj) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        sanitize(obj[key]);
+      }
+    }
+  };
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  next();
+};
+app.use(mongoSanitize);
+
 // Custom rate limiter: higher limits for admin, super admin, observer
 const { ipKeyGenerator } = require("express-rate-limit");
 
