@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const mongoose = require("mongoose");
-const VoterRecord = require("../models/VoterRecord");
+const VoterRecord = require("../models/Vote");
 const Ballot = require("../models/Ballot");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");

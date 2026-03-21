@@ -1,5 +1,5 @@
 const Election = require('../models/Election');
-const VoterRecord = require('../models/VoterRecord');
+const VoterRecord = require('../models/Vote');
 const Ballot = require('../models/Ballot');
 const User = require('../models/User');
 const cache = require('../utils/cache');
