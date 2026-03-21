@@ -429,7 +429,7 @@ const getMyCandidacy = asyncHandler(async (req, res) => {
 // @access  Protected (Candidate only)
 const getCandidateDashboard = asyncHandler(async (req, res) => {
   try {
-    const Vote = require("../models/Vote");
+    const Ballot = require("../models/Ballot");
 
     // Find all candidacies for this user
     const candidacies = await Candidate.find({ user: req.user._id })
@@ -473,12 +473,12 @@ const getCandidateDashboard = asyncHandler(async (req, res) => {
         }
 
         // Count votes for this candidate (both valid and all)
-        const voteCount = await Vote.countDocuments({
+        const voteCount = await Ballot.countDocuments({
           candidate: candidacy._id
         });
 
         // Get total votes cast in this election for this position
-        const totalPositionVotes = await Vote.countDocuments({
+        const totalPositionVotes = await Ballot.countDocuments({
           election: candidacy.election._id,
           position: candidacy.position
         });
@@ -492,7 +492,7 @@ const getCandidateDashboard = asyncHandler(async (req, res) => {
 
         const candidateVotes = await Promise.all(
           competingCandidates.map(async (c) => {
-            const votes = await Vote.countDocuments({
+            const votes = await Ballot.countDocuments({
               candidate: c._id
             });
             return { candidateId: c._id.toString(), votes };
@@ -578,7 +578,7 @@ const getCandidateDashboard = asyncHandler(async (req, res) => {
 const getCandidateElectionStats = asyncHandler(async (req, res) => {
   try {
     const { electionId } = req.params;
-    const Vote = require("../models/Vote");
+    const Ballot = require("../models/Ballot");
 
     const candidacy = await Candidate.findOne({
       user: req.user._id,
@@ -589,16 +589,16 @@ const getCandidateElectionStats = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "You are not a candidate in this election" });
     }
 
-    const voteCount = await Vote.countDocuments({
+    const voteCount = await Ballot.countDocuments({
       candidate: candidacy._id,
       status: 'valid'
     });
 
-    const allPositionVotes = await Vote.find({
+    const allPositionVotes = await Ballot.find({
       election: electionId,
       position: candidacy.position,
       status: 'valid'
-    }).populate('user', 'department yearOfStudy').populate('candidate');
+    }).populate('candidate');
 
     const totalPositionVotes = allPositionVotes.length;
     const votePercentage = totalPositionVotes > 0 ? ((voteCount / totalPositionVotes) * 100).toFixed(1) : 0;
@@ -611,7 +611,7 @@ const getCandidateElectionStats = asyncHandler(async (req, res) => {
 
     const candidateVotes = await Promise.all(
       competingCandidates.map(async (c) => {
-        const votes = await Vote.countDocuments({
+        const votes = await Ballot.countDocuments({
           candidate: c._id,
           status: 'valid'
         });
@@ -626,7 +626,7 @@ const getCandidateElectionStats = asyncHandler(async (req, res) => {
     candidateVotes.sort((a, b) => b.votes - a.votes);
     const ranking = candidateVotes.findIndex(cv => cv.candidateId === candidacy._id.toString()) + 1;
 
-    const myVoteRecords = await Vote.find({
+    const myVoteRecords = await Ballot.find({
       candidate: candidacy._id,
       status: 'valid'
     }).sort({ createdAt: 1 });
@@ -647,17 +647,17 @@ const getCandidateElectionStats = asyncHandler(async (req, res) => {
       };
     });
 
-    const myVotes = await Vote.find({
+    const myVotes = await Ballot.find({
       candidate: candidacy._id,
       status: 'valid'
-    }).populate('user', 'department yearOfStudy');
+    }); // No populate user needed, demographics are on Ballot
 
     const departmentBreakdown = {};
     const yearBreakdown = {};
 
     myVotes.forEach(vote => {
-      const dept = vote.user?.department || 'Unknown';
-      const year = vote.user?.yearOfStudy || 'Unknown';
+      const dept = vote.department || 'Unknown';
+      const year = vote.yearOfStudy || 'Unknown';
       departmentBreakdown[dept] = (departmentBreakdown[dept] || 0) + 1;
       yearBreakdown[year] = (yearBreakdown[year] || 0) + 1;
     });

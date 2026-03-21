@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const os = require('os');
 const User = require("../models/User");
 const Election = require("../models/Election");
-const Vote = require("../models/Vote");
+const Ballot = require("../models/Ballot");
+const VoterRecord = require("../models/VoterRecord");
 const Candidate = require("../models/Candidate");
 const Log = require("../models/Log");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
@@ -132,7 +133,7 @@ const getAnalytics = asyncHandler(async (req, res) => {
             Election.aggregate([
                 {
                     $lookup: {
-                        from: 'votes',
+                        from: 'voterrecords',
                         localField: '_id',
                         foreignField: 'election',
                         as: 'votes'
@@ -242,9 +243,9 @@ const getSystemSummary = asyncHandler(async (req, res) => {
                 User.countDocuments({ role: { $in: ['admin', 'super_admin'] } }),
                 Election.countDocuments(),
                 Election.countDocuments({ status: 'active' }),
-                Vote.countDocuments(),
+                Ballot.countDocuments(),
             ]),
-            Vote.distinct('user'),
+            VoterRecord.distinct('user'),
             User.countDocuments({ lastSeen: { $gte: fiveMinutesAgo } }),
             User.aggregate([
                 { $group: { _id: "$role", count: { $sum: 1 } } }

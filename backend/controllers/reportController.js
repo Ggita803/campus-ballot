@@ -1,20 +1,30 @@
 const Election = require('../models/Election');
-const Vote = require('../models/Vote');
+const VoterRecord = require('../models/VoterRecord');
+const Ballot = require('../models/Ballot');
 const User = require('../models/User');
 
 
 const getReportSummary = async (req, res) => {
   try {
     const totalElections = await Election.countDocuments();
-    const totalVotes = await Vote.countDocuments();
+    const totalVotes = await Ballot.countDocuments();
     const totalUsers = await User.countDocuments();
     // Populate candidates if they are refs, otherwise just use subdocs
     const elections = await Election.find().populate('candidates');
 
+    // OPTIMIZATION: Fetch vote counts for ALL elections in one query
+    const votesByElection = await Ballot.aggregate([
+      { $group: { _id: "$election", count: { $sum: 1 } } }
+    ]);
+    // Create a lookup map: { electionId: count }
+    const voteMap = votesByElection.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr.count;
+      return acc;
+    }, {});
+
     // Calculate stats for each election
-    const electionStats = await Promise.all(
-      elections.map(async (election) => {
-        const votes = await Vote.countDocuments({ election: election._id });
+    const electionStats = elections.map((election) => {
+        const votes = voteMap[election._id.toString()] || 0;
         const invalidVotes = election.invalidVotes || 0;
         const spoiledVotes = election.spoiledVotes || 0;
         const candidates = (election.candidates || []).map(c => ({
@@ -36,11 +46,10 @@ const getReportSummary = async (req, res) => {
           spoiledVotes,
           candidates,
         };
-      })
-    );
+    });
 
     // Voted vs Not Voted
-    const voted = await Vote.distinct('user');
+    const voted = await VoterRecord.distinct('user');
     const notVoted = totalUsers - voted.length;
     const voterTurnout = totalUsers ? Math.round((voted.length / totalUsers) * 100) : 0;
 
@@ -51,13 +60,13 @@ const getReportSummary = async (req, res) => {
     const participationByDepartment = await Promise.all(
       faculties.map(async (faculty) => {
         const total = await User.countDocuments({ faculty });
-        const votedUsers = await Vote.distinct('user', { faculty });
+        // Use VoterRecord to count unique users who voted in this faculty
+        // We need to look up users because VoterRecord links to User, not Faculty directly
         // Find users in this faculty who voted
-        // If Vote does not store faculty, you need to join with User
         // We'll join manually:
         const usersInFaculty = await User.find({ faculty }, '_id');
         const userIds = usersInFaculty.map(u => u._id.toString());
-        const votesInFaculty = await Vote.find({ user: { $in: userIds } }).distinct('user');
+        const votesInFaculty = await VoterRecord.find({ user: { $in: userIds } }).distinct('user');
         const turnout = total ? Math.round((votesInFaculty.length / total) * 100) : 0;
         return {
           department: faculty || 'Unknown',
@@ -112,7 +121,7 @@ const getReportSummary = async (req, res) => {
 const getSystemSummary = async (req, res) => {
   try {
     const totalElections = await Election.countDocuments();
-    const totalVotes = await Vote.countDocuments();
+    const totalVotes = await Ballot.countDocuments();
     const totalUsers = await User.countDocuments();
     
     // Basic system summary for super admin dashboard
