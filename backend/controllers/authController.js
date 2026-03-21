@@ -318,7 +318,6 @@ const register = asyncHandler(async (req, res) => {
       name,
       email,
       password,
-      role,
       studentId,
       faculty,
       course,
@@ -377,7 +376,7 @@ const register = asyncHandler(async (req, res) => {
       name,
       email: normalizedEmail,
       password: password, // Don't hash here - the model does it
-      role,
+      role: 'student', // FORCE role to student for public registration
       studentId,
       faculty,
       course,
@@ -1010,4 +1009,3 @@ module.exports = {
     resendPasswordReset,
     resendVerification
 };
-

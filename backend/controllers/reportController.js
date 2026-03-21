@@ -2,10 +2,18 @@ const Election = require('../models/Election');
 const VoterRecord = require('../models/VoterRecord');
 const Ballot = require('../models/Ballot');
 const User = require('../models/User');
+const cache = require('../utils/cache');
 
 
 const getReportSummary = async (req, res) => {
   try {
+    // Check cache for report summary (TTL: 30 seconds)
+    const cacheKey = 'report_summary';
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const totalElections = await Election.countDocuments();
     const totalVotes = await Ballot.countDocuments();
     const totalUsers = await User.countDocuments();
@@ -100,7 +108,7 @@ const getReportSummary = async (req, res) => {
       { $group: { _id: { yearOfStudy: '$yearOfStudy', gender: '$gender' }, total: { $sum: 1 } } }
     ]);
 
-    res.json({
+    const responseData = {
       totalElections,
       totalVotes,
       totalUsers,
@@ -112,7 +120,10 @@ const getReportSummary = async (req, res) => {
       auditLogs,
       topCandidate,
       demographics,
-    });
+    };
+
+    cache.set(cacheKey, responseData, 30); // Cache for 30 seconds
+    res.json(responseData);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch report summary', error: err.message });
   }

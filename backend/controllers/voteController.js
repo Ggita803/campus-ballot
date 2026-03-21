@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const VoterRecord = require("../models/VoterRecord");
 const Ballot = require("../models/Ballot");
 const Candidate = require("../models/Candidate");
@@ -74,43 +75,59 @@ const castVote = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "You have already voted for this position in this election" });
     }
 
-    // 1. Create Voter Record (Claims the spot, prevents double voting)
-    await VoterRecord.create({
-      user: req.user._id,
-      election: electionId,
-      position
-    });
+    // Start a transaction to ensure data integrity
+    // (VoterRecord + Ballot + Candidate Count must all succeed or all fail)
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // 2. Cast Ballot (Anonymous vote)
-    const ballot = await Ballot.create({
-      election: electionId,
-      position,
-      candidate: abstain ? undefined : candidateId,
-      // Store anonymous demographics snapshot
-      faculty: req.user.faculty,
-      department: req.user.department,
-      yearOfStudy: req.user.yearOfStudy,
-      gender: req.user.gender
-    });
+    try {
+      // 1. Create Voter Record (Claims the spot, prevents double voting)
+      await VoterRecord.create([{
+        user: req.user._id,
+        election: electionId,
+        position
+      }], { session });
 
-    // Log student voting activity
-    await logActivity({
-      userId: req.user._id,
-      action: 'vote',
-      entityType: 'Ballot',
-      entityId: ballot._id.toString(),
-      details: abstain 
-        ? `Abstained from voting for ${position} in ${election.title}`
-        : `Voted for ${candidate?.name || 'candidate'} for ${position} in ${election.title}`,
-      status: 'success',
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
-    });
+      // 2. Cast Ballot (Anonymous vote)
+      const ballot = await Ballot.create([{
+        election: electionId,
+        position,
+        candidate: abstain ? undefined : candidateId,
+        // Store anonymous demographics snapshot
+        faculty: req.user.faculty,
+        department: req.user.department,
+        yearOfStudy: req.user.yearOfStudy,
+        gender: req.user.gender
+      }], { session });
 
-    // Optionally increment candidate's vote count
-    if (candidate) {
-      // Use atomic $inc to avoid race conditions in high concurrency
-      await Candidate.updateOne({ _id: candidate._id }, { $inc: { votes: 1 } });
+      // Optionally increment candidate's vote count
+      if (candidate) {
+        // Use atomic $inc with session
+        await Candidate.updateOne(
+          { _id: candidate._id }, 
+          { $inc: { votes: 1 } }
+        ).session(session);
+      }
+
+      await session.commitTransaction();
+      
+      // Log student voting activity (After commit)
+      await logActivity({
+        userId: req.user._id,
+        action: 'vote',
+        entityType: 'Election',
+        entityId: election._id.toString(),
+        details: `Voted for position: ${position} in ${election.title}`,
+        status: 'success',
+        ipAddress: getIpAddress(req),
+        userAgent: getUserAgent(req)
+      });
+
+    } catch (transactionError) {
+      await session.abortTransaction();
+      throw transactionError; // Re-throw to be handled by main catch block
+    } finally {
+      session.endSession();
     }
 
     // Send response immediately to user so they don't wait for dashboard stats

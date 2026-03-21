@@ -79,7 +79,16 @@ const downloadMaterial = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Not authorized to access this material' });
   }
 
-  const filePath = path.join(__dirname, '..', material.url.replace(/^\//, ''));
+  // SECURITY: Prevent Path Traversal
+  // 1. Normalize the path from the DB
+  const safeUrl = path.normalize(material.url).replace(/^(\.\.[\/\\])+/, '');
+  // 2. Construct absolute path
+  const filePath = path.join(__dirname, '..', safeUrl);
+  // 3. Verify the file stays within the intended root (e.g., backend folder)
+  const rootDir = path.resolve(__dirname, '..');
+  if (!filePath.startsWith(rootDir)) {
+    return res.status(400).json({ message: 'Invalid file path' });
+  }
 
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ message: 'File not found on server' });
@@ -110,7 +119,14 @@ const deleteMaterial = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Not authorized to delete this material' });
   }
 
-  const filePath = path.join(__dirname, '..', material.url.replace(/^\//, ''));
+  // SECURITY: Prevent Path Traversal during deletion
+  const safeUrl = path.normalize(material.url).replace(/^(\.\.[\/\\])+/, '');
+  const filePath = path.join(__dirname, '..', safeUrl);
+  const rootDir = path.resolve(__dirname, '..');
+  
+  if (!filePath.startsWith(rootDir)) {
+    return res.status(400).json({ message: 'Invalid file path' });
+  }
 
   try {
     await fs.promises.unlink(filePath);

@@ -10,9 +10,10 @@ const {
 } = require('../controllers/voteController');
 
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { voteLimiter } = require('../middleware/rateLimiter');
 
 // User: Cast a vote
-router.post('/', protect, castVote);
+router.post('/', protect, voteLimiter, castVote);
 
 // User: Get own voting history
 router.get('/me', protect, getMyVotes);

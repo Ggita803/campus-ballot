@@ -45,7 +45,13 @@ const ElectionSchema = new mongoose.Schema({
     },
     endDate: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function(v) {
+                return this.startDate ? v > this.startDate : true;
+            },
+            message: 'End date must be after start date'
+        }
     },
     status: {
         type: String,
