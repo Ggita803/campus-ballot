@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Election = require("../models/Election");
-const Vote = require("../models/Vote");
+const VoterRecord = require("../models/VoterRecord");
+const Ballot = require("../models/Ballot");
 const User = require("../models/User");
 const Candidate = require("../models/Candidate");
 const Log = require("../models/Log");
@@ -68,7 +69,7 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
   // Get UTC start of EAT day
   const utcStartOfEatDay = new Date(eatToday.getTime() - eatOffsetMs);
 
-  const hourlyActivity = await Vote.aggregate([
+  const hourlyActivity = await Ballot.aggregate([
     {
       $match: {
         election: { $in: assignedElectionIds },
@@ -134,13 +135,13 @@ const getObserverDashboard = asyncHandler(async (req, res) => {
   const positionStats = Array.from(positionStatsMap.values());
 
   // Calculate total votes cast
-  const totalVotes = await Vote.countDocuments({
+  const totalVotes = await Ballot.countDocuments({
     electionId: { $in: elections.map(e => e._id) }
   });
 
   // Get unique voters across all elections
-  const uniqueVoters = await Vote.distinct('userId', {
-    electionId: { $in: elections.map(e => e._id) }
+  const uniqueVoters = await VoterRecord.distinct('user', {
+    election: { $in: elections.map(e => e._id) }
   });
 
   res.json({
@@ -207,10 +208,10 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
   });
 
   // Get votes count
-  const votesCount = await Vote.countDocuments({ election: election._id });
+  const votesCount = await Ballot.countDocuments({ election: election._id });
 
   // Get unique voters count
-  const uniqueVoters = await Vote.distinct('user', { election: election._id });
+  const uniqueVoters = await VoterRecord.distinct('user', { election: election._id });
   const uniqueVotersCount = uniqueVoters.length;
 
   // Calculate turnout
@@ -219,7 +220,7 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
     : 0;
 
   // Get votes by position with candidate details
-  const votesByCandidate = await Vote.aggregate([
+  const votesByCandidate = await Ballot.aggregate([
     { $match: { election: election._id } },
     { $group: { 
       _id: '$candidate',
@@ -245,7 +246,7 @@ const getElectionStatistics = asyncHandler(async (req, res) => {
   );
 
   // Get votes by position summary
-  const votesByPosition = await Vote.aggregate([
+  const votesByPosition = await Ballot.aggregate([
     { $match: { election: election._id } },
     { $group: { 
       _id: '$position',
@@ -370,7 +371,7 @@ const getTurnoutTrends = asyncHandler(async (req, res) => {
     };
   }
 
-  const trends = await Vote.aggregate([
+  const trends = await Ballot.aggregate([
     { $match: { electionId: election._id } },
     {
       $group: {
@@ -521,7 +522,7 @@ const getElectionVoters = asyncHandler(async (req, res) => {
   }
 
   // Get votes for this election to count participating voters - use 'user' field not 'voter'
-  const votes = await Vote.find({ election: electionId })
+  const votes = await VoterRecord.find({ election: electionId })
     .select('user')
     .lean();
 
@@ -837,7 +838,7 @@ const exportElectionVoters = asyncHandler(async (req, res) => {
     .select('name email studentId faculty phone accountStatus createdAt');
 
   // Check who has voted
-  const votes = await Vote.find({ election: electionId }).distinct('voter');
+  const votes = await VoterRecord.find({ election: electionId }).distinct('user');
   const votersWithStatus = voters.map(voter => ({
     name: voter.name,
     email: voter.email,
@@ -896,7 +897,7 @@ const generateElectionReport = asyncHandler(async (req, res) => {
   switch (reportType) {
     case 'summary':
       const totalVoters = await User.countDocuments({ role: 'voter', accountStatus: 'active' });
-      const totalVotes = await Vote.countDocuments({ election: electionId });
+      const totalVotes = await Ballot.countDocuments({ election: electionId });
       const candidates = await Candidate.countDocuments({ election: electionId });
       
       reportData = {
@@ -921,7 +922,7 @@ const generateElectionReport = asyncHandler(async (req, res) => {
     case 'voters':
       const voters = await User.find({ role: 'voter', accountStatus: 'active' })
         .select('name email studentId faculty createdAt');
-      const votedIds = await Vote.find({ election: electionId }).distinct('voter');
+      const votedIds = await VoterRecord.find({ election: electionId }).distinct('user');
       
       reportData = {
         election: { title: election.title },
@@ -963,7 +964,7 @@ const generateElectionReport = asyncHandler(async (req, res) => {
       
       const voteCounts = await Promise.all(
         resultCandidates.map(async (candidate) => {
-          const voteCount = await Vote.countDocuments({
+          const voteCount = await Ballot.countDocuments({
             election: electionId,
             position: candidate.position._id,
             candidate: candidate._id
