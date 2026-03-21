@@ -92,7 +92,7 @@ const ElectionSchema = new mongoose.Schema({
             type: String,
             default: null
         },
-        minimunmGPA: {
+        minimumGPA: {
             type: Number,
             default: null
         },
