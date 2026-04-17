@@ -4,6 +4,8 @@ import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import { CSVLink } from 'react-csv';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 const getInitials = (name = 'Admin') => {
   const words = String(name).trim().split(/\s+/).filter(Boolean);
@@ -52,6 +54,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     createdAt: '',
   });
   const [creating, setCreating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null); // Track which admin is being deleted
+  const [isTogglingId, setIsTogglingId] = useState(null); // Track which admin status is being toggled
   const { isDarkMode, colors } = useTheme();
 
   // Dark mode styles for SweetAlert2
@@ -187,6 +191,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     });
     if (!result.isConfirmed) return;
     try {
+      setIsDeletingId(id);
       const token = localStorage.getItem('token');
       await axios.delete(`/api/super-admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -195,11 +200,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       setAdmins(admins.filter(a => a._id !== id && a.id !== id));
     } catch (err) {
       showAlert('Error', 'Failed to delete admin', 'error');
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
   const handleToggleStatus = async (id, status) => {
     try {
+      setIsTogglingId(id);
       const token = localStorage.getItem('token');
       const newStatus = status === 'active' ? 'suspended' : 'active';
       await axios.put(`/api/super-admin/admins/${id}/status`, 
@@ -214,6 +222,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       showAlert('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
     } catch (err) {
       showAlert('Error', 'Failed to update status', 'error');
+    } finally {
+      setIsTogglingId(null);
     }
   };
 
@@ -608,15 +618,25 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         className={`btn btn-sm btn-${admin.status === 'active' ? 'secondary' : 'success'} me-2`}
                         onClick={() => handleToggleStatus(admin._id || admin.id, admin.status)}
                         title={admin.status === 'active' ? 'Deactivate' : 'Reactivate'}
+                        disabled={isTogglingId === (admin._id || admin.id)}
                       >
-                        <i className={`fa fa-${admin.status === 'active' ? 'ban' : 'check'}`}></i>
+                        {isTogglingId === (admin._id || admin.id) ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <i className={`fa fa-${admin.status === 'active' ? 'ban' : 'check'}`}></i>
+                        )}
                       </button>
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(admin._id || admin.id)}
                         title="Delete"
+                        disabled={isDeletingId === (admin._id || admin.id)}
                       >
-                        <i className="fa fa-trash"></i>
+                        {isDeletingId === (admin._id || admin.id) ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <i className="fa fa-trash"></i>
+                        )}
                       </button>
                       <button
                         className="btn btn-sm btn-secondary ms-2"
@@ -783,7 +803,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                 <button className="btn btn-primary" type="button" onClick={handleAddAdmin} disabled={creating}>
                   {creating ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
                       Creating...
                     </>
                   ) : (

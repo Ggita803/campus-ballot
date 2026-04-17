@@ -31,6 +31,7 @@ const OrganizationManagement = () => {
   const [expandedFederations, setExpandedFederations] = useState({});
   const [admins, setAdmins] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null); // Track which org is being deleted
   const [isAddingNewOrg, setIsAddingNewOrg] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   
@@ -244,6 +245,7 @@ const OrganizationManagement = () => {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(org._id);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/organizations/${org._id}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -252,6 +254,8 @@ const OrganizationManagement = () => {
         fetchOrganizations();
       } catch (err) {
         showAlert('Error', err.response?.data?.message || 'Failed to delete organization', 'error');
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -622,8 +626,13 @@ const OrganizationManagement = () => {
                     className="btn btn-sm btn-outline-danger"
                     onClick={(e) => { e.stopPropagation(); handleDelete(federation); }}
                     style={actionButtonStyle}
+                    disabled={isDeletingId === federation._id}
                   >
-                    <FontAwesomeIcon icon={faTrash} />
+                    {isDeletingId === federation._id ? (
+                      <FontAwesomeIcon icon={faSpinner} spin />
+                    ) : (
+                      <FontAwesomeIcon icon={faTrash} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -751,8 +760,13 @@ const OrganizationManagement = () => {
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => handleDelete(uni)}
                       style={actionButtonStyle}
+                      disabled={isDeletingId === uni._id}
                     >
-                      <FontAwesomeIcon icon={faTrash} />
+                      {isDeletingId === uni._id ? (
+                        <FontAwesomeIcon icon={faSpinner} spin />
+                      ) : (
+                        <FontAwesomeIcon icon={faTrash} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1043,6 +1057,7 @@ const OrganizationManagement = () => {
                     type="button" 
                     className="btn btn-secondary" 
                     onClick={() => setShowModal(false)}
+                    disabled={saving}
                   >
                     Cancel
                   </button>

@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FaUser, FaHeart, FaReply, FaCheckCircle, FaClock } from 'react-icons/fa';
 
 const QuestionsSection = ({ questions, onRefresh }) => {
   const { isDarkMode, colors } = useTheme();
   const [filter, setFilter] = useState('all');
+  const [isAnswering, setIsAnswering] = useState(false);
 
   const handleAnswer = async (questionId) => {
     const result = await Swal.fire({
@@ -36,6 +39,7 @@ const QuestionsSection = ({ questions, onRefresh }) => {
 
     if (result.isConfirmed) {
       try {
+        setIsAnswering(true);
         const token = localStorage.getItem('token');
         await axios.put(`/api/candidate/engagement/questions/${questionId}/answer`, {
           answer: result.value
@@ -68,6 +72,8 @@ const QuestionsSection = ({ questions, onRefresh }) => {
             popup.style.borderRadius = '8px';
           }
         });
+      } finally {
+        setIsAnswering(false);
       }
     }
   };
@@ -203,8 +209,22 @@ const QuestionsSection = ({ questions, onRefresh }) => {
                       <button
                         className="btn btn-sm btn-primary"
                         onClick={() => handleAnswer(question._id)}
+                        disabled={isAnswering}
+                        style={{
+                          opacity: isAnswering ? 0.7 : 1,
+                          cursor: isAnswering ? 'not-allowed' : 'pointer'
+                        }}
                       >
-                        <FaReply className="me-1" /> Answer
+                        {isAnswering ? (
+                          <>
+                            <FontAwesomeIcon icon={faSpinner} spin className="me-1" />
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <FaReply className="me-1" /> Answer
+                          </>
+                        )}
                       </button>
                     )}
                   </div>

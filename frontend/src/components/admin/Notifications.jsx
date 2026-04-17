@@ -34,6 +34,9 @@ function Notifications({ user }) {
     type: "info",
     targetAudience: "all"
   });
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
+  const [isMarkingReadId, setIsMarkingReadId] = useState(null);
 
   const { isDarkMode, colors } = useTheme();
 
@@ -68,6 +71,7 @@ function Notifications({ user }) {
   // Mark as read
   const markAsRead = async (id) => {
     try {
+      setIsMarkingReadId(id);
       const token = localStorage.getItem("token");
       await axios.put(`/api/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -75,6 +79,8 @@ function Notifications({ user }) {
       fetchNotifications();
     } catch (err) {
       Swal.fire("Error", "Failed to mark as read", "error");
+    } finally {
+      setIsMarkingReadId(null);
     }
   };
 
@@ -91,6 +97,7 @@ function Notifications({ user }) {
     });
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(id);
         const token = localStorage.getItem("token");
         await axios.delete(`/api/notifications/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -99,6 +106,8 @@ function Notifications({ user }) {
         Swal.fire("Deleted!", "Notification deleted.", "success");
       } catch (err) {
         Swal.fire("Error", "Failed to delete notification", "error");
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -107,6 +116,7 @@ function Notifications({ user }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
+      setIsCreating(true);
       const token = localStorage.getItem("token");
       await axios.post("/api/notifications", formData, {
         headers: { Authorization: `Bearer ${token}` }
@@ -119,6 +129,8 @@ function Notifications({ user }) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error || err.message;
       const details = err?.response?.data?.details ? `<br/><pre>${JSON.stringify(err.response.data.details, null, 2)}</pre>` : '';
       Swal.fire({ icon: 'error', title: 'Failed to create notification', html: `${serverMsg}${details}` });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -363,18 +375,46 @@ function Notifications({ user }) {
                         <button
                           className="btn btn-outline-success btn-sm"
                           onClick={() => markAsRead(n._id)}
+                          disabled={isMarkingReadId === n._id}
+                          style={{
+                            opacity: isMarkingReadId === n._id ? 0.6 : 1,
+                            cursor: isMarkingReadId === n._id ? 'not-allowed' : 'pointer'
+                          }}
                         >
-                          <FontAwesomeIcon icon={faCheckCircle} className="me-1" />
-                          Mark as Read
+                          {isMarkingReadId === n._id ? (
+                            <>
+                              <FontAwesomeIcon icon={faSpinner} spin className="me-1" />
+                              Marking...
+                            </>
+                          ) : (
+                            <>
+                              <FontAwesomeIcon icon={faCheckCircle} className="me-1" />
+                              Mark as Read
+                            </>
+                          )}
                         </button>
                       )}
                       {user?.role === "admin" && (
                         <button
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => deleteNotification(n._id)}
+                          disabled={isDeletingId === n._id}
+                          style={{
+                            opacity: isDeletingId === n._id ? 0.6 : 1,
+                            cursor: isDeletingId === n._id ? 'not-allowed' : 'pointer'
+                          }}
                         >
-                          <FontAwesomeIcon icon={faTrash} className="me-1" />
-                          Delete
+                          {isDeletingId === n._id ? (
+                            <>
+                              <FontAwesomeIcon icon={faSpinner} spin className="me-1" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <FontAwesomeIcon icon={faTrash} className="me-1" />
+                              Delete
+                            </>
+                          )}
                         </button>
                       )}
                     </div>
@@ -480,12 +520,38 @@ function Notifications({ user }) {
                   className="modal-footer"
                   style={{ borderTopColor: colors.border }}
                 >
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={() => setShowCreateModal(false)}
+                    disabled={isCreating}
+                    style={{
+                      opacity: isCreating ? 0.6 : 1,
+                      cursor: isCreating ? 'not-allowed' : 'pointer'
+                    }}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <FontAwesomeIcon icon={faPlus} className="me-1" />
-                    Create
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isCreating}
+                    style={{
+                      opacity: isCreating ? 0.7 : 1,
+                      cursor: isCreating ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isCreating ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-1" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faPlus} className="me-1" />
+                        Create
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

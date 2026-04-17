@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ThemedTable from '../common/ThemedTable';
 import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
 
@@ -11,6 +13,7 @@ const ObserverIncidents = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -59,6 +62,7 @@ const ObserverIncidents = () => {
   const handleSubmitIncident = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       await axios.post('/api/observer/incidents', formData, {
         headers: { Authorization: `Bearer ${token}` }
@@ -74,6 +78,8 @@ const ObserverIncidents = () => {
       fetchIncidents();
     } catch (err) {
       console.error('Error submitting incident:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -299,14 +305,36 @@ const ObserverIncidents = () => {
                   </select>
                 </div>
                 <div className="col-12 d-flex gap-2">
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fas fa-save me-2"></i>
-                    Submit Incident
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save me-2"></i>
+                        Submit Incident
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowForm(false)}
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     Cancel
                   </button>

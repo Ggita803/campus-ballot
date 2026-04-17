@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import {
   FaTasks,
   FaPlus,
@@ -34,6 +36,8 @@ const TaskManagement = () => {
     dueDate: '',
     assignedTo: []
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -88,6 +92,7 @@ const TaskManagement = () => {
     e.preventDefault();
 
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       
       console.log('Submitting task with data:', formData);
@@ -131,6 +136,8 @@ const TaskManagement = () => {
         background: colors.surface,
         color: colors.text
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,6 +156,7 @@ const TaskManagement = () => {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(taskId);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/tasks/${taskId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -171,6 +179,8 @@ const TaskManagement = () => {
           background: colors.surface,
           color: colors.text
         });
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -525,6 +535,7 @@ const TaskManagement = () => {
                     <button
                       className="btn btn-sm btn-outline-primary"
                       onClick={() => handleEdit(task)}
+                      disabled={isDeletingId === task._id}
                     >
                       <FaEdit className="me-1" />
                       Edit
@@ -532,9 +543,17 @@ const TaskManagement = () => {
                     <button
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => handleDelete(task._id)}
+                      disabled={isDeletingId === task._id}
+                      style={{
+                        opacity: isDeletingId === task._id ? 0.6 : 1,
+                        cursor: isDeletingId === task._id ? 'not-allowed' : 'pointer'
+                      }}
                     >
-                      <FaTrash className="me-1" />
-                      Delete
+                      {isDeletingId === task._id ? (
+                        <><FontAwesomeIcon icon={faSpinner} spin className="me-1" />Deleting</>
+                      ) : (
+                        <><FaTrash className="me-1" />Delete</>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -713,11 +732,31 @@ const TaskManagement = () => {
                     type="button"
                     className="btn btn-secondary"
                     onClick={handleCloseModal}
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingTask ? 'Update Task' : 'Create Task'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        {editingTask ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      editingTask ? 'Update Task' : 'Create Task'
+                    )}
                   </button>
                 </div>
               </form>

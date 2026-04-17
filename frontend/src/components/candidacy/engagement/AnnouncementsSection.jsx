@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FaBullhorn, FaPlus, FaEye, FaHeart, FaCommentDots, FaTrash, FaEdit } from 'react-icons/fa';
 
 const AnnouncementsSection = ({ announcements, onRefresh }) => {
@@ -9,10 +11,13 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ title: '', message: '' });
   const [editingId, setEditingId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       if (editingId) {
         await axios.put(`/api/candidate/engagement/announcements/${editingId}`, formData, {
@@ -32,6 +37,8 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
     } catch (error) {
       console.error('Error saving announcement:', error);
       Swal.fire('Error', 'Failed to save announcement.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -53,6 +60,7 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(id);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/candidate/engagement/announcements/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -62,6 +70,8 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
       } catch (error) {
         console.error('Error deleting announcement:', error);
         Swal.fire('Error', 'Failed to delete announcement.', 'error');
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -118,14 +128,24 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleEdit(announcement)}
+                        disabled={isDeletingId === announcement._id}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => handleDelete(announcement._id)}
+                        disabled={isDeletingId === announcement._id}
+                        style={{
+                          opacity: isDeletingId === announcement._id ? 0.6 : 1,
+                          cursor: isDeletingId === announcement._id ? 'not-allowed' : 'pointer'
+                        }}
                       >
-                        <FaTrash />
+                        {isDeletingId === announcement._id ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <FaTrash />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -220,11 +240,31 @@ const AnnouncementsSection = ({ announcements, onRefresh }) => {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowModal(false)}
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingId ? 'Update' : 'Create'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        {editingId ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      editingId ? 'Update' : 'Create'
+                    )}
                   </button>
                 </div>
               </form>
