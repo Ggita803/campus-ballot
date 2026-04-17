@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 import Swal from "sweetalert2";
 import { FaFileCsv, FaFilePdf } from 'react-icons/fa';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import getImageUrl from '../utils/getImageUrl';
 import Select from "react-select";
 import ugandaPartiesOptions from '../utils/ugandaParties';
@@ -386,6 +388,7 @@ function CreateCandidateModal({
                 className="btn btn-secondary"
                 type="button"
                 onClick={() => setShowCreate(false)}
+                disabled={creating}
               >
                 Cancel
               </button>
@@ -394,7 +397,14 @@ function CreateCandidateModal({
                 type="submit"
                 disabled={creating}
               >
-                {creating ? "Creating..." : "Create Candidate"}
+                {creating ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Creating...
+                  </>
+                ) : (
+                  "Create Candidate"
+                )}
               </button>
             </div>
           </form>
@@ -436,6 +446,9 @@ function Candidates({ user }) {
     manifesto: "",
   });
   const [creating, setCreating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null); // Track which candidate is being deleted
+  const [isApprovingId, setIsApprovingId] = useState(null); // Track which candidate is being approved
+  const [isDisqualifyingId, setIsDisqualifyingId] = useState(null); // Track which candidate is being disqualified
   const [exportLoading, setExportLoading] = useState(false);
   const { isDarkMode, colors } = useTheme();
 
@@ -751,6 +764,7 @@ function Candidates({ user }) {
 
   const approveCandidate = async (candidateId) => {
     try {
+      setIsApprovingId(candidateId);
       await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -758,11 +772,14 @@ function Candidates({ user }) {
       fetchCandidates();
     } catch (error) {
       Swal.fire('Error', 'Failed to approve candidate', 'error');
+    } finally {
+      setIsApprovingId(null);
     }
   };
 
   const disqualifyCandidate = async (candidateId) => {
     try {
+      setIsDisqualifyingId(candidateId);
       await axios.put(`https://api.campusballot.tech/api/candidates/${candidateId}/disqualify`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -770,6 +787,8 @@ function Candidates({ user }) {
       fetchCandidates();
     } catch (error) {
       Swal.fire('Error', 'Failed to disqualify candidate', 'error');
+    } finally {
+      setIsDisqualifyingId(null);
     }
   };
 
@@ -785,6 +804,7 @@ function Candidates({ user }) {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(candidateId);
         await axios.delete(`https://api.campusballot.tech/api/candidates/${candidateId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -792,6 +812,8 @@ function Candidates({ user }) {
         fetchCandidates();
       } catch (error) {
         Swal.fire('Error', 'Failed to delete candidate', 'error');
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -1270,25 +1292,38 @@ function Candidates({ user }) {
                         <button
                           className="btn btn-sm btn-success"
                           onClick={() => approveCandidate(candidate._id)}
-                          disabled={candidate.status === 'approved'}
+                          disabled={candidate.status === 'approved' || isApprovingId === candidate._id}
                           title="Approve"
                         >
-                          Approve
+                          {isApprovingId === candidate._id ? (
+                            <FontAwesomeIcon icon={faSpinner} spin />
+                          ) : (
+                            'Approve'
+                          )}
                         </button>
                         <button
                           className="btn btn-sm btn-warning"
                           onClick={() => disqualifyCandidate(candidate._id)}
-                          disabled={candidate.status === 'disqualified'}
+                          disabled={candidate.status === 'disqualified' || isDisqualifyingId === candidate._id}
                           title="Disqualify"
                         >
-                          Disqualify
+                          {isDisqualifyingId === candidate._id ? (
+                            <FontAwesomeIcon icon={faSpinner} spin />
+                          ) : (
+                            'Disqualify'
+                          )}
                         </button>
                         <button
                           className="btn btn-sm btn-danger"
                           onClick={() => deleteCandidate(candidate._id)}
+                          disabled={isDeletingId === candidate._id}
                           title="Delete"
                         >
-                          Delete
+                          {isDeletingId === candidate._id ? (
+                            <FontAwesomeIcon icon={faSpinner} spin />
+                          ) : (
+                            'Delete'
+                          )}
                         </button>
                       </div>
                     </td>

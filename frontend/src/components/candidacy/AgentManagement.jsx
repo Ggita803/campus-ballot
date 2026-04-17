@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { 
   FaUserFriends, 
   FaPlus, 
@@ -49,6 +51,9 @@ const AgentManagement = () => {
       manageTasks: false
     }
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
+  const [isTogglingId, setIsTogglingId] = useState(null);
 
   useEffect(() => {
     fetchAgents();
@@ -149,6 +154,7 @@ const AgentManagement = () => {
     }
 
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       const payload = {
         userId: formData.userId,
@@ -169,6 +175,8 @@ const AgentManagement = () => {
     } catch (error) {
       console.error('Error adding agent:', error);
       Swal.fire('Error', error.response?.data?.message || 'Failed to add agent. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -194,6 +202,7 @@ const AgentManagement = () => {
     e.preventDefault();
     
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       await axios.put(`/api/candidates/agents/${selectedAgent._id}`, {
         agentRole: formData.role,
@@ -212,6 +221,8 @@ const AgentManagement = () => {
     } catch (error) {
       console.error('Error updating agent:', error);
       Swal.fire('Error', error.response?.data?.message || 'Failed to update agent. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -228,6 +239,7 @@ const AgentManagement = () => {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(agentId);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/candidates/agents/${agentId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -239,12 +251,15 @@ const AgentManagement = () => {
       } catch (error) {
         console.error('Error deleting agent:', error);
         Swal.fire('Error', error.response?.data?.message || 'Failed to remove agent.', 'error');
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
 
   const toggleAgentStatus = async (agentId, currentStatus) => {
     try {
+      setIsTogglingId(agentId);
       const token = localStorage.getItem('token');
       await axios.patch(`/api/candidates/agents/${agentId}/status`, {
         status: currentStatus === 'active' ? 'inactive' : 'active'
@@ -258,6 +273,8 @@ const AgentManagement = () => {
     } catch (error) {
       console.error('Error updating status:', error);
       Swal.fire('Error', error.response?.data?.message || 'Failed to update status.', 'error');
+    } finally {
+      setIsTogglingId(null);
     }
   };
 
@@ -562,17 +579,24 @@ const AgentManagement = () => {
                         <button
                           className={`btn btn-sm ${agent.status === 'active' ? 'btn-success' : 'btn-secondary'}`}
                           onClick={() => toggleAgentStatus(agent._id, agent.status)}
+                          disabled={isTogglingId === agent._id}
                           style={{ 
                             minWidth: '80px',
                             color: agent.status === 'active' ? '#fff' : colors.text,
                             backgroundColor: agent.status === 'active' ? '#198754' : colors.cardBackground,
-                            borderColor: agent.status === 'active' ? '#198754' : colors.border
+                            borderColor: agent.status === 'active' ? '#198754' : colors.border,
+                            opacity: isTogglingId === agent._id ? 0.6 : 1,
+                            cursor: isTogglingId === agent._id ? 'not-allowed' : 'pointer'
                           }}
                         >
-                          {agent.status === 'active' ? (
-                            <><FaCheckCircle className="me-1" /> Active</>
+                          {isTogglingId === agent._id ? (
+                            <><FontAwesomeIcon icon={faSpinner} spin className="me-1" /> Toggling...</>
                           ) : (
-                            <><FaTimesCircle className="me-1" /> Inactive</>
+                            agent.status === 'active' ? (
+                              <><FaCheckCircle className="me-1" /> Active</>
+                            ) : (
+                              <><FaTimesCircle className="me-1" /> Inactive</>
+                            )
                           )}
                         </button>
                       </td>
@@ -603,21 +627,32 @@ const AgentManagement = () => {
                           <button
                             className="btn btn-sm btn-outline-danger"
                             onClick={() => handleDeleteAgent(agent._id)}
+                            disabled={isDeletingId === agent._id}
                             style={{
-                              color: '#dc3545',
-                              borderColor: '#dc3545',
-                              backgroundColor: 'transparent'
+                              color: isDeletingId === agent._id ? '#999' : '#dc3545',
+                              borderColor: isDeletingId === agent._id ? '#ccc' : '#dc3545',
+                              backgroundColor: 'transparent',
+                              opacity: isDeletingId === agent._id ? 0.6 : 1,
+                              cursor: isDeletingId === agent._id ? 'not-allowed' : 'pointer'
                             }}
                             onMouseEnter={(e) => {
-                              e.target.style.backgroundColor = '#dc3545';
-                              e.target.style.color = '#fff';
+                              if (isDeletingId !== agent._id) {
+                                e.target.style.backgroundColor = '#dc3545';
+                                e.target.style.color = '#fff';
+                              }
                             }}
                             onMouseLeave={(e) => {
-                              e.target.style.backgroundColor = 'transparent';
-                              e.target.style.color = '#dc3545';
+                              if (isDeletingId !== agent._id) {
+                                e.target.style.backgroundColor = 'transparent';
+                                e.target.style.color = '#dc3545';
+                              }
                             }}
                           >
-                            <FaTrash />
+                            {isDeletingId === agent._id ? (
+                              <FontAwesomeIcon icon={faSpinner} spin />
+                            ) : (
+                              <FaTrash />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -947,10 +982,13 @@ const AgentManagement = () => {
                       setSelectedAgent(null);
                       resetForm();
                     }}
+                    disabled={isSubmitting}
                     style={{
                       backgroundColor: colors.cardBackground,
                       borderColor: colors.border,
-                      color: colors.text
+                      color: colors.text,
+                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
                     }}
                   >
                     Cancel
@@ -958,14 +996,23 @@ const AgentManagement = () => {
                   <button 
                     type="submit" 
                     className="btn btn-primary"
-                    disabled={!selectedAgent && !selectedStudent}
+                    disabled={!selectedAgent && !selectedStudent || isSubmitting}
                     style={{
                       backgroundColor: '#0d6efd',
                       borderColor: '#0d6efd',
-                      color: '#fff'
+                      color: '#fff',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {selectedAgent ? 'Update Agent' : 'Add Agent'}
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        {selectedAgent ? 'Updating...' : 'Adding...'}
+                      </>
+                    ) : (
+                      selectedAgent ? 'Update Agent' : 'Add Agent'
+                    )}
                   </button>
                 </div>
               </form>

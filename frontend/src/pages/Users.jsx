@@ -37,6 +37,16 @@ const Users = ({ user }) => {
     const [editUser, setEditUser] = useState({});
     const [roleChangingId, setRoleChangingId] = useState(null);
     
+    // Loading states for each action type
+    const [loadingStates, setLoadingStates] = useState({
+        suspend: null,
+        activate: null,
+        delete: null,
+        verify: null,
+        edit: null,
+        view: null
+    });
+    
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -156,6 +166,7 @@ const Users = ({ user }) => {
 
     const handleSuspendUser = async (userId) => {
         try {
+            setLoadingStates(prev => ({ ...prev, suspend: userId }));
             await axios.put(`https://api.campusballot.tech/api/users/${userId}/suspend`, {}, {
                 headers: getAuthHeaders()
             });
@@ -164,11 +175,14 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Suspend error:', error);
             Toast.fire({ icon: 'error', title: 'Failed to suspend user' });
+        } finally {
+            setLoadingStates(prev => ({ ...prev, suspend: null }));
         }
     };
 
     const handleActivateUser = async (userId) => {
         try {
+            setLoadingStates(prev => ({ ...prev, activate: userId }));
             await axios.put(`https://api.campusballot.tech/api/users/${userId}/activate`, {}, {
                 headers: getAuthHeaders()
             });
@@ -177,6 +191,8 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Activate error:', error);
             Toast.fire({ icon: 'error', title: 'Failed to activate user' });
+        } finally {
+            setLoadingStates(prev => ({ ...prev, activate: null }));
         }
     };
 
@@ -193,6 +209,7 @@ const Users = ({ user }) => {
 
         if (result.isConfirmed) {
             try {
+                setLoadingStates(prev => ({ ...prev, delete: userId }));
                 await axios.delete(`https://api.campusballot.tech/api/users/${userId}`, {
                     headers: getAuthHeaders()
                 });
@@ -201,6 +218,8 @@ const Users = ({ user }) => {
             } catch (error) {
                 console.error('Delete error:', error);
                 Swal.fire('Error!', 'Failed to delete user.', 'error');
+            } finally {
+                setLoadingStates(prev => ({ ...prev, delete: null }));
             }
         }
     };
@@ -290,6 +309,7 @@ const Users = ({ user }) => {
 
     const viewUserDetails = async (userId) => {
         try {
+            setLoadingStates(prev => ({ ...prev, view: userId }));
             const userResponse = await axios.get(`https://api.campusballot.tech/api/users/${userId}`, {
                 headers: getAuthHeaders()
             });
@@ -298,6 +318,8 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('View user error:', error);
             Swal.fire('Error', 'Failed to fetch user details', 'error');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, view: null }));
         }
     };
 
@@ -309,6 +331,7 @@ const Users = ({ user }) => {
     const handleUpdateUser = async () => {
         try {
             const idToUpdate = editUser._id || editUser.id;
+            setLoadingStates(prev => ({ ...prev, edit: idToUpdate }));
             await axios.put(`https://api.campusballot.tech/api/users/${idToUpdate}`, editUser, {
                 headers: getAuthHeaders()
             });
@@ -318,11 +341,14 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Update error:', error);
             Swal.fire('Error', 'Failed to update user', 'error');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, edit: null }));
         }
     };
 
     const handleVerifyToggle = async (userId, shouldVerify) => {
         try {
+            setLoadingStates(prev => ({ ...prev, verify: userId }));
             await axios.put(`https://api.campusballot.tech/api/users/${userId}`, { isVerified: shouldVerify }, {
                 headers: getAuthHeaders()
             });
@@ -331,6 +357,8 @@ const Users = ({ user }) => {
         } catch (error) {
             console.error('Verify toggle error:', error);
             Swal.fire('Error', `Failed to ${shouldVerify ? 'verify' : 'unverify'} user`, 'error');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, verify: null }));
         }
     };
     
@@ -552,55 +580,122 @@ const Users = ({ user }) => {
                                                         <td>
                                                             <div className="btn-group" role="group">
                                                                 {/* View */}
-                                                                <button className="action-btn cool" onClick={() => viewUserDetails(uid)} title="View Details">
-                                                                    <FontAwesomeIcon icon={faEye} />
+                                                                <button 
+                                                                    className="action-btn cool" 
+                                                                    onClick={() => viewUserDetails(uid)} 
+                                                                    title="View Details"
+                                                                    disabled={loadingStates.view === uid}
+                                                                >
+                                                                    {loadingStates.view === uid ? (
+                                                                        <FontAwesomeIcon icon={faSpinner} spin />
+                                                                    ) : (
+                                                                        <FontAwesomeIcon icon={faEye} />
+                                                                    )}
                                                                 </button>
 
                                                                 {/* Copy ID - admin only */}
                                                                 {user?.role === 'admin' && (
-                                                                    <button className="action-btn copy" onClick={async () => {
-                                                                        try {
-                                                                            await navigator.clipboard.writeText(uid);
-                                                                            Swal.fire('Copied', 'User ID copied to clipboard', 'success');
-                                                                        } catch (err) {
-                                                                            console.error('Copy failed', err);
-                                                                            Swal.fire('Error', 'Could not copy ID', 'error');
-                                                                        }
-                                                                    }} title="Copy ID">
+                                                                    <button 
+                                                                        className="action-btn copy" 
+                                                                        onClick={async () => {
+                                                                            try {
+                                                                                await navigator.clipboard.writeText(uid);
+                                                                                Swal.fire('Copied', 'User ID copied to clipboard', 'success');
+                                                                            } catch (err) {
+                                                                                console.error('Copy failed', err);
+                                                                                Swal.fire('Error', 'Could not copy ID', 'error');
+                                                                            }
+                                                                        }} 
+                                                                        title="Copy ID"
+                                                                    >
                                                                         <i className="fas fa-copy"></i>
                                                                     </button>
                                                                 )}
 
                                                                 {/* Edit */}
-                                                                <button className="action-btn edit" onClick={() => handleEditUser(u)} title="Edit User">
-                                                                    <FontAwesomeIcon icon={faPen} />
+                                                                <button 
+                                                                    className="action-btn edit" 
+                                                                    onClick={() => handleEditUser(u)} 
+                                                                    title="Edit User"
+                                                                    disabled={loadingStates.edit === uid}
+                                                                >
+                                                                    {loadingStates.edit === uid ? (
+                                                                        <FontAwesomeIcon icon={faSpinner} spin />
+                                                                    ) : (
+                                                                        <FontAwesomeIcon icon={faPen} />
+                                                                    )}
                                                                 </button>
 
                                                                 {/* Suspend / Activate */}
                                                                 {(u.accountStatus || u.status) === 'suspended' ? (
-                                                                    <button className="action-btn activate" onClick={() => handleActivateUser(uid)} title="Activate User">
-                                                                        <FontAwesomeIcon icon={faCheck} />
+                                                                    <button 
+                                                                        className="action-btn activate" 
+                                                                        onClick={() => handleActivateUser(uid)} 
+                                                                        title="Activate User"
+                                                                        disabled={loadingStates.activate === uid}
+                                                                    >
+                                                                        {loadingStates.activate === uid ? (
+                                                                            <FontAwesomeIcon icon={faSpinner} spin />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faCheck} />
+                                                                        )}
                                                                     </button>
                                                                 ) : (
-                                                                    <button className="action-btn suspend" onClick={() => handleSuspendUser(uid)} title="Suspend User">
-                                                                        <FontAwesomeIcon icon={faBan} />
+                                                                    <button 
+                                                                        className="action-btn suspend" 
+                                                                        onClick={() => handleSuspendUser(uid)} 
+                                                                        title="Suspend User"
+                                                                        disabled={loadingStates.suspend === uid}
+                                                                    >
+                                                                        {loadingStates.suspend === uid ? (
+                                                                            <FontAwesomeIcon icon={faSpinner} spin />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faBan} />
+                                                                        )}
                                                                     </button>
                                                                 )}
 
                                                                 {/* Verify / Unverify */}
                                                                 {u.isVerified ? (
-                                                                    <button className="action-btn unverify" onClick={() => handleVerifyToggle(uid, false)} title="Unverify User">
-                                                                        <FontAwesomeIcon icon={faTimes} />
+                                                                    <button 
+                                                                        className="action-btn unverify" 
+                                                                        onClick={() => handleVerifyToggle(uid, false)} 
+                                                                        title="Unverify User"
+                                                                        disabled={loadingStates.verify === uid}
+                                                                    >
+                                                                        {loadingStates.verify === uid ? (
+                                                                            <FontAwesomeIcon icon={faSpinner} spin />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faTimes} />
+                                                                        )}
                                                                     </button>
                                                                 ) : (
-                                                                    <button className="action-btn verify" onClick={() => handleVerifyToggle(uid, true)} title="Verify User">
-                                                                        <FontAwesomeIcon icon={faCheckCircle} />
+                                                                    <button 
+                                                                        className="action-btn verify" 
+                                                                        onClick={() => handleVerifyToggle(uid, true)} 
+                                                                        title="Verify User"
+                                                                        disabled={loadingStates.verify === uid}
+                                                                    >
+                                                                        {loadingStates.verify === uid ? (
+                                                                            <FontAwesomeIcon icon={faSpinner} spin />
+                                                                        ) : (
+                                                                            <FontAwesomeIcon icon={faCheckCircle} />
+                                                                        )}
                                                                     </button>
                                                                 )}
 
                                                                 {/* Delete - second last */}
-                                                                <button className="action-btn delete" onClick={() => handleDeleteUser(uid)} title="Delete User">
-                                                                    <FontAwesomeIcon icon={faTrash} />
+                                                                <button 
+                                                                    className="action-btn delete" 
+                                                                    onClick={() => handleDeleteUser(uid)} 
+                                                                    title="Delete User"
+                                                                    disabled={loadingStates.delete === uid}
+                                                                >
+                                                                    {loadingStates.delete === uid ? (
+                                                                        <FontAwesomeIcon icon={faSpinner} spin />
+                                                                    ) : (
+                                                                        <FontAwesomeIcon icon={faTrash} />
+                                                                    )}
                                                                 </button>
 
                                                                 {/* Role dropdown - last */}
@@ -853,6 +948,7 @@ const Users = ({ user }) => {
                                     type="button" 
                                     className="btn btn-secondary" 
                                     onClick={() => setShowEditModal(false)}
+                                    disabled={loadingStates.edit !== null}
                                 >
                                     Cancel
                                 </button>
@@ -860,8 +956,16 @@ const Users = ({ user }) => {
                                     type="button" 
                                     className="btn btn-primary"
                                     onClick={handleUpdateUser}
+                                    disabled={loadingStates.edit !== null}
                                 >
-                                    Update User
+                                    {loadingStates.edit !== null ? (
+                                        <>
+                                            <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        'Update User'
+                                    )}
                                 </button>
                             </div>
                         </div>

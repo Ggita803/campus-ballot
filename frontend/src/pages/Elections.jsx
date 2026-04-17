@@ -65,6 +65,8 @@ function Elections({ user }) {
   const [selectedElection, setSelectedElection] = useState(null);
   const [facultiesExpanded, setFacultiesExpanded] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // For create/edit modal submit button
+  const [isDeletingId, setIsDeletingId] = useState(null); // Track which election is being deleted
   const [stats, setStats] = useState({
     total: 0,
     ongoing: 0,
@@ -262,6 +264,7 @@ function Elections({ user }) {
   const handleCreate = async (e)=> {
     e.preventDefault();
     try {
+      setIsSaving(true);
       const token = localStorage.getItem('token');
       // Prepare payload: convert datetime-local + AM/PM to ISO
       const payload = {
@@ -283,12 +286,15 @@ function Elections({ user }) {
     } catch (error) {
       console.error("Error creating election:", error);
       Swal.fire("Error", "Failed to create election", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
+      setIsSaving(true);
       const token = localStorage.getItem('token');
       if (!token) {
         Swal.fire("Error", "You must be logged in to edit elections", "error");
@@ -317,6 +323,8 @@ function Elections({ user }) {
       console.error("Error updating election:", error);
       console.error("Error details:", error.response?.data);
       Swal.fire("Error", error.response?.data?.message || "Failed to update election", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -333,6 +341,7 @@ function Elections({ user }) {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(election._id);
         const token = localStorage.getItem('token');
         if (!token) {
           Swal.fire("Error", "You must be logged in to delete elections", "error");
@@ -359,6 +368,8 @@ function Elections({ user }) {
         console.error("Error deleting election:", error);
         console.error("Error details:", error.response?.data);
         Swal.fire("Error", error.response?.data?.message || "Failed to delete election", "error");
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -747,6 +758,7 @@ function Elections({ user }) {
                           className="btn btn-sm btn-info action-btn"
                           onClick={() => openDetailsModal(election)}
                           title="View"
+                          disabled={isDeletingId === election._id}
                         >
                           <i className="fa fa-eye"></i>
                         </button>
@@ -754,6 +766,7 @@ function Elections({ user }) {
                           className="btn btn-sm btn-warning action-btn"
                           onClick={() => openEditModal(election)}
                           title="Edit"
+                          disabled={isDeletingId === election._id}
                         >
                           <i className="fa fa-edit"></i>
                         </button>
@@ -761,8 +774,13 @@ function Elections({ user }) {
                           className="btn btn-sm btn-danger action-btn"
                           onClick={() => handleDelete(election)}
                           title="Delete"
+                          disabled={isDeletingId === election._id}
                         >
-                          <i className="fa fa-trash"></i>
+                          {isDeletingId === election._id ? (
+                            <FontAwesomeIcon icon={faSpinner} spin />
+                          ) : (
+                            <i className="fa fa-trash"></i>
+                          )}
                         </button>
                       </div>
                     </td>
@@ -917,12 +935,22 @@ function Elections({ user }) {
                       setShowCreateModal(false);
                       resetForm();
                     }}
+                    disabled={isSaving}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <FontAwesomeIcon icon={faPlus} className="me-2" />
-                    Create Election
+                  <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faPlus} className="me-2" />
+                        Create Election
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -1105,12 +1133,22 @@ function Elections({ user }) {
                       setShowEditModal(false);
                       resetForm();
                     }}
+                    disabled={isSaving}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-warning">
-                    <FontAwesomeIcon icon={faEdit} className="me-2" />
-                    Update Election
+                  <button type="submit" className="btn btn-warning" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faEdit} className="me-2" />
+                        Update Election
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

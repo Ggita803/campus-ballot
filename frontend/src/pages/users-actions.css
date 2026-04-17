@@ -23,5 +23,7 @@
 .action-btn.unverify { background: #059669; /* use success green to match activate */ }
 .action-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
 .action-btn:focus { outline: 2px solid rgba(0,0,0,0.08); }
+.action-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+.action-btn:disabled:hover { filter: none; }
 /* small adjustments for dropdown toggle */
 .btn-secondary.dropdown-toggle { background: #4b5563; border: none; color: #fff; }
