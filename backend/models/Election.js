@@ -45,7 +45,13 @@ const ElectionSchema = new mongoose.Schema({
     },
     endDate: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function(v) {
+                return this.startDate ? v > this.startDate : true;
+            },
+            message: 'End date must be after start date'
+        }
     },
     status: {
         type: String,
@@ -92,7 +98,7 @@ const ElectionSchema = new mongoose.Schema({
             type: String,
             default: null
         },
-        minimunmGPA: {
+        minimumGPA: {
             type: Number,
             default: null
         },
@@ -109,7 +115,6 @@ ElectionSchema.index({ startDate: 1 });
 ElectionSchema.index({ endDate: 1 });
 ElectionSchema.index({ createdBy: 1 });
 ElectionSchema.index({ candidates: 1 });
-ElectionSchema.index({ organization: 1 });
 ElectionSchema.index({ scope: 1 });
 ElectionSchema.index({ 'eligibility.faculty': 1 });
 ElectionSchema.index({ 'eligibility.yearOfStudy': 1 });

@@ -52,6 +52,8 @@ function Logs({ user }) {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(60);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     info: 0,
@@ -198,6 +200,7 @@ function Logs({ user }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
+      setIsCreating(true);
       const token = localStorage.getItem('token');
       await axios.post("/api/logs", formData, {
         headers: { Authorization: `Bearer ${token}` }
@@ -210,6 +213,8 @@ function Logs({ user }) {
     } catch (error) {
       console.error("Error creating log:", error);
       Swal.fire("Error", "Failed to create log entry", "error");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -226,6 +231,7 @@ function Logs({ user }) {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(logId);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/logs/${logId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -236,6 +242,8 @@ function Logs({ user }) {
       } catch (error) {
         console.error("Error deleting log:", error);
         Swal.fire("Error", "Failed to delete log entry", "error");
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -917,6 +925,7 @@ function Logs({ user }) {
                                   className="btn btn-sm btn-outline-primary"
                                   onClick={() => openDetailsModal(log)}
                                   title="View Details"
+                                  disabled={isDeletingId === log._id}
                                 >
                                   <FontAwesomeIcon icon={faEye} />
                                 </button>
@@ -924,9 +933,17 @@ function Logs({ user }) {
                                   className="btn btn-sm btn-outline-danger"
                                   onClick={() => handleDelete(log._id)}
                                   title={user?.role === 'super_admin' ? 'Delete Log' : 'Only Super Admin can delete'}
-                                  disabled={user?.role !== 'super_admin'}
+                                  disabled={user?.role !== 'super_admin' || isDeletingId === log._id}
+                                  style={{
+                                    opacity: isDeletingId === log._id ? 0.6 : 1,
+                                    cursor: isDeletingId === log._id ? 'not-allowed' : 'pointer'
+                                  }}
                                 >
-                                  <FontAwesomeIcon icon={faTrash} />
+                                  {isDeletingId === log._id ? (
+                                    <FontAwesomeIcon icon={faSpinner} spin />
+                                  ) : (
+                                    <FontAwesomeIcon icon={faTrash} />
+                                  )}
                                 </button>
                               </div>
                             </td>
@@ -1172,12 +1189,34 @@ function Logs({ user }) {
                       setShowCreateModal(false);
                       resetForm();
                     }}
+                    disabled={isCreating}
+                    style={{
+                      opacity: isCreating ? 0.6 : 1,
+                      cursor: isCreating ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <FontAwesomeIcon icon={faPlus} className="me-2" />
-                    Create Admin Log
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isCreating}
+                    style={{
+                      opacity: isCreating ? 0.7 : 1,
+                      cursor: isCreating ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isCreating ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faPlus} className="me-2" />
+                        Create Admin Log
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -1303,6 +1342,7 @@ function Logs({ user }) {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowDetailsModal(false)}
+                  disabled={isDeletingId === selectedLog._id}
                 >
                   Close
                 </button>
@@ -1314,9 +1354,23 @@ function Logs({ user }) {
                       setShowDetailsModal(false);
                       handleDelete(selectedLog._id);
                     }}
+                    disabled={isDeletingId === selectedLog._id}
+                    style={{
+                      opacity: isDeletingId === selectedLog._id ? 0.6 : 1,
+                      cursor: isDeletingId === selectedLog._id ? 'not-allowed' : 'pointer'
+                    }}
                   >
-                    <FontAwesomeIcon icon={faTrash} className="me-2" />
-                    Delete Log
+                    {isDeletingId === selectedLog._id ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faTrash} className="me-2" />
+                        Delete Log
+                      </>
+                    )}
                   </button>
                 )}
               </div>

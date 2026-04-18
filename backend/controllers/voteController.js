@@ -1,8 +1,14 @@
 const asyncHandler = require("express-async-handler");
-const Vote = require("../models/Vote");
+const mongoose = require("mongoose");
+const VoterRecord = require("../models/Vote");
+const Ballot = require("../models/Ballot");
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
+
+// Global throttle state for dashboard updates
+let lastDashboardUpdate = 0;
+const DASHBOARD_UPDATE_INTERVAL = 5000; // 5 seconds
 
 // @desc    Cast a vote
 // @route   POST /api/votes
@@ -63,39 +69,70 @@ const castVote = asyncHandler(async (req, res) => {
     }
 
     // Check if user has already voted for this position in this election
-    const existingVote = await Vote.findOne({ user: req.user._id, election: electionId, position });
-    if (existingVote) {
+    const existingRecord = await VoterRecord.findOne({ user: req.user._id, election: electionId, position });
+    if (existingRecord) {
       console.log({ message: "User has already voted for this position in this election" });
       return res.status(400).json({ message: "You have already voted for this position in this election" });
     }
 
-    // Create vote
-    const vote = await Vote.create({
-      user: req.user._id,
-      election: electionId,
-      position,
-      candidate: abstain ? undefined : candidateId
-    });
+    // Start a transaction to ensure data integrity
+    // (VoterRecord + Ballot + Candidate Count must all succeed or all fail)
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Log student voting activity
-    await logActivity({
-      userId: req.user._id,
-      action: 'vote',
-      entityType: 'Vote',
-      entityId: vote._id.toString(),
-      details: abstain 
-        ? `Abstained from voting for ${position} in ${election.title}`
-        : `Voted for ${candidate?.name || 'candidate'} for ${position} in ${election.title}`,
-      status: 'success',
-      ipAddress: getIpAddress(req),
-      userAgent: getUserAgent(req)
-    });
+    try {
+      // 1. Create Voter Record (Claims the spot, prevents double voting)
+      await VoterRecord.create([{
+        user: req.user._id,
+        election: electionId,
+        position
+      }], { session });
 
-    // Optionally increment candidate's vote count
-    if (candidate) {
-      // Use atomic $inc to avoid race conditions in high concurrency
-      await Candidate.updateOne({ _id: candidate._id }, { $inc: { votes: 1 } });
+      // 2. Cast Ballot (Anonymous vote)
+      const ballot = await Ballot.create([{
+        election: electionId,
+        position,
+        candidate: abstain ? undefined : candidateId,
+        // Store anonymous demographics snapshot
+        faculty: req.user.faculty,
+        department: req.user.department,
+        yearOfStudy: req.user.yearOfStudy,
+        gender: req.user.gender
+      }], { session });
+
+      // Optionally increment candidate's vote count
+      if (candidate) {
+        // Use atomic $inc with session
+        await Candidate.updateOne(
+          { _id: candidate._id }, 
+          { $inc: { votes: 1 } }
+        ).session(session);
+      }
+
+      await session.commitTransaction();
+      
+      // Log student voting activity (After commit)
+      await logActivity({
+        userId: req.user._id,
+        action: 'vote',
+        entityType: 'Election',
+        entityId: election._id.toString(),
+        details: `Voted for position: ${position} in ${election.title}`,
+        status: 'success',
+        ipAddress: getIpAddress(req),
+        userAgent: getUserAgent(req)
+      });
+
+    } catch (transactionError) {
+      await session.abortTransaction();
+      throw transactionError; // Re-throw to be handled by main catch block
+    } finally {
+      session.endSession();
     }
+
+    // Send response immediately to user so they don't wait for dashboard stats
+    console.log({ message: "Vote cast successfully" });
+    res.status(201).json({ message: "Vote cast successfully" });
 
     // Emit realtime update to connected clients
     try {
@@ -109,40 +146,45 @@ const castVote = asyncHandler(async (req, res) => {
           abstain: !!abstain,
         });
 
-        // Compute aggregate counts for dashboard (votes per election and candidate votes)
-        // Build structured votes per election including titles
-        const votesPerElectionAgg = await Vote.aggregate([
-          { $group: { _id: '$election', count: { $sum: 1 } } },
-          { $lookup: { from: 'elections', localField: '_id', foreignField: '_id', as: 'election' } },
-          { $unwind: { path: '$election', preserveNullAndEmptyArrays: true } },
-          { $project: { election: '$_id', title: '$election.title', count: 1 } }
-        ]);
+        // THROTTLING: Only perform heavy dashboard aggregation if interval has passed
+        const now = Date.now();
+        if (now - lastDashboardUpdate > DASHBOARD_UPDATE_INTERVAL) {
+          lastDashboardUpdate = now;
 
-        // Ensure all elections are present with zero counts if missing
-        const allElections = await Election.find().select('title').lean();
-        const votesPerElection = allElections.map(e => {
-          const found = votesPerElectionAgg.find(v => String(v.election) === String(e._id));
-          return { election: e._id, title: e.title, count: found ? found.count : 0 };
-        });
+          // Compute aggregate counts for dashboard (votes per election and candidate votes)
+          // Build structured votes per election including titles
+          const votesPerElectionAgg = await Ballot.aggregate([
+            { $group: { _id: '$election', count: { $sum: 1 } } },
+            { $lookup: { from: 'elections', localField: '_id', foreignField: '_id', as: 'election' } },
+            { $unwind: { path: '$election', preserveNullAndEmptyArrays: true } },
+            { $project: { election: '$_id', title: '$election.title', count: 1 } }
+          ]);
 
-        const candidateVotesAgg = await Candidate.find({ election: electionId })
-          .select('name votes')
-          .lean();
+          // Ensure all elections are present with zero counts if missing
+          const allElections = await Election.find().select('title').lean();
+          const votesPerElection = allElections.map(e => {
+            const found = votesPerElectionAgg.find(v => String(v.election) === String(e._id));
+            return { election: e._id, title: e.title, count: found ? found.count : 0 };
+          });
 
-        io.emit('dashboard:update', {
-          votesPerElection,
-          candidateVotes: candidateVotesAgg
-        });
+          const candidateVotesAgg = await Candidate.find({ election: electionId })
+            .select('name votes')
+            .lean();
+
+          io.emit('dashboard:update', {
+            votesPerElection,
+            candidateVotes: candidateVotesAgg
+          });
+        }
       }
     } catch (emitError) {
       console.error('Error emitting socket update:', emitError.message);
     }
-
-    console.log({ message: "Vote cast successfully" });
-    res.status(201).json({ message: "Vote cast successfully", vote });
   } catch (error) {
     console.log({ message: "Error casting vote", error: error.message });
-    res.status(500).json({ message: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
   }
 });
 
@@ -151,9 +193,10 @@ const castVote = asyncHandler(async (req, res) => {
 // @access  User
 const getMyVotes = asyncHandler(async (req, res) => {
   try {
-    const votes = await Vote.find({ user: req.user._id })
-      .populate("election", "title")
-      .populate("candidate", "name position");
+    // We can only show THAT they voted, not WHO they voted for (Anonymity)
+    const votes = await VoterRecord.find({ user: req.user._id })
+      .populate("election", "title");
+    
     console.log({ message: "Fetched user's voting history" });
     res.json(votes);
   } catch (error) {
@@ -167,9 +210,9 @@ const getMyVotes = asyncHandler(async (req, res) => {
 // @access  Admin
 const getVotesByElection = asyncHandler(async (req, res) => {
   try {
-    const votes = await Vote.find({ election: req.params.electionId })
-      .populate("user", "name email")
-      .populate("candidate", "name position");
+    // Admins can see ballots, but NO USER INFO attached
+    const votes = await Ballot.find({ election: req.params.electionId })
+      .populate("candidate", "name position party");
     console.log({ message: "Fetched votes for election" });
     res.json(votes);
   } catch (error) {
@@ -183,8 +226,8 @@ const getVotesByElection = asyncHandler(async (req, res) => {
 // @access  Admin
 const getVotesByCandidate = asyncHandler(async (req, res) => {
   try {
-    const votes = await Vote.find({ candidate: req.params.candidateId })
-      .populate("user", "name email")
+    // Admins can see ballots for a candidate, but NO USER INFO
+    const votes = await Ballot.find({ candidate: req.params.candidateId })
       .populate("election", "title");
     console.log({ message: "Fetched votes for candidate" });
     res.json(votes);
@@ -199,10 +242,9 @@ const getVotesByCandidate = asyncHandler(async (req, res) => {
 // @access  Admin
 const getAllVotes = asyncHandler(async (req, res) => {
   try {
-    const votes = await Vote.find()
-      .populate("user", "name email")
+    const votes = await Ballot.find()
       .populate("election", "title")
-      .populate("candidate", "name position");
+      .populate("candidate", "name position party");
     console.log({ message: "Fetched all votes" });
     res.json(votes);
   } catch (error) {

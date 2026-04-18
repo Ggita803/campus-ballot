@@ -94,12 +94,10 @@ const protect = asyncHandler(async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, user not found" });
     }
 
-    // Enforce single-device login for students
-    if (user.role === 'student') {
-      if (!user.currentSessionToken || user.currentSessionToken !== token) {
-        console.log("[AUTH] 🚫 Student token does not match current session token");
-        return res.status(401).json({ message: "Session invalidated: You have logged in on another device." });
-      }
+    // Enforce active session check for ALL users (Invalidates tokens after logout)
+    if (!user.currentSessionToken || user.currentSessionToken !== token) {
+      console.log("[AUTH] 🚫 Token does not match current session token (Logged out or new login)");
+      return res.status(401).json({ message: "Session expired or logged in on another device." });
     }
 
     req.user = user;

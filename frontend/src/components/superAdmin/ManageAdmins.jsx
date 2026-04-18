@@ -4,6 +4,31 @@ import Swal from 'sweetalert2';
 import SuperAdminSidebar from './Sidebar';
 import { CSVLink } from 'react-csv';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+
+const getInitials = (name = 'Admin') => {
+  const words = String(name).trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'A';
+  if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
+  return `${words[0][0]}${words[1][0]}`.toUpperCase();
+};
+
+const avatarColorFromName = (name = 'Admin') => {
+  const palette = ['#2563eb', '#0ea5e9', '#059669', '#7c3aed', '#ea580c', '#dc2626'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return palette[Math.abs(hash) % palette.length];
+};
+
+const buildAvatarDataUri = (name = 'Admin') => {
+  const initials = getInitials(name);
+  const bg = avatarColorFromName(name);
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='${bg}' rx='40' ry='40'/><text x='40' y='49' text-anchor='middle' font-family='Segoe UI, Arial, sans-serif' font-size='28' font-weight='700' fill='white'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
 
 const dummyAdmins = [
   { id: 1, name: 'Aine Bridget', email: 'jane@kyu.ac.ug', role: 'admin', status: 'active' },
@@ -29,6 +54,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     createdAt: '',
   });
   const [creating, setCreating] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null); // Track which admin is being deleted
+  const [isTogglingId, setIsTogglingId] = useState(null); // Track which admin status is being toggled
   const { isDarkMode, colors } = useTheme();
 
   // Dark mode styles for SweetAlert2
@@ -164,6 +191,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
     });
     if (!result.isConfirmed) return;
     try {
+      setIsDeletingId(id);
       const token = localStorage.getItem('token');
       await axios.delete(`/api/super-admin/admins/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -172,11 +200,14 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       setAdmins(admins.filter(a => a._id !== id && a.id !== id));
     } catch (err) {
       showAlert('Error', 'Failed to delete admin', 'error');
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
   const handleToggleStatus = async (id, status) => {
     try {
+      setIsTogglingId(id);
       const token = localStorage.getItem('token');
       const newStatus = status === 'active' ? 'suspended' : 'active';
       await axios.put(`/api/super-admin/admins/${id}/status`, 
@@ -191,6 +222,8 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
       showAlert('Success', `Admin ${status === 'active' ? 'deactivated' : 'reactivated'}`, 'success');
     } catch (err) {
       showAlert('Error', 'Failed to update status', 'error');
+    } finally {
+      setIsTogglingId(null);
     }
   };
 
@@ -488,8 +521,12 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                     </td>
                     <td style={{ padding: '0.75rem' }}>
                       <img
-                        src={admin.profilePicture || admin.image || '/default-avatar.png'}
+                        src={admin.profilePicture || admin.image || buildAvatarDataUri(admin.name)}
                         alt={admin.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = buildAvatarDataUri(admin.name);
+                        }}
                         style={{
                           width: 40,
                           height: 40,
@@ -581,15 +618,25 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         className={`btn btn-sm btn-${admin.status === 'active' ? 'secondary' : 'success'} me-2`}
                         onClick={() => handleToggleStatus(admin._id || admin.id, admin.status)}
                         title={admin.status === 'active' ? 'Deactivate' : 'Reactivate'}
+                        disabled={isTogglingId === (admin._id || admin.id)}
                       >
-                        <i className={`fa fa-${admin.status === 'active' ? 'ban' : 'check'}`}></i>
+                        {isTogglingId === (admin._id || admin.id) ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <i className={`fa fa-${admin.status === 'active' ? 'ban' : 'check'}`}></i>
+                        )}
                       </button>
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDelete(admin._id || admin.id)}
                         title="Delete"
+                        disabled={isDeletingId === (admin._id || admin.id)}
                       >
-                        <i className="fa fa-trash"></i>
+                        {isDeletingId === (admin._id || admin.id) ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <i className="fa fa-trash"></i>
+                        )}
                       </button>
                       <button
                         className="btn btn-sm btn-secondary ms-2"
@@ -690,6 +737,10 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                         <img
                           src={newAdmin.image}
                           alt="Preview"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = buildAvatarDataUri(newAdmin.name || 'Admin');
+                          }}
                           style={{ width: 40, height: 40, borderRadius: '50%', marginTop: 8, objectFit: 'cover', border: '1px solid #eee' }}
                         />
                       )}
@@ -752,7 +803,7 @@ const ManageAdmins = ({ collapsed, isMobile }) => {
                 <button className="btn btn-primary" type="button" onClick={handleAddAdmin} disabled={creating}>
                   {creating ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
                       Creating...
                     </>
                   ) : (

@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const os = require('os');
 const User = require("../models/User");
 const Election = require("../models/Election");
-const Vote = require("../models/Vote");
+const Ballot = require("../models/Ballot");
+const VoterRecord = require("../models/Vote");
 const Candidate = require("../models/Candidate");
 const Log = require("../models/Log");
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
@@ -132,7 +133,7 @@ const getAnalytics = asyncHandler(async (req, res) => {
             Election.aggregate([
                 {
                     $lookup: {
-                        from: 'votes',
+                        from: 'voterrecords',
                         localField: '_id',
                         foreignField: 'election',
                         as: 'votes'
@@ -242,9 +243,9 @@ const getSystemSummary = asyncHandler(async (req, res) => {
                 User.countDocuments({ role: { $in: ['admin', 'super_admin'] } }),
                 Election.countDocuments(),
                 Election.countDocuments({ status: 'active' }),
-                Vote.countDocuments(),
+                Ballot.countDocuments(),
             ]),
-            Vote.distinct('user'),
+            VoterRecord.distinct('user'),
             User.countDocuments({ lastSeen: { $gte: fiveMinutesAgo } }),
             User.aggregate([
                 { $group: { _id: "$role", count: { $sum: 1 } } }
@@ -513,6 +514,34 @@ const updateProfilePicture = asyncHandler(async (req, res) => {
     res.json({ success: true, profilePicture: user.profilePicture });
 });
 
+// @desc    Force sync election statuses based on current time
+// @route   POST /api/super-admin/maintenance/sync-status
+const syncElectionStatus = asyncHandler(async (req, res) => {
+    const now = new Date();
+    const elections = await Election.find();
+    let updatedCount = 0;
+
+    for (const election of elections) {
+        let newStatus = election.status;
+        
+        if (now < new Date(election.startDate)) newStatus = 'upcoming';
+        else if (now >= new Date(election.startDate) && now <= new Date(election.endDate)) newStatus = 'ongoing';
+        else if (now > new Date(election.endDate)) newStatus = 'completed';
+
+        if (election.status !== newStatus) {
+            election.status = newStatus;
+            await election.save();
+            updatedCount++;
+        }
+    }
+
+    res.json({ 
+        message: "Election statuses synchronized", 
+        checked: elections.length, 
+        updated: updatedCount 
+    });
+});
+
 // --- EXPORTS ---
 module.exports = {
     getAnalytics,
@@ -538,5 +567,6 @@ module.exports = {
         const logs = await Log.find({ user: req.params.id }).sort('-createdAt').lean();
         res.json(logs);
     }),
-    updateProfilePicture
+    updateProfilePicture,
+    syncElectionStatus
 };

@@ -4,6 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const { logActivity, getIpAddress, getUserAgent } = require("../utils/logActivity");
 
+// Helper to escape regex special characters
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 // @desc    Get all users (admin) with pagination and search
 // @route   GET /api/users
 // @access  Admin only
@@ -12,7 +17,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     // Extract pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || '';
+    const search = req.query.search ? escapeRegex(String(req.query.search)) : '';
     const role = req.query.role || ''; // Add role filter
     const searchField = req.query.searchField || ''; // Specific field to search
     
@@ -367,7 +372,17 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
       console.log({ message: "User not found" });
       return res.status(404).json({ message: "User not found" });
     }
-    Object.assign(user, req.body);
+    
+    // SECURITY: Whitelist allowed fields to prevent privilege escalation (e.g. changing role to admin)
+    const allowedUpdates = ['name', 'phone', 'faculty', 'course', 'yearOfStudy', 'gender', 'department', 'bio', 'profilePicture'];
+    
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        user[key] = req.body[key];
+      }
+    });
+    
+    // Object.assign(user, req.body); // VULNERABLE CODE REMOVED
     await user.save();
     console.log({ message: "Updated own profile" });
     try {
@@ -388,9 +403,10 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
 // @access  Admin only
 const searchUsers = asyncHandler(async (req, res) => {
   try {
-    const { q } = req.query;
-    const query = q
-      ? { $or: [{ name: { $regex: q, $options: "i" } }, { email: { $regex: q, $options: "i" } }] }
+    const q = req.query.q ? String(req.query.q) : '';
+    const safeQ = escapeRegex(q);
+    const query = safeQ
+      ? { $or: [{ name: { $regex: safeQ, $options: "i" } }, { email: { $regex: safeQ, $options: "i" } }] }
       : {};
     const users = await User.find(query).select("-password");
     console.log({ message: "Searched users" });

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { 
   FaPlus, 
   FaCalendarAlt, 
@@ -25,10 +27,13 @@ const EventsCalendar = ({ events, onRefresh }) => {
     time: '',
     expectedAttendance: 0
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       if (editingId) {
         await axios.put(`/api/agent/outreach/events/${editingId}`, formData, {
@@ -55,6 +60,8 @@ const EventsCalendar = ({ events, onRefresh }) => {
     } catch (error) {
       console.error('Error saving event:', error);
       Swal.fire('Error', 'Failed to save event.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,6 +90,7 @@ const EventsCalendar = ({ events, onRefresh }) => {
 
     if (result.isConfirmed) {
       try {
+        setIsDeletingId(id);
         const token = localStorage.getItem('token');
         await axios.delete(`/api/agent/outreach/events/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -92,6 +100,8 @@ const EventsCalendar = ({ events, onRefresh }) => {
       } catch (error) {
         console.error('Error deleting event:', error);
         Swal.fire('Error', 'Failed to delete event.', 'error');
+      } finally {
+        setIsDeletingId(null);
       }
     }
   };
@@ -167,14 +177,24 @@ const EventsCalendar = ({ events, onRefresh }) => {
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => handleEdit(event)}
+                        disabled={isDeletingId === event._id}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => handleDelete(event._id)}
+                        disabled={isDeletingId === event._id}
+                        style={{
+                          opacity: isDeletingId === event._id ? 0.6 : 1,
+                          cursor: isDeletingId === event._id ? 'not-allowed' : 'pointer'
+                        }}
                       >
-                        <FaTrash />
+                        {isDeletingId === event._id ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <FaTrash />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -342,11 +362,31 @@ const EventsCalendar = ({ events, onRefresh }) => {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setShowModal(false)}
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingId ? 'Update' : 'Schedule'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                    style={{
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        {editingId ? 'Updating...' : 'Scheduling...'}
+                      </>
+                    ) : (
+                      editingId ? 'Update' : 'Schedule'
+                    )}
                   </button>
                 </div>
               </form>

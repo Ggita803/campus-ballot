@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ThemedTable from '../common/ThemedTable';
 
 const ManageObservers = () => {
@@ -8,6 +10,8 @@ const ManageObservers = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingObserver, setEditingObserver] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(null); // Store ID of the observer being deleted
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,6 +68,7 @@ const ManageObservers = () => {
     setSuccess(null);
 
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem('token');
       if (editingObserver) {
         // Update existing observer
@@ -85,6 +90,8 @@ const ManageObservers = () => {
       closeModal();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save observer');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -92,6 +99,7 @@ const ManageObservers = () => {
     if (!confirm('Are you sure you want to delete this observer?')) return;
 
     try {
+      setIsDeleting(id);
       const token = localStorage.getItem('token');
       await axios.delete(`/api/super-admin/observers/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -101,6 +109,8 @@ const ManageObservers = () => {
       fetchObservers();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete observer');
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -218,14 +228,20 @@ const ManageObservers = () => {
                       <button 
                         className="btn btn-sm btn-outline-primary me-2" 
                         onClick={() => openModal(observer)}
+                        disabled={isDeleting !== null}
                       >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button 
                         className="btn btn-sm btn-outline-danger" 
                         onClick={() => handleDelete(observer._id)}
+                        disabled={isDeleting === observer._id}
                       >
-                        <i className="fas fa-trash"></i>
+                        {isDeleting === observer._id ? (
+                          <FontAwesomeIcon icon={faSpinner} spin />
+                        ) : (
+                          <i className="fas fa-trash"></i>
+                        )}
                       </button>
                     </td>
                   </tr>
@@ -361,12 +377,30 @@ const ManageObservers = () => {
                 </div>
 
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    onClick={closeModal}
+                    disabled={isSubmitting}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fas fa-save me-2"></i>
-                    {editingObserver ? 'Update Observer' : 'Create Observer'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="me-2" />
+                        {editingObserver ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save me-2"></i>
+                        {editingObserver ? 'Update Observer' : 'Create Observer'}
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

@@ -3,12 +3,22 @@
 // Loading environment variables
 require('dotenv').config();
 
-// Initialize Datadog Tracing as the very first thing (agentless for Render)
-const tracer = require('dd-trace').init({
-  apiKey: process.env.DD_API_KEY,
-  site: process.env.DD_SITE || 'datadoghq.com',
-});
-console.log(`🟣 Datadog tracing enabled (agentless). Service: ${process.env.DD_SERVICE}, Env: ${process.env.DD_ENV}, Site: ${process.env.DD_SITE || 'datadoghq.com'}`);
+const datadogSite = process.env.DD_SITE || 'us5.datadoghq.com';
+const datadogService = process.env.DD_SERVICE || 'campus-ballot-backend';
+const datadogEnv = process.env.DD_ENV || process.env.NODE_ENV || 'development';
+
+if (process.env.DD_API_KEY) {
+  require('dd-trace').init({
+    apiKey: process.env.DD_API_KEY,
+    site: datadogSite,
+    service: datadogService,
+    env: datadogEnv
+  });
+
+  console.log(`🟣 Datadog tracing enabled (agentless). Service: ${datadogService}, Env: ${datadogEnv}, Site: ${datadogSite}`);
+} else {
+  console.log('⚪ Datadog tracing disabled. Set DD_API_KEY to enable agentless tracing.');
+}
 
 // require("dotenv").config();
 
@@ -151,6 +161,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- SECURITY: Global NoSQL Injection Sanitization ---
+// Recursively removes keys starting with '$' or containing '.' from req.body, req.query, req.params
+const mongoSanitize = (req, res, next) => {
+  const sanitize = (obj) => {
+    for (let key in obj) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        sanitize(obj[key]);
+      }
+    }
+  };
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  next();
+};
+app.use(mongoSanitize);
+
 // Custom rate limiter: higher limits for admin, super admin, observer
 const { ipKeyGenerator } = require("express-rate-limit");
 
@@ -219,16 +248,17 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/user', require('./routes/roleManagement'));
 
 
-// Catch-all: send React index.html for any non-API route
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-// });
+// --- GLOBAL ERROR HANDLER ---
+// This must be defined AFTER all routes but BEFORE server listen
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
 
-// app.use(express.static(path.join(__dirname, "../frontend/build")));
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-// });
-
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+  });
+});
 
 // --- SOCKET.IO + START SERVER & CONNECT TO DB ---
 const http = require('http');
