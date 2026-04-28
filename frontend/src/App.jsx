@@ -306,8 +306,6 @@ function App() {
       </Suspense>
     </Router>
   );
-    </Router>
-  );
 }
 
 export default App;
