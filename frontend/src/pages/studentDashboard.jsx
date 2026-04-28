@@ -21,9 +21,8 @@ import RoleSwitcher from '../components/common/RoleSwitcher';
 import ThemedTable from '../components/common/ThemedTable';
 import { generateVoteReceipt, generateVerificationCode } from '../utils/pdfGenerator';
 import { getDepartmentFromCourse } from '../utils/academicStructure';
-
-// Set axios base URL
-axios.defaults.baseURL = "https://api.campusballot.tech";
+import kyuLogo from "../assets/kyambogo-university-kyu-logo-png_seeklogo-550308.png";
+// baseURL is set centrally in axiosInstance.js — do not override here
 import {
   FaSignOutAlt,
   FaUserCircle,
@@ -640,6 +639,18 @@ function StudentDashboard({ user: initialUser }) {
       'isEligible:', isEligible);
     
     return matchesSearch && matchesStatus && isEligible;
+  }).sort((a, b) => {
+    const statusA = getElectionStatus(a).status;
+    const statusB = getElectionStatus(b).status;
+    
+    const priority = { 'active': 0, 'upcoming': 1, 'completed': 2 };
+    
+    if (priority[statusA] !== priority[statusB]) {
+      return priority[statusA] - priority[statusB];
+    }
+    
+    // Within same status, show newest first
+    return new Date(b.startDate) - new Date(a.startDate);
   });
 
 
@@ -2331,9 +2342,9 @@ function StudentDashboard({ user: initialUser }) {
             >
               <FaBars />
             </button>
-            <FaUserGraduate size={22} className="text-white" />
-            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Student Portal</span>
-            <span className="fw-bold d-md-none text-white" style={{ fontSize: '1rem' }}>Portal</span>
+            <img src={kyuLogo} alt="Kyambogo University Logo" className="img-fluid" style={{ height: '50px', width: '50px' }} />
+            <span className="fw-bold d-none d-md-inline text-white" style={{ fontSize: '1.2rem' }}>Campus Ballot</span>
+            {/* <span className="fw-bold d-md-none text-white" style={{ fontSize: '0.8em', marginLeft: '0.5rem' }}>Campus Ballot</span> */}
           </span>
           
           {/* User Actions */}
@@ -2569,7 +2580,7 @@ function StudentDashboard({ user: initialUser }) {
           zIndex: 2000,
           left: 0,
           top: 0,
-          display: 'none'
+          display: sidebarOpen ? 'block' : 'none'
         }}
         className="d-lg-none"
       >
@@ -4321,8 +4332,8 @@ function StudentDashboard({ user: initialUser }) {
       {/* Quick Actions Widget */}
       <QuickActionsWidget 
         activeElections={elections.filter(e => {
-          const status = getElectionStatus(e);
-          return status.status === 'active' && isUserEligibleForElection(e);
+          const status = getElectionStatus(e).status;
+          return (status === 'active' || status === 'upcoming') && isUserEligibleForElection(e);
         })}
         onNavigate={(action) => {
           if (action === 'apply') {

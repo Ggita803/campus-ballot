@@ -238,9 +238,25 @@ export default function ElectionCard({
                             </div>
                             
                             <div style={{ minWidth: 0, flex: 1 }}>
-                              <div className="fw-bold text-truncate mb-1" title={candidate.name} style={{ fontSize: '0.9rem' }}>
+                              <div className="fw-bold text-truncate mb-1" title={candidate.name} style={{ fontSize: '0.95rem', lineHeight: 1.2 }}>
                                 {candidate.name}
                               </div>
+                              {/* Candidate Position - prominent and responsive */}
+                              <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
+                                {candidate.position || candidate.role || candidate.post ? (
+                                  <span className="badge rounded-pill bg-success px-3 py-1" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>
+                                    {(candidate.position || candidate.role || candidate.post)}
+                                  </span>
+                                ) : null}
+                                {/* Candidate Symbol (if any) */}
+                                {candidate.symbol && (
+                                  <span className="badge rounded-pill bg-warning text-dark px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap', border: '1px solid #ffc107' }}>
+                                    <FaStar className="me-1" size={12} style={{ color: '#f59e42' }} />
+                                    <span style={{ fontWeight: 700 }}>{candidate.symbol}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {/* Party badge */}
                               <div className="d-flex align-items-center gap-1 mb-1">
                                 <div 
                                   className="px-2 py-1 rounded-pill d-flex align-items-center gap-1"
@@ -256,7 +272,6 @@ export default function ElectionCard({
                                   {candidate.party || 'Independent'}
                                 </div>
                               </div>
-                              
                               {typeof candidate.votes === 'number' && (
                                 <div className="d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
                                   <FaTrophy className="text-warning" size={10} />
